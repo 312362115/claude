@@ -1,0 +1,29 @@
+# macOS
+.DS_Store
+
+# 敏感信息 - 可能包含 API key / token
+config.json
+
+# 会话记录 - 体积大且无需版本控制
+projects/
+
+# 运行时缓存与临时文件
+cache/
+backups/
+session-env/
+shell-snapshots/
+telemetry/
+history.jsonl
+
+# IDE 状态
+ide/
+
+# 插件 - 可重新安装
+plugins/
+
+# 技能评估工作区 - 测试产物，非核心配置
+skills/*/workspace/
+skills/*-workspace/
+
+# 定时任务运行时状态
+scheduled-tasks/
