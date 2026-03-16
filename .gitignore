@@ -27,3 +27,7 @@ skills/*-workspace/
 
 # 定时任务运行时状态
 scheduled-tasks/
+
+
+plans/
+.history
