@@ -25,6 +25,7 @@ description: >
 **不可跳过原则**：满足上述触发条件时，必须执行 Step 1 询问用户是否预览。Claude 不得以任何理由（如"纯后端文档"、"内容简单"、"不涉及 UI"等）自行判断跳过。是否预览由用户决定，不由 Claude 决定。
 
 **不触发** 的场景：
+- **非 `.md` 文件**：HTML、JSON、YAML 等其他格式文件不走此 skill（HTML 原型直接用 `open` 命令打开）
 - memory 文件、CLAUDE.md、README.md 等非 review 类文件
 - 对 MD 文件的小幅修改（如修错别字、更新状态标记）
 
