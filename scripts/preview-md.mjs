@@ -1,12 +1,16 @@
 #!/usr/bin/env node
 /**
- * MD 预览工具：将 markdown 文件渲染为 GitHub 风格 HTML，左侧目录，浏览器打开。
+ * MD 预览工具：全局单例 HTTP server + GitHub 风格渲染 + 左侧目录 + 文件监听自动刷新。
  * 用法：node scripts/preview-md.mjs <path-to-md-file>
+ *
+ * 首次调用启动 server，后续调用复用已有 server，直接打开新文件预览。
+ * 所有浏览器标签关闭 1 分钟后 server 自动退出。
  */
-import { readFileSync, writeFileSync, mkdtempSync } from 'fs';
+import { readFileSync, watchFile, unwatchFile, existsSync, writeFileSync, unlinkSync } from 'fs';
+import { createServer } from 'http';
 import { resolve, basename } from 'path';
-import { tmpdir } from 'os';
 import { exec } from 'child_process';
+import http from 'http';
 
 const mdPath = process.argv[2];
 if (!mdPath) {
@@ -15,21 +19,135 @@ if (!mdPath) {
 }
 
 const absPath = resolve(mdPath);
-const mdContent = readFileSync(absPath, 'utf-8');
-const title = basename(absPath, '.md');
+const LOCK_FILE = '/tmp/md-preview-server.json';
 
-// 转义 JS 模板字符串中的特殊字符
-const escaped = mdContent
-  .replace(/\\/g, '\\\\')
-  .replace(/`/g, '\\`')
-  .replace(/\$/g, '\\$');
+// 尝试连接已有 server
+async function tryExistingServer() {
+  if (!existsSync(LOCK_FILE)) return false;
+  try {
+    const info = JSON.parse(readFileSync(LOCK_FILE, 'utf-8'));
+    // 注册文件并获取 URL
+    return await new Promise((resolve) => {
+      const postData = JSON.stringify({ file: absPath });
+      const req = http.request({
+        hostname: '127.0.0.1',
+        port: info.port,
+        path: '/api/watch',
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(postData) },
+        timeout: 2000,
+      }, (res) => {
+        let body = '';
+        res.on('data', c => body += c);
+        res.on('end', () => {
+          if (res.statusCode === 200) {
+            const { url } = JSON.parse(body);
+            resolve(url);
+          } else {
+            resolve(false);
+          }
+        });
+      });
+      req.on('error', () => resolve(false));
+      req.on('timeout', () => { req.destroy(); resolve(false); });
+      req.end(postData);
+    });
+  } catch {
+    return false;
+  }
+}
 
-const html = `<!DOCTYPE html>
+// 主逻辑
+const existingUrl = await tryExistingServer();
+if (existingUrl) {
+  console.log(`复用已有预览服务: ${existingUrl}`);
+  const cmd = process.platform === 'darwin' ? 'open' : 'xdg-open';
+  exec(`${cmd} "${existingUrl}"`);
+  process.exit(0);
+}
+
+// --- 以下为 server 模式 ---
+
+// 文件监听管理：{ absPath: { watchers: Set<res>, watched: boolean } }
+const fileRegistry = new Map();
+
+function registerFile(filePath) {
+  if (fileRegistry.has(filePath)) return;
+  fileRegistry.set(filePath, { watchers: new Set(), watched: false });
+  startWatching(filePath);
+}
+
+function startWatching(filePath) {
+  const entry = fileRegistry.get(filePath);
+  if (entry.watched) return;
+  watchFile(filePath, { interval: 500 }, () => {
+    entry.watchers.forEach(res => {
+      res.write('data: reload\n\n');
+    });
+  });
+  entry.watched = true;
+}
+
+function addSSEClient(filePath, res) {
+  registerFile(filePath);
+  fileRegistry.get(filePath).watchers.add(res);
+  cancelShutdown();
+}
+
+function removeSSEClient(filePath, res) {
+  const entry = fileRegistry.get(filePath);
+  if (!entry) return;
+  entry.watchers.delete(res);
+  scheduleShutdownIfEmpty();
+}
+
+function getTotalClients() {
+  let total = 0;
+  for (const entry of fileRegistry.values()) {
+    total += entry.watchers.size;
+  }
+  return total;
+}
+
+// 自动关闭逻辑
+let shutdownTimer = null;
+
+function scheduleShutdownIfEmpty() {
+  if (getTotalClients() > 0) return;
+  shutdownTimer = setTimeout(() => {
+    if (getTotalClients() === 0) {
+      console.log('所有浏览器已断开，自动关闭预览服务');
+      cleanup();
+    }
+  }, 60000);
+}
+
+function cancelShutdown() {
+  if (shutdownTimer) {
+    clearTimeout(shutdownTimer);
+    shutdownTimer = null;
+  }
+}
+
+function cleanup() {
+  for (const [filePath, entry] of fileRegistry) {
+    if (entry.watched) unwatchFile(filePath);
+  }
+  try { unlinkSync(LOCK_FILE); } catch {}
+  server.close();
+  process.exit(0);
+}
+
+// 生成预览页面 HTML
+function buildHTML(filePath) {
+  const fileTitle = basename(filePath, '.md');
+  const encodedPath = encodeURIComponent(filePath);
+  return `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>${title}</title>
+<title>${fileTitle}</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.5.1/github-markdown-light.min.css">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -45,7 +163,6 @@ const html = `<!DOCTYPE html>
     min-height: 100vh;
   }
 
-  /* 左侧目录 */
   .toc-sidebar {
     position: fixed;
     top: 0;
@@ -59,14 +176,8 @@ const html = `<!DOCTYPE html>
     z-index: 10;
   }
 
-  .toc-sidebar::-webkit-scrollbar {
-    width: 4px;
-  }
-
-  .toc-sidebar::-webkit-scrollbar-thumb {
-    background: #d0d7de;
-    border-radius: 2px;
-  }
+  .toc-sidebar::-webkit-scrollbar { width: 4px; }
+  .toc-sidebar::-webkit-scrollbar-thumb { background: #d0d7de; border-radius: 2px; }
 
   .toc-title {
     padding: 0 20px 12px;
@@ -79,14 +190,8 @@ const html = `<!DOCTYPE html>
     margin-bottom: 8px;
   }
 
-  .toc-list {
-    list-style: none;
-    padding: 0;
-  }
-
-  .toc-list li {
-    margin: 0;
-  }
+  .toc-list { list-style: none; padding: 0; }
+  .toc-list li { margin: 0; }
 
   .toc-list a {
     display: block;
@@ -102,10 +207,7 @@ const html = `<!DOCTYPE html>
     white-space: nowrap;
   }
 
-  .toc-list a:hover {
-    color: #0969da;
-    background: #f6f8fa;
-  }
+  .toc-list a:hover { color: #0969da; background: #f6f8fa; }
 
   .toc-list a.active {
     color: #0969da;
@@ -120,7 +222,6 @@ const html = `<!DOCTYPE html>
   .toc-list a.depth-5 { padding-left: 64px; font-size: 12px; }
   .toc-list a.depth-6 { padding-left: 76px; font-size: 12px; }
 
-  /* 主内容 */
   .main-content {
     margin-left: 280px;
     flex: 1;
@@ -138,7 +239,6 @@ const html = `<!DOCTYPE html>
     box-shadow: 0 1px 3px rgba(0,0,0,0.04);
   }
 
-  /* 文件路径提示 */
   .file-path {
     max-width: none;
     margin: 0 0 12px;
@@ -147,7 +247,6 @@ const html = `<!DOCTYPE html>
     font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
   }
 
-  /* 响应式 */
   @media (max-width: 1000px) {
     .toc-sidebar { width: 240px; }
     .main-content { margin-left: 240px; padding: 24px 20px; }
@@ -167,105 +266,176 @@ const html = `<!DOCTYPE html>
       <ul class="toc-list" id="toc"></ul>
     </nav>
     <main class="main-content">
-      <div class="file-path">${absPath}</div>
+      <div class="file-path">${filePath}</div>
       <article class="markdown-body" id="content"></article>
     </main>
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.1/marked.min.js"></script>
   <script>
-    const md = \`${escaped}\`;
+    const FILE_PATH = '${encodedPath}';
 
-    // 渲染 markdown
-    marked.setOptions({
-      gfm: true,
-      breaks: false,
-    });
+    function renderMarkdown(md) {
+      marked.setOptions({ gfm: true, breaks: false });
 
-    // 自定义 heading renderer，给标题加 id
-    const renderer = new marked.Renderer();
-    const slugCounts = {};
+      const renderer = new marked.Renderer();
+      const slugCounts = {};
 
-    renderer.heading = function(text, level, raw) {
-      // marked 12.x: heading(text, level, raw)
-      var plain = (raw || text).replace(/<[^>]+>/g, '');
-      var slug = plain.toLowerCase().replace(/[^\\w\\u4e00-\\u9fff]+/g, '-').replace(/(^-|-$)/g, '');
-      if (slugCounts[slug] !== undefined) {
-        slugCounts[slug]++;
-        slug = slug + '-' + slugCounts[slug];
-      } else {
-        slugCounts[slug] = 0;
-      }
-      return '<h' + level + ' id="' + slug + '">' + text + '</h' + level + '>';
-    };
-
-    document.getElementById('content').innerHTML = marked.parse(md, { renderer });
-
-    // 生成目录
-    const headings = document.querySelectorAll('#content h1, #content h2, #content h3, #content h4, #content h5, #content h6');
-    const tocList = document.getElementById('toc');
-
-    headings.forEach(h => {
-      const depth = parseInt(h.tagName[1]);
-      // 只展示 h1-h4
-      if (depth > 4) return;
-      const li = document.createElement('li');
-      const a = document.createElement('a');
-      a.href = '#' + h.id;
-      a.textContent = h.textContent;
-      a.className = 'depth-' + depth;
-      a.dataset.id = h.id;
-      li.appendChild(a);
-      tocList.appendChild(li);
-    });
-
-    // 滚动高亮当前目录项
-    const tocLinks = document.querySelectorAll('.toc-list a');
-    const headingElements = Array.from(headings).filter(h => parseInt(h.tagName[1]) <= 4);
-
-    function updateActiveLink() {
-      let current = '';
-      for (const h of headingElements) {
-        const rect = h.getBoundingClientRect();
-        if (rect.top <= 80) {
-          current = h.id;
+      renderer.heading = function(text, level, raw) {
+        var plain = (raw || text).replace(/<[^>]+>/g, '');
+        var slug = plain.toLowerCase().replace(/[^\\w\\u4e00-\\u9fff]+/g, '-').replace(/(^-|-$)/g, '');
+        if (slugCounts[slug] !== undefined) {
+          slugCounts[slug]++;
+          slug = slug + '-' + slugCounts[slug];
+        } else {
+          slugCounts[slug] = 0;
         }
+        return '<h' + level + ' id="' + slug + '">' + text + '</h' + level + '>';
+      };
+
+      document.getElementById('content').innerHTML = marked.parse(md, { renderer });
+
+      const tocList = document.getElementById('toc');
+      tocList.innerHTML = '';
+      const headings = document.querySelectorAll('#content h1, #content h2, #content h3, #content h4');
+
+      headings.forEach(h => {
+        const depth = parseInt(h.tagName[1]);
+        if (depth > 4) return;
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.href = '#' + h.id;
+        a.textContent = h.textContent;
+        a.className = 'depth-' + depth;
+        a.dataset.id = h.id;
+        li.appendChild(a);
+        tocList.appendChild(li);
+      });
+
+      setupScrollHighlight();
+    }
+
+    function setupScrollHighlight() {
+      const tocLinks = document.querySelectorAll('.toc-list a');
+      const headings = document.querySelectorAll('#content h1, #content h2, #content h3, #content h4');
+
+      function updateActiveLink() {
+        let current = '';
+        for (const h of headings) {
+          const rect = h.getBoundingClientRect();
+          if (rect.top <= 80) current = h.id;
+        }
+        tocLinks.forEach(link => {
+          link.classList.toggle('active', link.dataset.id === current);
+        });
       }
+
+      window.removeEventListener('scroll', window._tocScrollHandler);
+      window._tocScrollHandler = updateActiveLink;
+      window.addEventListener('scroll', updateActiveLink, { passive: true });
+      updateActiveLink();
+
       tocLinks.forEach(link => {
-        link.classList.toggle('active', link.dataset.id === current);
+        link.addEventListener('click', e => {
+          e.preventDefault();
+          const target = document.getElementById(link.dataset.id);
+          if (target) {
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            history.replaceState(null, '', '#' + link.dataset.id);
+          }
+        });
       });
     }
 
-    window.addEventListener('scroll', updateActiveLink, { passive: true });
-    updateActiveLink();
+    async function loadAndRender() {
+      const res = await fetch('/api/content?file=' + FILE_PATH);
+      const md = await res.text();
+      renderMarkdown(md);
+    }
 
-    // 点击目录平滑滚动
-    tocLinks.forEach(link => {
-      link.addEventListener('click', e => {
-        e.preventDefault();
-        const target = document.getElementById(link.dataset.id);
-        if (target) {
-          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          history.replaceState(null, '', '#' + link.dataset.id);
-        }
-      });
-    });
+    loadAndRender();
+
+    const evtSource = new EventSource('/api/events?file=' + FILE_PATH);
+    evtSource.onmessage = () => { loadAndRender(); };
   </script>
 </body>
 </html>`;
+}
 
-// 写入临时文件并打开
-const tmpDir = mkdtempSync(resolve(tmpdir(), 'md-preview-'));
-const htmlPath = resolve(tmpDir, `${title}.html`);
-writeFileSync(htmlPath, html, 'utf-8');
+// HTTP server
+const server = createServer((req, res) => {
+  const url = new URL(req.url, 'http://localhost');
 
-// macOS 用 open，Linux 用 xdg-open
-const cmd = process.platform === 'darwin' ? 'open' : 'xdg-open';
-exec(`${cmd} "${htmlPath}"`, (err) => {
-  if (err) {
-    console.error('打开浏览器失败:', err.message);
-    console.log('HTML 文件已生成:', htmlPath);
+  if (url.pathname === '/api/content' && req.method === 'GET') {
+    const filePath = decodeURIComponent(url.searchParams.get('file') || '');
+    try {
+      const content = readFileSync(filePath, 'utf-8');
+      res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end(content);
+    } catch (err) {
+      res.writeHead(500);
+      res.end('读取文件失败: ' + err.message);
+    }
+  } else if (url.pathname === '/api/events' && req.method === 'GET') {
+    const filePath = decodeURIComponent(url.searchParams.get('file') || '');
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive',
+    });
+    res.write('\n');
+    addSSEClient(filePath, res);
+    req.on('close', () => removeSSEClient(filePath, res));
+  } else if (url.pathname === '/api/watch' && req.method === 'POST') {
+    // 注册新文件（来自后续脚本调用）
+    let body = '';
+    req.on('data', c => body += c);
+    req.on('end', () => {
+      try {
+        const { file } = JSON.parse(body);
+        registerFile(file);
+        const port = server.address().port;
+        const previewUrl = `http://127.0.0.1:${port}/preview?file=${encodeURIComponent(file)}`;
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ url: previewUrl }));
+      } catch (err) {
+        res.writeHead(400);
+        res.end('Invalid request');
+      }
+    });
+  } else if (url.pathname === '/preview' && req.method === 'GET') {
+    const filePath = decodeURIComponent(url.searchParams.get('file') || '');
+    if (!filePath || !existsSync(filePath)) {
+      res.writeHead(404);
+      res.end('文件不存在: ' + filePath);
+      return;
+    }
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    res.end(buildHTML(filePath));
   } else {
-    console.log('已在浏览器中打开:', htmlPath);
+    res.writeHead(404);
+    res.end('Not found');
   }
 });
+
+// 注册首个文件
+registerFile(absPath);
+
+// 启动 server
+server.listen(0, '127.0.0.1', () => {
+  const port = server.address().port;
+  const previewUrl = `http://127.0.0.1:${port}/preview?file=${encodeURIComponent(absPath)}`;
+
+  // 写入 lock 文件
+  writeFileSync(LOCK_FILE, JSON.stringify({ port, pid: process.pid }), 'utf-8');
+
+  console.log(`预览服务已启动: http://127.0.0.1:${port}`);
+  console.log(`预览文件: ${absPath}`);
+  console.log('所有浏览器关闭 1 分钟后自动退出');
+
+  const cmd = process.platform === 'darwin' ? 'open' : 'xdg-open';
+  exec(`${cmd} "${previewUrl}"`);
+});
+
+process.on('SIGINT', cleanup);
+process.on('SIGTERM', cleanup);
