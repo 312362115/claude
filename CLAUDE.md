@@ -70,8 +70,17 @@
 |------|------|---------|
 | `docs/specs/` | 方案设计 | `YYYY-MM-DD-<模块名>-<主题>.md` |
 | `docs/plans/` | 开发计划 | `YYYY-MM-DD-<模块名>-plan.md` |
+| `docs/todos/` | 想法草案（灵感、待整理的点子） | `YYYY-MM-DD-<主题>.md` |
 
 文档与代码同步更新，中文编写，文件名英文小写+连字符。
+
+**todos 状态管理**：todos 文件使用 frontmatter 标记状态：
+```yaml
+---
+status: open        # open | done
+plan: docs/plans/xxx.md  # done 时关联对应的 plan 路径
+---
+```
 
 ---
 
