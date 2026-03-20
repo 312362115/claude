@@ -253,9 +253,38 @@ function buildHTML(filePath) {
     .markdown-body { padding: 24px; }
   }
 
+  .pdf-btn {
+    position: fixed;
+    top: 16px;
+    right: 20px;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #24292f;
+    background: #ffffff;
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    transition: all 0.15s ease;
+  }
+  .pdf-btn:hover { background: #f6f8fa; border-color: #0969da; color: #0969da; }
+  .pdf-btn svg { width: 16px; height: 16px; fill: currentColor; }
+
   @media (max-width: 720px) {
     .toc-sidebar { display: none; }
     .main-content { margin-left: 0; }
+  }
+
+  @media print {
+    .toc-sidebar, .pdf-btn, .file-path { display: none !important; }
+    .main-content { margin-left: 0 !important; padding: 0 !important; }
+    .markdown-body { border: none !important; box-shadow: none !important; padding: 0 !important; }
+    body { background: #fff !important; }
   }
 </style>
 </head>
@@ -265,6 +294,10 @@ function buildHTML(filePath) {
       <div class="toc-title">目录</div>
       <ul class="toc-list" id="toc"></ul>
     </nav>
+    <button class="pdf-btn" onclick="window.print()" title="下载为 PDF">
+      <svg viewBox="0 0 16 16"><path d="M4.75 7.5a.75.75 0 000 1.5h6.5a.75.75 0 000-1.5h-6.5zM4.75 10.5a.75.75 0 000 1.5h4.5a.75.75 0 000-1.5h-4.5zM13.5 1h-11A1.5 1.5 0 001 2.5v11A1.5 1.5 0 002.5 15h11a1.5 1.5 0 001.5-1.5v-11A1.5 1.5 0 0013.5 1zm0 1.5v2h-11v-2h11zm-11 11V6h11v7.5h-11z"/></svg>
+      下载 PDF
+    </button>
     <main class="main-content">
       <div class="file-path">${filePath}</div>
       <article class="markdown-body" id="content"></article>

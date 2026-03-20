@@ -1,10 +1,14 @@
 {
+  "env": {
+    "CLAUDE_CODE_MAX_OUTPUT_TOKENS": "64000"
+  },
   "enabledPlugins": {
     "skill-creator@claude-plugins-official": true,
+    "superpowers@claude-plugins-official": true,
+    "claude-md-management@claude-plugins-official": true,
     "frontend-design@claude-plugins-official": true,
     "agent-sdk-dev@claude-plugins-official": true,
     "playwright@claude-plugins-official": true,
-    "superpowers@claude-plugins-official": true,
     "claude-code-setup@claude-plugins-official": true,
     "commit-commands@claude-plugins-official": true
   },
