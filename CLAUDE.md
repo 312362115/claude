@@ -64,23 +64,31 @@
 - 优先复用项目已有的库，引入新依赖前说明必要性
 
 ### 项目文档规范
-项目使用 `docs/` 目录统一管理文档：
+项目使用 `docs/` 目录统一管理文档，流转关系：
+
+```
+backlog（要做什么）→ spec（怎么做）→ plan（拆步骤 + 跟踪进度）
+```
 
 | 目录 | 用途 | 命名格式 |
 |------|------|---------|
-| `docs/specs/` | 方案设计 | `YYYY-MM-DD-<模块名>-<主题>.md` |
-| `docs/plans/` | 开发计划 | `YYYY-MM-DD-<模块名>-plan.md` |
-| `docs/todos/` | 想法草案（灵感、待整理的点子） | `YYYY-MM-DD-<主题>.md` |
+| `docs/backlog/` | 需求池 & 待办事项（想法、需求、待办，按优先级排列） | `YYYY-MM-DD-<主题>.md` |
+| `docs/specs/` | 方案设计（技术方案、架构决策） | `YYYY-MM-DD-<模块名>-<主题>.md` |
+| `docs/plans/` | 开发计划（任务拆分 + 进度跟踪） | `YYYY-MM-DD-<模块名>-plan.md` |
 
 文档与代码同步更新，中文编写，文件名英文小写+连字符。
 
-**todos 状态管理**：todos 文件使用 frontmatter 标记状态：
+**backlog 状态管理**：
 ```yaml
 ---
+priority: P1        # P0（紧急）| P1（重要）| P2（普通）| P3（低优）
 status: open        # open | done
-plan: docs/plans/xxx.md  # done 时关联对应的 plan 路径
+spec: docs/specs/xxx.md   # 关联方案
+plan: docs/plans/xxx.md   # 关联计划
 ---
 ```
+
+**进度跟踪在 plan 中完成**：plan 文件内用 task checklist 记录各步骤完成状态，不在 backlog 中重复跟踪。
 
 ---
 
