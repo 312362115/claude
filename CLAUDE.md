@@ -82,7 +82,7 @@ backlog（要做什么）→ spec（怎么做）→ plan（拆步骤 + 跟踪进
 ```yaml
 ---
 priority: P1        # P0（紧急）| P1（重要）| P2（普通）| P3（低优）
-status: open        # open | done
+status: open        # open | done | dropped
 spec: docs/specs/xxx.md   # 关联方案
 plan: docs/plans/xxx.md   # 关联计划
 ---
