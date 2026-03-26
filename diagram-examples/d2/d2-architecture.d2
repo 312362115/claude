@@ -1,0 +1,177 @@
+direction: down
+
+# ============ 客户端层 ============
+clients: 客户端 {
+  grid-rows: 1
+  grid-gap: 16
+  style: {
+    fill: "#EFF6FF"
+    stroke: "#93C5FD"
+    border-radius: 16
+    font-size: 28
+    bold: true
+    font-color: "#1E40AF"
+  }
+
+  web: "🌐 Web 应用" {
+    style: { fill: "#DBEAFE"; stroke: "#93C5FD"; border-radius: 10; font-size: 22; font-color: "#1E3A5F" }
+  }
+  mobile: "📱 移动端 App" {
+    style: { fill: "#DBEAFE"; stroke: "#93C5FD"; border-radius: 10; font-size: 22; font-color: "#1E3A5F" }
+  }
+  miniapp: "💬 小程序" {
+    style: { fill: "#DBEAFE"; stroke: "#93C5FD"; border-radius: 10; font-size: 22; font-color: "#1E3A5F" }
+  }
+}
+
+# ============ API 网关 ============
+gateway: "🔀  API 网关  ·  Nginx + Kong" {
+  style: {
+    fill: "#FEF3C7"
+    stroke: "#FCD34D"
+    border-radius: 12
+    font-size: 26
+    bold: true
+    font-color: "#92400E"
+  }
+}
+
+# ============ 微服务层 ============
+services: 微服务集群 {
+  grid-rows: 2
+  grid-columns: 3
+  grid-gap: 16
+  style: {
+    fill: "#F5F3FF"
+    stroke: "#C4B5FD"
+    border-radius: 16
+    font-size: 28
+    bold: true
+    font-color: "#5B21B6"
+  }
+
+  user: "👤 用户服务" {
+    style: { fill: "#EDE9FE"; stroke: "#C4B5FD"; border-radius: 10; font-size: 22; font-color: "#3B0764" }
+  }
+  product: "📦 商品服务" {
+    style: { fill: "#EDE9FE"; stroke: "#C4B5FD"; border-radius: 10; font-size: 22; font-color: "#3B0764" }
+  }
+  order: "📋 订单服务" {
+    style: { fill: "#EDE9FE"; stroke: "#C4B5FD"; border-radius: 10; font-size: 22; font-color: "#3B0764" }
+  }
+  payment: "💳 支付服务" {
+    style: { fill: "#EDE9FE"; stroke: "#C4B5FD"; border-radius: 10; font-size: 22; font-color: "#3B0764" }
+  }
+  inventory: "🏷️ 库存服务" {
+    style: { fill: "#EDE9FE"; stroke: "#C4B5FD"; border-radius: 10; font-size: 22; font-color: "#3B0764" }
+  }
+  notify: "🔔 通知服务" {
+    style: { fill: "#EDE9FE"; stroke: "#C4B5FD"; border-radius: 10; font-size: 22; font-color: "#3B0764" }
+  }
+}
+
+# ============ 中间件 ============
+middleware: 中间件 {
+  grid-rows: 1
+  grid-gap: 12
+  style: {
+    fill: "#FFF1F2"
+    stroke: "#FECDD3"
+    border-radius: 16
+    font-size: 26
+    bold: true
+    font-color: "#9F1239"
+  }
+
+  kafka: "⚡ Kafka 消息队列" {
+    style: { fill: "#FFE4E6"; stroke: "#FECDD3"; border-radius: 10; font-size: 20; font-color: "#881337" }
+  }
+  redis: "🚀 Redis 缓存" {
+    style: { fill: "#FFE4E6"; stroke: "#FECDD3"; border-radius: 10; font-size: 20; font-color: "#881337" }
+  }
+  rocketmq: "📨 RocketMQ" {
+    style: { fill: "#FFE4E6"; stroke: "#FECDD3"; border-radius: 10; font-size: 20; font-color: "#881337" }
+  }
+  sentinel: "🛡️ Sentinel 限流" {
+    style: { fill: "#FFE4E6"; stroke: "#FECDD3"; border-radius: 10; font-size: 20; font-color: "#881337" }
+  }
+}
+
+# ============ 数据存储 ============
+data: 数据存储 {
+  grid-rows: 1
+  grid-gap: 12
+  style: {
+    fill: "#ECFDF5"
+    stroke: "#A7F3D0"
+    border-radius: 16
+    font-size: 26
+    bold: true
+    font-color: "#065F46"
+  }
+
+  mysql: "MySQL 主从" {
+    shape: cylinder
+    style: { fill: "#D1FAE5"; stroke: "#6EE7B7"; font-size: 20; font-color: "#064E3B" }
+  }
+  mongo: "MongoDB" {
+    shape: cylinder
+    style: { fill: "#D1FAE5"; stroke: "#6EE7B7"; font-size: 20; font-color: "#064E3B" }
+  }
+  es: "Elasticsearch" {
+    shape: cylinder
+    style: { fill: "#D1FAE5"; stroke: "#6EE7B7"; font-size: 20; font-color: "#064E3B" }
+  }
+  oss: "对象存储 OSS" {
+    shape: cylinder
+    style: { fill: "#D1FAE5"; stroke: "#6EE7B7"; font-size: 20; font-color: "#064E3B" }
+  }
+}
+
+# ============ 可观测性 ============
+monitor: 可观测性 {
+  grid-rows: 1
+  grid-gap: 16
+  style: {
+    fill: "#F8FAFC"
+    stroke: "#CBD5E1"
+    border-radius: 16
+    font-size: 24
+    bold: true
+    font-color: "#334155"
+  }
+
+  prometheus: "📊 Prometheus" {
+    style: { fill: "#F1F5F9"; stroke: "#CBD5E1"; border-radius: 10; font-size: 20; font-color: "#1E293B" }
+  }
+  grafana: "📈 Grafana" {
+    style: { fill: "#F1F5F9"; stroke: "#CBD5E1"; border-radius: 10; font-size: 20; font-color: "#1E293B" }
+  }
+  jaeger: "🔍 链路追踪" {
+    style: { fill: "#F1F5F9"; stroke: "#CBD5E1"; border-radius: 10; font-size: 20; font-color: "#1E293B" }
+  }
+  elk: "📝 ELK 日志" {
+    style: { fill: "#F1F5F9"; stroke: "#CBD5E1"; border-radius: 10; font-size: 20; font-color: "#1E293B" }
+  }
+}
+
+# ============ 连线 ============
+clients -> gateway: "HTTPS" {
+  style: { stroke: "#60A5FA"; stroke-width: 3; font-size: 18; font-color: "#3B82F6"; bold: true }
+}
+
+gateway -> services: "gRPC / REST" {
+  style: { stroke: "#FBBF24"; stroke-width: 3; font-size: 18; font-color: "#D97706"; bold: true }
+}
+
+services -> middleware: "异步事件" {
+  style: { stroke: "#FB7185"; stroke-width: 2; font-size: 16; font-color: "#E11D48" }
+}
+
+services -> data: "数据读写" {
+  style: { stroke: "#34D399"; stroke-width: 2; font-size: 16; font-color: "#059669" }
+}
+
+monitor -> services: "指标采集" {
+  style: { stroke: "#CBD5E1"; stroke-width: 1; stroke-dash: 5; font-size: 14; font-color: "#94A3B8" }
+}

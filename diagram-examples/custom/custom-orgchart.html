@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1200, height=800">
+<title>组织结构图 - 科技公司</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 1200px; height: 800px;
+    font-family: -apple-system, system-ui, 'PingFang SC', sans-serif;
+    background: linear-gradient(135deg, #f0f4ff 0%, #faf5ff 50%, #fff1f2 100%);
+    overflow: hidden;
+  }
+  svg text { font-family: -apple-system, system-ui, 'PingFang SC', sans-serif; }
+</style>
+</head>
+<body>
+<svg width="1200" height="800" viewBox="0 0 1200 800">
+  <defs>
+    <filter id="s" x="-5%" y="-5%" width="115%" height="125%">
+      <feDropShadow dx="0" dy="3" stdDeviation="6" flood-opacity="0.1"/>
+    </filter>
+    <linearGradient id="g-ceo" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#6366f1"/><stop offset="100%" stop-color="#8b5cf6"/>
+    </linearGradient>
+    <linearGradient id="g-cto" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0891b2"/><stop offset="100%" stop-color="#06b6d4"/>
+    </linearGradient>
+    <linearGradient id="g-cpo" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#d946ef"/><stop offset="100%" stop-color="#e879f9"/>
+    </linearGradient>
+    <linearGradient id="g-cfo" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#fbbf24"/>
+    </linearGradient>
+    <linearGradient id="g-coo" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#10b981"/><stop offset="100%" stop-color="#34d399"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Title -->
+  <text x="600" y="40" text-anchor="middle" font-size="22" font-weight="700" fill="#1e293b">科技公司组织结构图</text>
+
+  <!-- Connection lines -->
+  <g stroke="#cbd5e1" stroke-width="2" fill="none">
+    <!-- CEO to C-level -->
+    <line x1="600" y1="145" x2="600" y2="175"/>
+    <line x1="180" y1="175" x2="1020" y2="175"/>
+    <line x1="180" y1="175" x2="180" y2="205"/>
+    <line x1="460" y1="175" x2="460" y2="205"/>
+    <line x1="740" y1="175" x2="740" y2="205"/>
+    <line x1="1020" y1="175" x2="1020" y2="205"/>
+
+    <!-- CTO to teams -->
+    <line x1="180" y1="325" x2="180" y2="370"/>
+    <line x1="60" y1="370" x2="300" y2="370"/>
+    <line x1="60" y1="370" x2="60" y2="400"/>
+    <line x1="140" y1="370" x2="140" y2="400"/>
+    <line x1="220" y1="370" x2="220" y2="400"/>
+    <line x1="300" y1="370" x2="300" y2="400"/>
+
+    <!-- CPO to teams -->
+    <line x1="460" y1="325" x2="460" y2="370"/>
+    <line x1="400" y1="370" x2="520" y2="370"/>
+    <line x1="400" y1="370" x2="400" y2="400"/>
+    <line x1="520" y1="370" x2="520" y2="400"/>
+
+    <!-- CFO to teams -->
+    <line x1="740" y1="325" x2="740" y2="370"/>
+    <line x1="680" y1="370" x2="800" y2="370"/>
+    <line x1="680" y1="370" x2="680" y2="400"/>
+    <line x1="800" y1="370" x2="800" y2="400"/>
+
+    <!-- COO to teams -->
+    <line x1="1020" y1="325" x2="1020" y2="370"/>
+    <line x1="960" y1="370" x2="1080" y2="370"/>
+    <line x1="960" y1="370" x2="960" y2="400"/>
+    <line x1="1080" y1="370" x2="1080" y2="400"/>
+  </g>
+
+  <!-- CEO Card -->
+  <g transform="translate(510,60)">
+    <rect width="180" height="85" rx="14" fill="white" filter="url(#s)"/>
+    <circle cx="40" cy="42" r="22" fill="url(#g-ceo)"/>
+    <text x="40" y="48" text-anchor="middle" font-size="16" font-weight="700" fill="white">张</text>
+    <text x="110" y="36" text-anchor="middle" font-size="15" font-weight="700" fill="#1e293b">张明远</text>
+    <text x="110" y="56" text-anchor="middle" font-size="12" fill="#6366f1" font-weight="600">CEO · 首席执行官</text>
+  </g>
+
+  <!-- CTO Card -->
+  <g transform="translate(90,205)">
+    <rect width="180" height="120" rx="14" fill="white" filter="url(#s)"/>
+    <circle cx="90" cy="35" r="22" fill="url(#g-cto)"/>
+    <text x="90" y="41" text-anchor="middle" font-size="16" font-weight="700" fill="white">李</text>
+    <text x="90" y="75" text-anchor="middle" font-size="15" font-weight="700" fill="#1e293b">李伟</text>
+    <text x="90" y="95" text-anchor="middle" font-size="12" fill="#0891b2" font-weight="600">CTO · 首席技术官</text>
+  </g>
+
+  <!-- CPO Card -->
+  <g transform="translate(370,205)">
+    <rect width="180" height="120" rx="14" fill="white" filter="url(#s)"/>
+    <circle cx="90" cy="35" r="22" fill="url(#g-cpo)"/>
+    <text x="90" y="41" text-anchor="middle" font-size="16" font-weight="700" fill="white">王</text>
+    <text x="90" y="75" text-anchor="middle" font-size="15" font-weight="700" fill="#1e293b">王雪</text>
+    <text x="90" y="95" text-anchor="middle" font-size="12" fill="#d946ef" font-weight="600">CPO · 首席产品官</text>
+  </g>
+
+  <!-- CFO Card -->
+  <g transform="translate(650,205)">
+    <rect width="180" height="120" rx="14" fill="white" filter="url(#s)"/>
+    <circle cx="90" cy="35" r="22" fill="url(#g-cfo)"/>
+    <text x="90" y="41" text-anchor="middle" font-size="16" font-weight="700" fill="white">陈</text>
+    <text x="90" y="75" text-anchor="middle" font-size="15" font-weight="700" fill="#1e293b">陈刚</text>
+    <text x="90" y="95" text-anchor="middle" font-size="12" fill="#f59e0b" font-weight="600">CFO · 首席财务官</text>
+  </g>
+
+  <!-- COO Card -->
+  <g transform="translate(930,205)">
+    <rect width="180" height="120" rx="14" fill="white" filter="url(#s)"/>
+    <circle cx="90" cy="35" r="22" fill="url(#g-coo)"/>
+    <text x="90" y="41" text-anchor="middle" font-size="16" font-weight="700" fill="white">赵</text>
+    <text x="90" y="75" text-anchor="middle" font-size="15" font-weight="700" fill="#1e293b">赵倩</text>
+    <text x="90" y="95" text-anchor="middle" font-size="12" fill="#10b981" font-weight="600">COO · 首席运营官</text>
+  </g>
+
+  <!-- CTO Teams -->
+  <g font-size="13" font-weight="600">
+    <g transform="translate(10,400)">
+      <rect width="100" height="50" rx="10" fill="#ecfeff" stroke="#0891b2" stroke-width="1.5" filter="url(#s)"/>
+      <text x="50" y="30" text-anchor="middle" fill="#0891b2">前端团队</text>
+    </g>
+    <g transform="translate(90,400)">
+      <rect width="100" height="50" rx="10" fill="#ecfeff" stroke="#0891b2" stroke-width="1.5" filter="url(#s)"/>
+      <text x="50" y="30" text-anchor="middle" fill="#0891b2">后端团队</text>
+    </g>
+    <g transform="translate(170,400)">
+      <rect width="100" height="50" rx="10" fill="#ecfeff" stroke="#0891b2" stroke-width="1.5" filter="url(#s)"/>
+      <text x="50" y="30" text-anchor="middle" fill="#0891b2">数据团队</text>
+    </g>
+    <g transform="translate(250,400)">
+      <rect width="100" height="50" rx="10" fill="#ecfeff" stroke="#0891b2" stroke-width="1.5" filter="url(#s)"/>
+      <text x="50" y="30" text-anchor="middle" fill="#0891b2">SRE团队</text>
+    </g>
+
+    <!-- CPO Teams -->
+    <g transform="translate(345,400)">
+      <rect width="110" height="50" rx="10" fill="#fdf4ff" stroke="#d946ef" stroke-width="1.5" filter="url(#s)"/>
+      <text x="55" y="30" text-anchor="middle" fill="#d946ef">产品设计</text>
+    </g>
+    <g transform="translate(465,400)">
+      <rect width="110" height="50" rx="10" fill="#fdf4ff" stroke="#d946ef" stroke-width="1.5" filter="url(#s)"/>
+      <text x="55" y="30" text-anchor="middle" fill="#d946ef">用户研究</text>
+    </g>
+
+    <!-- CFO Teams -->
+    <g transform="translate(625,400)">
+      <rect width="110" height="50" rx="10" fill="#fffbeb" stroke="#f59e0b" stroke-width="1.5" filter="url(#s)"/>
+      <text x="55" y="30" text-anchor="middle" fill="#b45309">财务核算</text>
+    </g>
+    <g transform="translate(745,400)">
+      <rect width="110" height="50" rx="10" fill="#fffbeb" stroke="#f59e0b" stroke-width="1.5" filter="url(#s)"/>
+      <text x="55" y="30" text-anchor="middle" fill="#b45309">投融资</text>
+    </g>
+
+    <!-- COO Teams -->
+    <g transform="translate(905,400)">
+      <rect width="110" height="50" rx="10" fill="#ecfdf5" stroke="#10b981" stroke-width="1.5" filter="url(#s)"/>
+      <text x="55" y="30" text-anchor="middle" fill="#047857">市场营销</text>
+    </g>
+    <g transform="translate(1025,400)">
+      <rect width="110" height="50" rx="10" fill="#ecfdf5" stroke="#10b981" stroke-width="1.5" filter="url(#s)"/>
+      <text x="55" y="30" text-anchor="middle" fill="#047857">客户成功</text>
+    </g>
+  </g>
+
+  <!-- Headcount badges -->
+  <g font-size="11" fill="#64748b">
+    <text x="60" y="470" text-anchor="middle">8 人</text>
+    <text x="140" y="470" text-anchor="middle">12 人</text>
+    <text x="220" y="470" text-anchor="middle">6 人</text>
+    <text x="300" y="470" text-anchor="middle">4 人</text>
+    <text x="400" y="470" text-anchor="middle">5 人</text>
+    <text x="520" y="470" text-anchor="middle">3 人</text>
+    <text x="680" y="470" text-anchor="middle">4 人</text>
+    <text x="800" y="470" text-anchor="middle">2 人</text>
+    <text x="960" y="470" text-anchor="middle">6 人</text>
+    <text x="1080" y="470" text-anchor="middle">5 人</text>
+  </g>
+</svg>
+</body>
+</html>

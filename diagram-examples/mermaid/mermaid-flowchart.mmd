@@ -1,0 +1,51 @@
+---
+title: 订单处理流程
+---
+flowchart TD
+    classDef startEnd fill:#10B981,stroke:#059669,color:#ffffff,stroke-width:2px
+    classDef process fill:#4F46E5,stroke:#3730A3,color:#ffffff,stroke-width:2px
+    classDef decision fill:#F59E0B,stroke:#D97706,color:#1E293B,stroke-width:2px
+    classDef error fill:#EF4444,stroke:#DC2626,color:#ffffff,stroke-width:2px
+    classDef success fill:#06B6D4,stroke:#0891B2,color:#ffffff,stroke-width:2px
+
+    Start([🛒 用户提交订单]):::startEnd
+
+    subgraph 订单验证
+        A[接收订单请求]:::process
+        B{库存是否充足?}:::decision
+        C[锁定库存]:::process
+        D[库存不足通知]:::error
+    end
+
+    subgraph 支付处理
+        E[生成支付订单]:::process
+        F{支付是否成功?}:::decision
+        G[记录支付信息]:::process
+        H[支付失败处理]:::error
+        I{重试次数 < 3?}:::decision
+    end
+
+    subgraph 订单履约
+        J[通知仓库备货]:::process
+        K[生成物流单号]:::process
+        L[更新订单状态]:::process
+        M[发送发货通知]:::success
+    end
+
+    Start --> A
+    A --> B
+    B -->|是| C
+    B -->|否| D
+    D --> End2([❌ 订单关闭]):::error
+    C --> E
+    E --> F
+    F -->|成功| G
+    F -->|失败| H
+    H --> I
+    I -->|是| E
+    I -->|否| End3([⚠️ 人工介入]):::error
+    G --> J
+    J --> K
+    K --> L
+    L --> M
+    M --> End1([✅ 订单完成]):::startEnd

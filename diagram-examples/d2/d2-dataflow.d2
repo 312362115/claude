@@ -1,0 +1,266 @@
+# 数据流图 — ETL 数据管道
+
+direction: right
+
+# ============ 数据源层 ============
+sources: 数据源 {
+  style: {
+    fill: "#e3f2fd"
+    stroke: "#42a5f5"
+    border-radius: 12
+    font-color: "#1565c0"
+    shadow: true
+  }
+
+  mysql-source: 业务数据库 (MySQL) {
+    style: { fill: "#ffffff"; stroke: "#42a5f5"; border-radius: 8 }
+  }
+
+  api-source: 第三方 API {
+    style: { fill: "#ffffff"; stroke: "#42a5f5"; border-radius: 8 }
+  }
+
+  log-source: 应用日志 (Filebeat) {
+    style: { fill: "#ffffff"; stroke: "#42a5f5"; border-radius: 8 }
+  }
+
+  click-source: 埋点数据 (SDK) {
+    style: { fill: "#ffffff"; stroke: "#42a5f5"; border-radius: 8 }
+  }
+
+  iot-source: IoT 设备数据 {
+    style: { fill: "#ffffff"; stroke: "#42a5f5"; border-radius: 8 }
+  }
+}
+
+# ============ 数据采集层 ============
+ingestion: 数据采集 {
+  style: {
+    fill: "#fff3e0"
+    stroke: "#ffa726"
+    border-radius: 12
+    font-color: "#e65100"
+    shadow: true
+  }
+
+  cdc: CDC 变更捕获 (Debezium) {
+    style: { fill: "#ffffff"; stroke: "#ffa726"; border-radius: 8 }
+  }
+
+  kafka: Kafka 消息总线 {
+    style: { fill: "#fff3e0"; stroke: "#ffa726"; border-radius: 8; shadow: true }
+  }
+
+  logstash: Logstash 日志采集 {
+    style: { fill: "#ffffff"; stroke: "#ffa726"; border-radius: 8 }
+  }
+}
+
+# ============ 数据处理层 ============
+processing: 清洗转换 {
+  style: {
+    fill: "#ede7f6"
+    stroke: "#7e57c2"
+    border-radius: 12
+    font-color: "#4527a0"
+    shadow: true
+  }
+
+  flink: Flink 实时计算 {
+    style: { fill: "#ffffff"; stroke: "#7e57c2"; border-radius: 8 }
+  }
+
+  spark: Spark 批处理 {
+    style: { fill: "#ffffff"; stroke: "#7e57c2"; border-radius: 8 }
+  }
+
+  quality: 数据质量校验 {
+    style: { fill: "#ffffff"; stroke: "#7e57c2"; border-radius: 8 }
+  }
+
+  transform: 字段映射 & 格式转换 {
+    style: { fill: "#ffffff"; stroke: "#7e57c2"; border-radius: 8 }
+  }
+}
+
+# ============ 数据存储层 ============
+storage: 数据存储 {
+  style: {
+    fill: "#e8f5e9"
+    stroke: "#43a047"
+    border-radius: 12
+    font-color: "#2e7d32"
+    shadow: true
+  }
+
+  datalake: 数据湖 (S3/HDFS) {
+    style: { fill: "#c8e6c9"; stroke: "#43a047"; border-radius: 8; shadow: true }
+  }
+
+  dw: 数据仓库 (ClickHouse) {
+    style: { fill: "#c8e6c9"; stroke: "#43a047"; border-radius: 8; shadow: true }
+  }
+
+  ods: ODS 贴源层 {
+    style: { fill: "#ffffff"; stroke: "#66bb6a"; border-radius: 8 }
+  }
+
+  dwd: DWD 明细层 {
+    style: { fill: "#ffffff"; stroke: "#66bb6a"; border-radius: 8 }
+  }
+
+  dws: DWS 汇总层 {
+    style: { fill: "#ffffff"; stroke: "#66bb6a"; border-radius: 8 }
+  }
+
+  ads: ADS 应用层 {
+    style: { fill: "#ffffff"; stroke: "#66bb6a"; border-radius: 8 }
+  }
+
+  ods -> dwd: 清洗 {
+    style: { stroke: "#66bb6a" }
+  }
+  dwd -> dws: 聚合 {
+    style: { stroke: "#66bb6a" }
+  }
+  dws -> ads: 加工 {
+    style: { stroke: "#66bb6a" }
+  }
+}
+
+# ============ 数据服务层 ============
+serving: 数据服务 & 输出 {
+  style: {
+    fill: "#fce4ec"
+    stroke: "#ec407a"
+    border-radius: 12
+    font-color: "#880e4f"
+    shadow: true
+  }
+
+  bi-report: BI 报表 (Metabase) {
+    style: { fill: "#ffffff"; stroke: "#ec407a"; border-radius: 8 }
+  }
+
+  dashboard: 实时大屏 (Grafana) {
+    style: { fill: "#ffffff"; stroke: "#ec407a"; border-radius: 8 }
+  }
+
+  data-api: 数据 API 服务 {
+    style: { fill: "#ffffff"; stroke: "#ec407a"; border-radius: 8 }
+  }
+
+  ml-feature: ML 特征服务 {
+    style: { fill: "#ffffff"; stroke: "#ec407a"; border-radius: 8 }
+  }
+
+  alert: 告警推送 {
+    style: { fill: "#ffffff"; stroke: "#ec407a"; border-radius: 8 }
+  }
+}
+
+# ============ 调度 & 监控 ============
+orchestration: 调度 & 治理 {
+  style: {
+    fill: "#eceff1"
+    stroke: "#78909c"
+    border-radius: 12
+    font-color: "#37474f"
+    shadow: true
+  }
+
+  airflow: Airflow 任务调度 {
+    style: { fill: "#ffffff"; stroke: "#78909c"; border-radius: 8 }
+  }
+
+  datahub: DataHub 元数据管理 {
+    style: { fill: "#ffffff"; stroke: "#78909c"; border-radius: 8 }
+  }
+
+  monitor: 数据质量监控 {
+    style: { fill: "#ffffff"; stroke: "#78909c"; border-radius: 8 }
+  }
+}
+
+# ============ 数据流连接 ============
+
+# 数据源 → 采集
+sources.mysql-source -> ingestion.cdc: Binlog 捕获 {
+  style: { stroke: "#ffa726"; font-color: "#e65100" }
+}
+sources.api-source -> ingestion.kafka: HTTP 拉取 {
+  style: { stroke: "#ffa726"; font-color: "#e65100" }
+}
+sources.log-source -> ingestion.logstash: 文件采集 {
+  style: { stroke: "#ffa726"; font-color: "#e65100" }
+}
+sources.click-source -> ingestion.kafka: 实时上报 {
+  style: { stroke: "#ffa726"; font-color: "#e65100" }
+}
+sources.iot-source -> ingestion.kafka: MQTT 桥接 {
+  style: { stroke: "#ffa726"; font-color: "#e65100" }
+}
+
+ingestion.cdc -> ingestion.kafka: 变更事件 {
+  style: { stroke: "#ffa726" }
+}
+ingestion.logstash -> ingestion.kafka: 日志事件 {
+  style: { stroke: "#ffa726" }
+}
+
+# 采集 → 处理
+ingestion.kafka -> processing.flink: 实时流 {
+  style: { stroke: "#7e57c2"; font-color: "#4527a0" }
+}
+ingestion.kafka -> processing.spark: 微批处理 {
+  style: { stroke: "#7e57c2"; font-color: "#4527a0" }
+}
+
+processing.flink -> processing.quality: 校验规则 {
+  style: { stroke: "#7e57c2" }
+}
+processing.spark -> processing.quality: 校验规则 {
+  style: { stroke: "#7e57c2" }
+}
+processing.quality -> processing.transform: 通过 {
+  style: { stroke: "#7e57c2" }
+}
+
+# 处理 → 存储
+processing.transform -> storage.datalake: 原始数据归档 {
+  style: { stroke: "#43a047"; font-color: "#2e7d32" }
+}
+processing.transform -> storage.ods: 贴源写入 {
+  style: { stroke: "#43a047"; font-color: "#2e7d32" }
+}
+processing.flink -> storage.dw: 实时写入 {
+  style: { stroke: "#43a047"; font-color: "#2e7d32" }
+}
+
+# 存储 → 服务
+storage.ads -> serving.bi-report: SQL 查询 {
+  style: { stroke: "#ec407a"; font-color: "#880e4f" }
+}
+storage.dw -> serving.dashboard: 实时指标 {
+  style: { stroke: "#ec407a"; font-color: "#880e4f" }
+}
+storage.ads -> serving.data-api: RESTful {
+  style: { stroke: "#ec407a"; font-color: "#880e4f" }
+}
+storage.dws -> serving.ml-feature: 特征抽取 {
+  style: { stroke: "#ec407a"; font-color: "#880e4f" }
+}
+storage.dw -> serving.alert: 阈值触发 {
+  style: { stroke: "#ec407a"; font-color: "#880e4f" }
+}
+
+# 调度 & 监控
+orchestration.airflow -> processing: DAG 调度 {
+  style: { stroke: "#78909c"; stroke-dash: 5 }
+}
+orchestration.datahub -> storage: 血缘追踪 {
+  style: { stroke: "#78909c"; stroke-dash: 5 }
+}
+orchestration.monitor -> processing.quality: 质量规则 {
+  style: { stroke: "#78909c"; stroke-dash: 5 }
+}

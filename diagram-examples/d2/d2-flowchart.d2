@@ -1,0 +1,305 @@
+# 订单处理流程图
+
+direction: down
+
+# ============ 节点定义 ============
+
+start: 用户提交订单 {
+  shape: oval
+  style: {
+    fill: "#4db6ac"
+    stroke: "#00897b"
+    font-color: "#ffffff"
+    border-radius: 20
+    shadow: true
+  }
+}
+
+validate-order: 订单参数校验 {
+  shape: rectangle
+  style: {
+    fill: "#e3f2fd"
+    stroke: "#42a5f5"
+    border-radius: 8
+    font-color: "#1565c0"
+    shadow: true
+  }
+}
+
+check-valid: 参数合法? {
+  shape: diamond
+  style: {
+    fill: "#fff8e1"
+    stroke: "#ffb300"
+    font-color: "#e65100"
+  }
+}
+
+check-inventory: 库存检查 {
+  shape: rectangle
+  style: {
+    fill: "#e3f2fd"
+    stroke: "#42a5f5"
+    border-radius: 8
+    font-color: "#1565c0"
+    shadow: true
+  }
+}
+
+has-stock: 库存充足? {
+  shape: diamond
+  style: {
+    fill: "#fff8e1"
+    stroke: "#ffb300"
+    font-color: "#e65100"
+  }
+}
+
+lock-inventory: 锁定库存 {
+  shape: rectangle
+  style: {
+    fill: "#e3f2fd"
+    stroke: "#42a5f5"
+    border-radius: 8
+    font-color: "#1565c0"
+    shadow: true
+  }
+}
+
+create-order: 创建订单记录 {
+  shape: rectangle
+  style: {
+    fill: "#e3f2fd"
+    stroke: "#42a5f5"
+    border-radius: 8
+    font-color: "#1565c0"
+    shadow: true
+  }
+}
+
+call-payment: 调用支付服务 {
+  shape: rectangle
+  style: {
+    fill: "#f3e5f5"
+    stroke: "#ab47bc"
+    border-radius: 8
+    font-color: "#6a1b9a"
+    shadow: true
+  }
+}
+
+payment-ok: 支付成功? {
+  shape: diamond
+  style: {
+    fill: "#fff8e1"
+    stroke: "#ffb300"
+    font-color: "#e65100"
+  }
+}
+
+payment-timeout: 支付超时? {
+  shape: diamond
+  style: {
+    fill: "#fff8e1"
+    stroke: "#ffb300"
+    font-color: "#e65100"
+  }
+}
+
+confirm-order: 确认订单 {
+  shape: rectangle
+  style: {
+    fill: "#e8f5e9"
+    stroke: "#66bb6a"
+    border-radius: 8
+    font-color: "#2e7d32"
+    shadow: true
+  }
+}
+
+deduct-inventory: 扣减库存 {
+  shape: rectangle
+  style: {
+    fill: "#e8f5e9"
+    stroke: "#66bb6a"
+    border-radius: 8
+    font-color: "#2e7d32"
+    shadow: true
+  }
+}
+
+send-notification: 发送订单通知 {
+  shape: rectangle
+  style: {
+    fill: "#e8f5e9"
+    stroke: "#66bb6a"
+    border-radius: 8
+    font-color: "#2e7d32"
+    shadow: true
+  }
+}
+
+release-inventory: 释放锁定库存 {
+  shape: rectangle
+  style: {
+    fill: "#ffebee"
+    stroke: "#ef5350"
+    border-radius: 8
+    font-color: "#c62828"
+    shadow: true
+  }
+}
+
+cancel-order: 取消订单 {
+  shape: rectangle
+  style: {
+    fill: "#ffebee"
+    stroke: "#ef5350"
+    border-radius: 8
+    font-color: "#c62828"
+    shadow: true
+  }
+}
+
+retry-payment: 重试支付 {
+  shape: rectangle
+  style: {
+    fill: "#fff3e0"
+    stroke: "#ffa726"
+    border-radius: 8
+    font-color: "#e65100"
+    shadow: true
+  }
+}
+
+error-invalid: 返回参数错误 {
+  shape: rectangle
+  style: {
+    fill: "#ffebee"
+    stroke: "#ef5350"
+    border-radius: 8
+    font-color: "#c62828"
+  }
+}
+
+error-nostock: 返回库存不足 {
+  shape: rectangle
+  style: {
+    fill: "#ffebee"
+    stroke: "#ef5350"
+    border-radius: 8
+    font-color: "#c62828"
+  }
+}
+
+end-success: 订单完成 {
+  shape: oval
+  style: {
+    fill: "#2e7d32"
+    stroke: "#1b5e20"
+    font-color: "#ffffff"
+    border-radius: 20
+    shadow: true
+  }
+}
+
+end-fail: 订单失败 {
+  shape: oval
+  style: {
+    fill: "#c62828"
+    stroke: "#b71c1c"
+    font-color: "#ffffff"
+    border-radius: 20
+    shadow: true
+  }
+}
+
+# ============ 连接关系 ============
+
+start -> validate-order {
+  style: { stroke: "#42a5f5" }
+}
+
+validate-order -> check-valid {
+  style: { stroke: "#42a5f5" }
+}
+
+check-valid -> check-inventory: 是 {
+  style: { stroke: "#66bb6a"; font-color: "#2e7d32" }
+}
+
+check-valid -> error-invalid: 否 {
+  style: { stroke: "#ef5350"; font-color: "#c62828" }
+}
+
+error-invalid -> end-fail {
+  style: { stroke: "#ef5350" }
+}
+
+check-inventory -> has-stock {
+  style: { stroke: "#42a5f5" }
+}
+
+has-stock -> lock-inventory: 是 {
+  style: { stroke: "#66bb6a"; font-color: "#2e7d32" }
+}
+
+has-stock -> error-nostock: 否 {
+  style: { stroke: "#ef5350"; font-color: "#c62828" }
+}
+
+error-nostock -> end-fail {
+  style: { stroke: "#ef5350" }
+}
+
+lock-inventory -> create-order {
+  style: { stroke: "#42a5f5" }
+}
+
+create-order -> call-payment {
+  style: { stroke: "#ab47bc" }
+}
+
+call-payment -> payment-ok {
+  style: { stroke: "#ab47bc" }
+}
+
+payment-ok -> confirm-order: 是 {
+  style: { stroke: "#66bb6a"; font-color: "#2e7d32" }
+}
+
+payment-ok -> payment-timeout: 否 {
+  style: { stroke: "#ffa726"; font-color: "#e65100" }
+}
+
+payment-timeout -> retry-payment: 是 {
+  style: { stroke: "#ffa726"; font-color: "#e65100" }
+}
+
+payment-timeout -> release-inventory: 否 {
+  style: { stroke: "#ef5350"; font-color: "#c62828" }
+}
+
+retry-payment -> call-payment: 重新发起 {
+  style: { stroke: "#ffa726" }
+}
+
+release-inventory -> cancel-order {
+  style: { stroke: "#ef5350" }
+}
+
+cancel-order -> end-fail {
+  style: { stroke: "#ef5350" }
+}
+
+confirm-order -> deduct-inventory {
+  style: { stroke: "#66bb6a" }
+}
+
+deduct-inventory -> send-notification {
+  style: { stroke: "#66bb6a" }
+}
+
+send-notification -> end-success {
+  style: { stroke: "#2e7d32" }
+}

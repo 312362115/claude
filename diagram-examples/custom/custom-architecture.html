@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #FAFAFA;
+    font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
+    display: flex;
+    justify-content: center;
+    padding: 52px 40px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .arch {
+    width: 820px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #18181B;
+    margin-bottom: 16px;
+    padding-left: 2px;
+  }
+
+  .layer {
+    background: #fff;
+    border: 1px solid #E4E4E7;
+    border-radius: 10px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .layer-label {
+    width: 100px;
+    flex-shrink: 0;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: #71717A;
+    line-height: 1.5;
+    border-right: 1px solid #E4E4E7;
+    padding-right: 16px;
+  }
+  .layer-label span {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    color: #18181B;
+    margin-bottom: 1px;
+    letter-spacing: 0;
+  }
+
+  .layer-items {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    flex: 1;
+  }
+
+  .item {
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: #3F3F46;
+    background: #FAFAFA;
+    border: 1px solid #E4E4E7;
+    transition: background 0.1s;
+  }
+
+  /* 每层左侧色条 */
+  .l-client  { border-left: 3px solid #3B82F6; }
+  .l-gateway { border-left: 3px solid #06B6D4; }
+  .l-service { border-left: 3px solid #8B5CF6; }
+  .l-mw      { border-left: 3px solid #F59E0B; }
+  .l-data    { border-left: 3px solid #10B981; }
+  .l-infra   { border-left: 3px solid #94A3B8; }
+
+  /* 协议标注 */
+  .proto {
+    font-size: 10.5px;
+    color: #A1A1AA;
+    text-align: center;
+    padding: 0;
+    letter-spacing: 0.3px;
+  }
+</style>
+</head>
+<body>
+  <div class="arch">
+    <div class="title">电商平台 · 系统架构</div>
+
+    <div class="layer l-client">
+      <div class="layer-label"><span>客户端</span>Client</div>
+      <div class="layer-items">
+        <div class="item">Web 应用</div>
+        <div class="item">iOS / Android</div>
+        <div class="item">微信小程序</div>
+        <div class="item">管理后台</div>
+      </div>
+    </div>
+
+    <div class="proto">HTTPS / WebSocket</div>
+
+    <div class="layer l-gateway">
+      <div class="layer-label"><span>接入层</span>Gateway</div>
+      <div class="layer-items">
+        <div class="item">Nginx</div>
+        <div class="item">Kong API Gateway</div>
+        <div class="item">OAuth 2.0</div>
+        <div class="item">WAF</div>
+      </div>
+    </div>
+
+    <div class="proto">gRPC / REST</div>
+
+    <div class="layer l-service">
+      <div class="layer-label"><span>业务服务</span>Service</div>
+      <div class="layer-items">
+        <div class="item">用户服务</div>
+        <div class="item">商品服务</div>
+        <div class="item">订单服务</div>
+        <div class="item">支付服务</div>
+        <div class="item">库存服务</div>
+        <div class="item">通知服务</div>
+        <div class="item">搜索服务</div>
+        <div class="item">推荐服务</div>
+      </div>
+    </div>
+
+    <div class="layer l-mw">
+      <div class="layer-label"><span>中间件</span>Middleware</div>
+      <div class="layer-items">
+        <div class="item">Kafka</div>
+        <div class="item">Redis</div>
+        <div class="item">RocketMQ</div>
+        <div class="item">Sentinel</div>
+        <div class="item">Nacos</div>
+      </div>
+    </div>
+
+    <div class="layer l-data">
+      <div class="layer-label"><span>数据层</span>Data Store</div>
+      <div class="layer-items">
+        <div class="item">MySQL</div>
+        <div class="item">MongoDB</div>
+        <div class="item">Elasticsearch</div>
+        <div class="item">OSS</div>
+        <div class="item">HDFS</div>
+      </div>
+    </div>
+
+    <div class="layer l-infra">
+      <div class="layer-label"><span>基础设施</span>Infra</div>
+      <div class="layer-items">
+        <div class="item">Docker / K8s</div>
+        <div class="item">GitLab CI/CD</div>
+        <div class="item">Prometheus</div>
+        <div class="item">Grafana</div>
+        <div class="item">ELK</div>
+        <div class="item">Jaeger</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

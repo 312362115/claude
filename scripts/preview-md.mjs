@@ -8,9 +8,18 @@
  */
 import { readFileSync, watchFile, unwatchFile, existsSync, writeFileSync, unlinkSync } from 'fs';
 import { createServer } from 'http';
-import { resolve, basename } from 'path';
+import { resolve, basename, dirname, extname, join } from 'path';
 import { exec } from 'child_process';
 import http from 'http';
+
+// MIME types for static file serving
+const MIME_TYPES = {
+  '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg',
+  '.gif': 'image/gif', '.svg': 'image/svg+xml', '.webp': 'image/webp',
+  '.ico': 'image/x-icon', '.bmp': 'image/bmp',
+  '.css': 'text/css', '.js': 'text/javascript',
+  '.pdf': 'application/pdf', '.json': 'application/json',
+};
 
 const mdPath = process.argv[2];
 if (!mdPath) {
@@ -142,6 +151,8 @@ function cleanup() {
 function buildHTML(filePath) {
   const fileTitle = basename(filePath, '.md');
   const encodedPath = encodeURIComponent(filePath);
+  const fileDir = dirname(filePath);
+  const encodedDir = encodeURIComponent(fileDir);
   return `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -307,6 +318,35 @@ function buildHTML(filePath) {
   <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.1/marked.min.js"></script>
   <script>
     const FILE_PATH = '${encodedPath}';
+    const FILE_DIR = '${encodedDir}';
+
+    // 解析相对路径为绝对路径（简化版，处理 ./ 和 ../ 和直接文件名）
+    function resolveRelativePath(base, rel) {
+      if (rel.startsWith('/') || rel.startsWith('http://') || rel.startsWith('https://') || rel.startsWith('data:')) {
+        return null; // 绝对路径或外部 URL，不处理
+      }
+      const baseParts = decodeURIComponent(base).split('/');
+      const relParts = rel.split('/');
+      for (const part of relParts) {
+        if (part === '.' || part === '') continue;
+        if (part === '..') baseParts.pop();
+        else baseParts.push(part);
+      }
+      return baseParts.join('/');
+    }
+
+    // 渲染后改写图片 src 为 /api/file 路由
+    function rewriteImagePaths() {
+      const images = document.querySelectorAll('#content img');
+      images.forEach(img => {
+        const src = img.getAttribute('src');
+        if (!src) return;
+        const absPath = resolveRelativePath(FILE_DIR, src);
+        if (absPath) {
+          img.src = '/api/file?path=' + encodeURIComponent(absPath);
+        }
+      });
+    }
 
     function renderMarkdown(md) {
       marked.setOptions({ gfm: true, breaks: false });
@@ -327,6 +367,7 @@ function buildHTML(filePath) {
       };
 
       document.getElementById('content').innerHTML = marked.parse(md, { renderer });
+      rewriteImagePaths();
 
       const tocList = document.getElementById('toc');
       tocList.innerHTML = '';
@@ -445,6 +486,27 @@ const server = createServer((req, res) => {
     }
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
     res.end(buildHTML(filePath));
+  } else if (url.pathname === '/api/file' && req.method === 'GET') {
+    // 静态文件服务：支持图片等资源加载
+    const filePath = decodeURIComponent(url.searchParams.get('path') || '');
+    if (!filePath || !existsSync(filePath)) {
+      res.writeHead(404);
+      res.end('文件不存在: ' + filePath);
+      return;
+    }
+    try {
+      const ext = extname(filePath).toLowerCase();
+      const mime = MIME_TYPES[ext] || 'application/octet-stream';
+      const content = readFileSync(filePath);
+      res.writeHead(200, {
+        'Content-Type': mime,
+        'Cache-Control': 'public, max-age=300',
+      });
+      res.end(content);
+    } catch (err) {
+      res.writeHead(500);
+      res.end('读取文件失败: ' + err.message);
+    }
   } else {
     res.writeHead(404);
     res.end('Not found');

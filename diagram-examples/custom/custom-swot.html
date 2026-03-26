@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1000, height=800">
+<title>SWOT 分析 - AI 创业公司</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 1000px; height: 800px;
+    font-family: -apple-system, system-ui, 'PingFang SC', sans-serif;
+    background: #f8fafc;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+  }
+  h1 {
+    font-size: 22px; color: #1e293b; margin-bottom: 24px; font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+  .grid {
+    display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr;
+    gap: 16px; width: 880px; height: 640px;
+  }
+  .card {
+    border-radius: 16px; padding: 28px 32px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+    display: flex; flex-direction: column;
+  }
+  .card-header {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 18px;
+  }
+  .card-header .icon { font-size: 28px; }
+  .card-header .label { font-size: 18px; font-weight: 700; }
+  .card-header .en { font-size: 13px; font-weight: 500; opacity: 0.7; margin-left: 4px; }
+  .card ul { list-style: none; flex: 1; display: flex; flex-direction: column; gap: 10px; }
+  .card li {
+    font-size: 15px; line-height: 1.6; padding: 8px 14px;
+    border-radius: 8px; display: flex; align-items: center; gap: 8px;
+  }
+  .card li::before { content: ''; width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+  /* Strengths - green */
+  .s { background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); }
+  .s .card-header .label { color: #065f46; }
+  .s li { background: rgba(255,255,255,0.7); color: #064e3b; }
+  .s li::before { background: #10b981; }
+
+  /* Weaknesses - amber/orange */
+  .w { background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); }
+  .w .card-header .label { color: #92400e; }
+  .w li { background: rgba(255,255,255,0.7); color: #78350f; }
+  .w li::before { background: #f59e0b; }
+
+  /* Opportunities - blue/indigo */
+  .o { background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%); }
+  .o .card-header .label { color: #3730a3; }
+  .o li { background: rgba(255,255,255,0.7); color: #312e81; }
+  .o li::before { background: #6366f1; }
+
+  /* Threats - rose/red */
+  .t { background: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%); }
+  .t .card-header .label { color: #9f1239; }
+  .t li { background: rgba(255,255,255,0.7); color: #881337; }
+  .t li::before { background: #f43f5e; }
+</style>
+</head>
+<body>
+  <h1>SWOT 分析 — AI 创业公司</h1>
+  <div class="grid">
+    <div class="card s">
+      <div class="card-header">
+        <span class="icon">💪</span>
+        <span class="label">优势 <span class="en">Strengths</span></span>
+      </div>
+      <ul>
+        <li>技术领先，核心算法自研</li>
+        <li>人才密集，团队背景优秀</li>
+        <li>融资充足，资金储备充裕</li>
+      </ul>
+    </div>
+    <div class="card w">
+      <div class="card-header">
+        <span class="icon">⚠️</span>
+        <span class="label">劣势 <span class="en">Weaknesses</span></span>
+      </div>
+      <ul>
+        <li>品牌知名度低，市场认知不足</li>
+        <li>客户基础薄弱，商业化早期</li>
+        <li>运营成本高，烧钱速度快</li>
+      </ul>
+    </div>
+    <div class="card o">
+      <div class="card-header">
+        <span class="icon">🚀</span>
+        <span class="label">机会 <span class="en">Opportunities</span></span>
+      </div>
+      <ul>
+        <li>AI 市场爆发期，需求旺盛</li>
+        <li>政策扶持，产业基金支持</li>
+        <li>行业标准未定，先发优势大</li>
+      </ul>
+    </div>
+    <div class="card t">
+      <div class="card-header">
+        <span class="icon">🔥</span>
+        <span class="label">威胁 <span class="en">Threats</span></span>
+      </div>
+      <ul>
+        <li>巨头入场，竞争白热化</li>
+        <li>监管政策收紧，合规成本上升</li>
+        <li>核心人才流失风险</li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>

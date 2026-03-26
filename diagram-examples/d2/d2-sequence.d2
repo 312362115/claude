@@ -1,0 +1,110 @@
+# API 认证鉴权时序图
+
+shape: sequence_diagram
+
+# ============ 参与者 ============
+
+user: 用户 {
+  style: {
+    fill: "#e3f2fd"
+    stroke: "#42a5f5"
+    font-color: "#1565c0"
+    border-radius: 8
+    shadow: true
+  }
+}
+
+frontend: 前端应用 {
+  style: {
+    fill: "#e8f5e9"
+    stroke: "#66bb6a"
+    font-color: "#2e7d32"
+    border-radius: 8
+    shadow: true
+  }
+}
+
+gateway: API 网关 {
+  style: {
+    fill: "#fff3e0"
+    stroke: "#ffa726"
+    font-color: "#e65100"
+    border-radius: 8
+    shadow: true
+  }
+}
+
+auth: 认证服务 {
+  style: {
+    fill: "#f3e5f5"
+    stroke: "#ab47bc"
+    font-color: "#6a1b9a"
+    border-radius: 8
+    shadow: true
+  }
+}
+
+db: 数据库 {
+  style: {
+    fill: "#eceff1"
+    stroke: "#78909c"
+    font-color: "#37474f"
+    border-radius: 8
+    shadow: true
+  }
+}
+
+redis: Redis 缓存 {
+  style: {
+    fill: "#ffebee"
+    stroke: "#ef5350"
+    font-color: "#c62828"
+    border-radius: 8
+    shadow: true
+  }
+}
+
+# ============ 登录流程 ============
+
+user -> frontend: 1. 输入账号密码，点击登录
+frontend -> gateway: 2. POST /api/v1/auth/login
+gateway -> auth: 3. 转发登录请求
+auth -> db: 4. 查询用户信息 (SELECT * FROM users)
+db -> auth: 5. 返回用户记录
+auth -> auth: 6. 校验密码 (bcrypt.compare)
+auth -> auth: 7. 生成 JWT (Access Token + Refresh Token)
+auth -> redis: 8. 存储 Refresh Token (SET rt:userId, EX 7d)
+redis -> auth: 9. OK
+auth -> gateway: 10. 返回 tokens + 用户信息
+gateway -> frontend: 11. 200 OK (access_token, refresh_token, user)
+frontend -> frontend: 12. 存储 tokens 到 localStorage
+frontend -> user: 13. 登录成功，跳转首页
+
+# ============ 访问受保护资源 ============
+
+user -> frontend: 14. 访问「我的订单」
+frontend -> gateway: 15. GET /api/v1/orders (Bearer access_token)
+gateway -> auth: 16. 验证 Access Token
+auth -> auth: 17. JWT 签名验证 + 过期检查
+auth -> gateway: 18. Token 有效，返回用户身份
+gateway -> gateway: 19. 注入 X-User-Id 头，路由到订单服务
+gateway -> frontend: 20. 200 OK 返回订单列表
+frontend -> user: 21. 展示订单列表
+
+# ============ Token 刷新流程 ============
+
+user -> frontend: 22. 继续操作（Access Token 已过期）
+frontend -> gateway: 23. GET /api/v1/orders (过期的 Token)
+gateway -> auth: 24. 验证 Token
+auth -> gateway: 25. 401 Token Expired
+gateway -> frontend: 26. 401 Unauthorized
+frontend -> gateway: 27. POST /api/v1/auth/refresh (refresh_token)
+gateway -> auth: 28. 刷新令牌请求
+auth -> redis: 29. 验证 Refresh Token (GET rt:userId)
+redis -> auth: 30. 返回存储的 token
+auth -> auth: 31. 签发新 Access Token
+auth -> gateway: 32. 返回新 Access Token
+gateway -> frontend: 33. 200 OK (new access_token)
+frontend -> gateway: 34. 重试原请求 (新 Access Token)
+gateway -> frontend: 35. 200 OK 返回订单数据
+frontend -> user: 36. 展示数据（用户无感知）
