@@ -1,0 +1,57 @@
+---
+title: 电商平台开发项目计划
+---
+gantt
+    dateFormat  YYYY-MM-DD
+    axisFormat  %m/%d
+
+    section 需求分析
+    市场调研与竞品分析           :done, req1, 2026-01-06, 5d
+    用户需求收集与整理           :done, req2, after req1, 3d
+    产品需求文档编写             :done, req3, after req2, 4d
+    需求评审与确认               :done, milestone, req4, after req3, 1d
+    需求评审通过                 :milestone, m1, after req4, 0d
+
+    section 技术方案
+    技术选型与架构设计           :done, arch1, after m1, 5d
+    数据库设计                   :done, arch2, after arch1, 3d
+    API 接口设计                 :done, arch3, after arch1, 4d
+    技术方案评审                 :done, arch4, after arch3, 1d
+    方案评审通过                 :milestone, m2, after arch4, 0d
+
+    section 基础设施
+    开发环境搭建                 :done, infra1, after m2, 3d
+    CI/CD 流水线配置             :done, infra2, after infra1, 2d
+    监控告警部署                 :active, infra3, after infra2, 3d
+
+    section 后端开发
+    用户模块开发                 :done, be1, after m2, 8d
+    商品模块开发                 :active, be2, after be1, 10d
+    订单模块开发                 :be3, after be2, 10d
+    支付模块开发                 :be4, after be2, 8d
+    通知模块开发                 :be5, after be3, 5d
+
+    section 前端开发
+    UI 组件库搭建                :done, fe1, after m2, 5d
+    用户中心页面                 :active, fe2, after fe1, 6d
+    商品展示与搜索页面           :fe3, after fe2, 8d
+    购物车与下单页面             :fe4, after fe3, 7d
+    订单管理页面                 :fe5, after fe4, 5d
+    管理后台开发                 :fe6, after fe3, 10d
+
+    section 测试阶段
+    单元测试编写                 :test1, after be3, 5d
+    接口自动化测试               :test2, after test1, 5d
+    前后端联调测试               :test3, after fe5, 7d
+    性能压力测试                 :test4, after test3, 4d
+    安全渗透测试                 :test5, after test3, 3d
+    UAT 用户验收测试             :test6, after test4, 5d
+    测试全部通过                 :milestone, m3, after test6, 0d
+
+    section 上线部署
+    生产环境部署                 :deploy1, after m3, 2d
+    数据迁移与初始化             :deploy2, after deploy1, 2d
+    灰度发布（10%流量）          :deploy3, after deploy2, 3d
+    全量发布                     :deploy4, after deploy3, 1d
+    正式上线                     :milestone, m4, after deploy4, 0d
+    上线后监控观察               :deploy5, after m4, 5d

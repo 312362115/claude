@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<style>
+  :root {
+    --c-bg: #FFFFFF; --c-surface: #F8FAFC; --c-surface-alt: #F1F5F9;
+    --c-border: #E2E8F0; --c-border-light: #CBD5E1;
+    --c-text: #1E293B; --c-text-secondary: #64748B; --c-text-heading: #0F172A;
+    --c-line: #94A3B8;
+    --c-blue: #3B82F6; --c-blue-light: #EFF6FF; --c-blue-mid: #93C5FD;
+    --c-emerald: #10B981; --c-emerald-light: #ECFDF5; --c-emerald-mid: #6EE7B7; --c-emerald-dark: #065F46;
+    --c-amber: #F59E0B; --c-amber-light: #FFFBEB; --c-amber-mid: #FCD34D; --c-amber-dark: #92400E;
+    --c-rose: #F43F5E; --c-rose-light: #FFF1F2; --c-rose-mid: #FDA4AF; --c-rose-dark: #9F1239;
+    --font-sans: 'PingFang SC','Inter',-apple-system,sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--c-surface);
+    font-family: var(--font-sans);
+    display: flex; justify-content: center;
+    padding: 48px 32px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .diagram {
+    background: var(--c-bg);
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    padding: 32px;
+  }
+</style>
+</head>
+<body>
+<div class="diagram">
+  <svg width="520" height="720" viewBox="0 0 520 720" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="arrow" markerWidth="12" markerHeight="10" refX="11" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+        <path d="M0,0 L11,5 L0,10 Z" fill="#94A3B8"/>
+      </marker>
+      <marker id="arrow-green" markerWidth="12" markerHeight="10" refX="11" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+        <path d="M0,0 L11,5 L0,10 Z" fill="#10B981"/>
+      </marker>
+      <marker id="arrow-red" markerWidth="12" markerHeight="10" refX="11" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+        <path d="M0,0 L11,5 L0,10 Z" fill="#F43F5E"/>
+      </marker>
+    </defs>
+
+    <!-- 标题 -->
+    <text x="24" y="24" font-size="16" font-weight="700" fill="#0F172A" font-family="PingFang SC, Inter, sans-serif">订单处理流程</text>
+    <text x="24" y="42" font-size="12" fill="#64748B" font-family="PingFang SC, Inter, sans-serif">Order Processing Workflow</text>
+
+    <!-- ====== 节点 ====== -->
+
+    <!-- 开始：用户提交订单 -->
+    <rect x="170" y="68" width="140" height="36" rx="18" fill="#ECFDF5" stroke="#6EE7B7" stroke-width="1.5"/>
+    <text x="240" y="91" text-anchor="middle" font-size="13" font-weight="500" fill="#065F46" font-family="PingFang SC, Inter, sans-serif">用户提交订单</text>
+
+    <!-- 连线 -->
+    <line x1="240" y1="104" x2="240" y2="134" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+    <!-- 订单参数校验 -->
+    <rect x="170" y="136" width="140" height="40" rx="6" fill="#EFF6FF" stroke="#93C5FD" stroke-width="1.5"/>
+    <text x="240" y="161" text-anchor="middle" font-size="13" font-weight="500" fill="#1E293B" font-family="PingFang SC, Inter, sans-serif">订单参数校验</text>
+
+    <!-- 连线 -->
+    <line x1="240" y1="176" x2="240" y2="216" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+    <!-- 判断：参数合法？ -->
+    <polygon points="240,218 290,248 240,278 190,248" fill="#FFFBEB" stroke="#FCD34D" stroke-width="1.5"/>
+    <text x="240" y="252" text-anchor="middle" font-size="12" font-weight="500" fill="#92400E" font-family="PingFang SC, Inter, sans-serif">参数合法?</text>
+
+    <!-- 是：向下 -->
+    <line x1="240" y1="278" x2="240" y2="318" stroke="#10B981" stroke-width="2" marker-end="url(#arrow-green)"/>
+    <rect x="224" y="284" width="28" height="16" rx="3" fill="white"/>
+    <text x="238" y="296" text-anchor="middle" font-size="11" font-weight="500" fill="#10B981" font-family="PingFang SC, Inter, sans-serif">是</text>
+
+    <!-- 否：向右折下 -->
+    <path d="M290,248 L380,248 Q390,248 390,258 L390,318" stroke="#F43F5E" stroke-width="2" fill="none" marker-end="url(#arrow-red)"/>
+    <rect x="318" y="240" width="28" height="16" rx="3" fill="white"/>
+    <text x="332" y="252" text-anchor="middle" font-size="11" font-weight="500" fill="#F43F5E" font-family="PingFang SC, Inter, sans-serif">否</text>
+
+    <!-- 库存检查 -->
+    <rect x="170" y="320" width="140" height="40" rx="6" fill="#EFF6FF" stroke="#93C5FD" stroke-width="1.5"/>
+    <text x="240" y="345" text-anchor="middle" font-size="13" font-weight="500" fill="#1E293B" font-family="PingFang SC, Inter, sans-serif">库存检查</text>
+
+    <!-- 错误节点：返回参数错误 -->
+    <rect x="330" y="320" width="130" height="40" rx="6" fill="#FFF1F2" stroke="#FDA4AF" stroke-width="1.5"/>
+    <text x="395" y="345" text-anchor="middle" font-size="13" font-weight="500" fill="#9F1239" font-family="PingFang SC, Inter, sans-serif">返回参数错误</text>
+
+    <!-- 连线 -->
+    <line x1="240" y1="360" x2="240" y2="400" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+    <!-- 判断：库存充足？ -->
+    <polygon points="240,402 290,432 240,462 190,432" fill="#FFFBEB" stroke="#FCD34D" stroke-width="1.5"/>
+    <text x="240" y="436" text-anchor="middle" font-size="12" font-weight="500" fill="#92400E" font-family="PingFang SC, Inter, sans-serif">库存充足?</text>
+
+    <!-- 是：向下 -->
+    <line x1="240" y1="462" x2="240" y2="502" stroke="#10B981" stroke-width="2" marker-end="url(#arrow-green)"/>
+    <rect x="224" y="468" width="28" height="16" rx="3" fill="white"/>
+    <text x="238" y="480" text-anchor="middle" font-size="11" font-weight="500" fill="#10B981" font-family="PingFang SC, Inter, sans-serif">是</text>
+
+    <!-- 否：向右折下 -->
+    <path d="M290,432 L380,432 Q390,432 390,442 L390,502" stroke="#F43F5E" stroke-width="2" fill="none" marker-end="url(#arrow-red)"/>
+    <rect x="318" y="424" width="28" height="16" rx="3" fill="white"/>
+    <text x="332" y="436" text-anchor="middle" font-size="11" font-weight="500" fill="#F43F5E" font-family="PingFang SC, Inter, sans-serif">否</text>
+
+    <!-- 创建订单（高亮） -->
+    <rect x="170" y="504" width="140" height="40" rx="6" fill="#3B82F6" stroke="#3B82F6" stroke-width="1.5"/>
+    <text x="240" y="529" text-anchor="middle" font-size="13" font-weight="700" fill="#FFFFFF" font-family="PingFang SC, Inter, sans-serif">创建订单记录</text>
+
+    <!-- 错误节点：库存不足 -->
+    <rect x="330" y="504" width="130" height="40" rx="6" fill="#FFF1F2" stroke="#FDA4AF" stroke-width="1.5"/>
+    <text x="395" y="529" text-anchor="middle" font-size="13" font-weight="500" fill="#9F1239" font-family="PingFang SC, Inter, sans-serif">退回库存不足</text>
+
+    <!-- 连线 -->
+    <line x1="240" y1="544" x2="240" y2="584" stroke="#10B981" stroke-width="2" marker-end="url(#arrow-green)"/>
+
+    <!-- 发送通知 -->
+    <rect x="170" y="586" width="140" height="40" rx="6" fill="#EFF6FF" stroke="#93C5FD" stroke-width="1.5"/>
+    <text x="240" y="611" text-anchor="middle" font-size="13" font-weight="500" fill="#1E293B" font-family="PingFang SC, Inter, sans-serif">发送订单通知</text>
+
+    <!-- 连线 -->
+    <line x1="240" y1="626" x2="240" y2="650" stroke="#10B981" stroke-width="2" marker-end="url(#arrow-green)"/>
+
+    <!-- 结束 -->
+    <rect x="180" y="652" width="120" height="36" rx="18" fill="#ECFDF5" stroke="#6EE7B7" stroke-width="1.5"/>
+    <text x="240" y="675" text-anchor="middle" font-size="13" font-weight="500" fill="#065F46" font-family="PingFang SC, Inter, sans-serif">订单完成</text>
+  </svg>
+</div>
+</body>
+</html>

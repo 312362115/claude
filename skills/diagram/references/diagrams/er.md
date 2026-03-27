@@ -79,6 +79,12 @@ users -> orders: 1:N
 
 ---
 
+## 模板
+
+`templates/d2/er.d2`
+
+---
+
 ## 生成命令
 
 ```bash

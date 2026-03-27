@@ -1,0 +1,123 @@
+%%{init: {'theme':'base','themeVariables':{
+  'primaryColor':'#EFF6FF','primaryBorderColor':'#93C5FD','primaryTextColor':'#1E293B',
+  'lineColor':'#94A3B8','textColor':'#1E293B','fontSize':'13px',
+  'fontFamily':'PingFang SC, Inter, sans-serif',
+  'classText':'#1E293B'
+}}}%%
+
+classDiagram
+    direction TB
+
+    class User {
+        -Long id
+        -String username
+        -String email
+        -String phone
+        -String passwordHash
+        -UserRole role
+        -DateTime createdAt
+        +register() bool
+        +login(password) Token
+        +updateProfile(info) bool
+        +getOrders() List~Order~
+    }
+
+    class Order {
+        -Long id
+        -String orderNo
+        -OrderStatus status
+        -BigDecimal totalAmount
+        -BigDecimal discountAmount
+        -BigDecimal payAmount
+        -String shippingAddress
+        -DateTime createdAt
+        -DateTime paidAt
+        +create(items) Order
+        +cancel() bool
+        +pay(payment) bool
+        +ship(trackingNo) bool
+        +confirm() bool
+        +calculateTotal() BigDecimal
+    }
+
+    class OrderItem {
+        -Long id
+        -Integer quantity
+        -BigDecimal unitPrice
+        -BigDecimal subtotal
+        +getSubtotal() BigDecimal
+        +updateQuantity(qty) void
+    }
+
+    class Product {
+        -Long id
+        -String name
+        -String description
+        -BigDecimal price
+        -Integer stock
+        -ProductStatus status
+        -String imageUrl
+        +updateStock(delta) bool
+        +isAvailable() bool
+        +getCategory() Category
+    }
+
+    class Category {
+        -Long id
+        -String name
+        -String description
+        -Integer sortOrder
+        -Category parent
+        +getProducts() List~Product~
+        +getChildren() List~Category~
+        +getFullPath() String
+    }
+
+    class Payment {
+        -Long id
+        -String paymentNo
+        -PaymentMethod method
+        -PaymentStatus status
+        -BigDecimal amount
+        -String transactionId
+        -DateTime paidAt
+        +execute() bool
+        +refund(amount) bool
+        +getStatus() PaymentStatus
+    }
+
+    class UserRole {
+        <<enumeration>>
+        CUSTOMER
+        ADMIN
+        MERCHANT
+    }
+
+    class OrderStatus {
+        <<enumeration>>
+        PENDING
+        PAID
+        SHIPPING
+        DELIVERED
+        CANCELLED
+        REFUNDING
+        REFUNDED
+    }
+
+    class PaymentMethod {
+        <<enumeration>>
+        ALIPAY
+        WECHAT_PAY
+        CREDIT_CARD
+        BANK_TRANSFER
+    }
+
+    User "1" --> "*" Order : 下单
+    Order "1" *-- "1..*" OrderItem : 包含
+    OrderItem "*" --> "1" Product : 关联商品
+    Product "*" --> "1" Category : 所属分类
+    Category "0..1" --> "*" Category : 父子分类
+    Order "1" --> "0..1" Payment : 支付信息
+    User ..> UserRole : 使用
+    Order ..> OrderStatus : 使用
+    Payment ..> PaymentMethod : 使用

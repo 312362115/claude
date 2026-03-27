@@ -1,0 +1,92 @@
+---
+title: API 认证鉴权流程
+---
+sequenceDiagram
+    autonumber
+
+    participant U as 👤 用户
+    participant F as 🖥️ 前端应用
+    participant G as 🔀 API 网关
+    participant A as 🔐 认证服务
+    participant D as 🗄️ 数据库
+
+    Note over U,D: 用户登录认证流程
+
+    U->>F: 输入账号密码
+    activate F
+    F->>F: 前端表单校验
+    F->>G: POST /api/auth/login
+    activate G
+
+    G->>G: 请求限流检查
+    G->>A: 转发认证请求
+    activate A
+
+    A->>D: 查询用户信息
+    activate D
+    D-->>A: 返回用户记录
+    deactivate D
+
+    alt 用户不存在
+        A-->>G: 401 用户不存在
+        G-->>F: 401 认证失败
+        F-->>U: 提示账号或密码错误
+    else 密码错误
+        A->>D: 更新失败次数
+        activate D
+        D-->>A: 更新成功
+        deactivate D
+        A-->>G: 401 密码错误
+        G-->>F: 401 认证失败
+        F-->>U: 提示账号或密码错误
+    else 认证成功
+        A->>A: 生成 JWT Token
+        A->>D: 写入登录日志
+        activate D
+        D-->>A: 写入成功
+        deactivate D
+        A-->>G: 200 返回 Token
+        deactivate A
+        G-->>F: 200 返回 Token
+        deactivate G
+        F->>F: 存储 Token 到本地
+        F-->>U: 登录成功，跳转首页
+        deactivate F
+    end
+
+    Note over U,D: Token 鉴权访问资源
+
+    U->>F: 访问受保护资源
+    activate F
+    F->>G: GET /api/resource<br/>Authorization: Bearer Token
+    activate G
+
+    G->>A: 验证 Token 有效性
+    activate A
+    A->>A: 校验签名和过期时间
+
+    alt Token 有效
+        A-->>G: Token 有效，返回用户信息
+        deactivate A
+        G->>G: 注入用户上下文
+        G-->>F: 200 返回资源数据
+        deactivate G
+        F-->>U: 展示页面内容
+        deactivate F
+    else Token 过期
+        A-->>G: 401 Token 已过期
+        G-->>F: 401 需要刷新 Token
+        F->>G: POST /api/auth/refresh
+        G->>A: 刷新 Token
+        A-->>G: 新 Token
+        G-->>F: 200 新 Token
+        F->>F: 更新本地 Token
+        F->>G: 重新请求资源
+        G-->>F: 200 返回资源数据
+        F-->>U: 展示页面内容
+    end
+
+    loop 心跳检测（每 5 分钟）
+        F->>G: GET /api/auth/heartbeat
+        G-->>F: 200 会话有效
+    end

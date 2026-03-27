@@ -19,4 +19,4 @@
 
 ## 模板
 
-参考已有示例：`diagram-examples/custom/custom-journey.html`，配色对齐设计规范后迁移到 `templates/html/`。
+`templates/html/journey.html`

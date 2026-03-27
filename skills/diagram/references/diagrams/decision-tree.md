@@ -31,6 +31,12 @@
 
 ---
 
+## 模板
+
+`templates/d2/decision-tree.d2`
+
+---
+
 ## 生成命令
 
 ```bash

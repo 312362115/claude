@@ -95,7 +95,7 @@
 
 ## 模板
 
-参考 `templates/html/architecture.html`，基于已有 v4 版本更新配色为设计规范色值。
+`templates/html/architecture.html`
 
 ---
 

@@ -19,6 +19,12 @@
 
 ---
 
+## 模板
+
+`templates/mermaid/timeline.mmd`
+
+---
+
 ## 生成命令
 
 ```bash

@@ -1,0 +1,91 @@
+# 数据库选型决策树
+
+direction: down
+
+# --- 根节点 ---
+root: 数据类型？ {
+  style: {
+    fill: "#3B82F6"
+    stroke: "#3B82F6"
+    font-color: "#FFFFFF"
+    border-radius: 6
+    font-size: 14
+    bold: true
+  }
+}
+
+# --- 一级分支 ---
+structured: 结构化数据 {
+  shape: diamond
+  style: { fill: "#FFFBEB"; stroke: "#FCD34D"; font-color: "#92400E"; font-size: 12 }
+}
+semi: 半结构化数据 {
+  shape: diamond
+  style: { fill: "#FFFBEB"; stroke: "#FCD34D"; font-color: "#92400E"; font-size: 12 }
+}
+unstructured: 非结构化数据 {
+  shape: diamond
+  style: { fill: "#FFFBEB"; stroke: "#FCD34D"; font-color: "#92400E"; font-size: 12 }
+}
+
+# --- 二级分支 ---
+high-read: 读多写少？ {
+  shape: diamond
+  style: { fill: "#FFFBEB"; stroke: "#FCD34D"; font-color: "#92400E"; font-size: 11 }
+}
+need-tx: 需要事务？ {
+  shape: diamond
+  style: { fill: "#FFFBEB"; stroke: "#FCD34D"; font-color: "#92400E"; font-size: 11 }
+}
+json-heavy: JSON 为主？ {
+  shape: diamond
+  style: { fill: "#FFFBEB"; stroke: "#FCD34D"; font-color: "#92400E"; font-size: 11 }
+}
+large-scale: 数据量大？ {
+  shape: diamond
+  style: { fill: "#FFFBEB"; stroke: "#FCD34D"; font-color: "#92400E"; font-size: 11 }
+}
+
+# --- 推荐结果 ---
+mysql: MySQL {
+  style: { fill: "#ECFDF5"; stroke: "#6EE7B7"; font-color: "#065F46"; border-radius: 6; font-size: 13 }
+}
+pg: PostgreSQL {
+  style: { fill: "#ECFDF5"; stroke: "#6EE7B7"; font-color: "#065F46"; border-radius: 6; font-size: 13 }
+}
+redis: Redis {
+  style: { fill: "#ECFDF5"; stroke: "#6EE7B7"; font-color: "#065F46"; border-radius: 6; font-size: 13 }
+}
+mongo: MongoDB {
+  style: { fill: "#ECFDF5"; stroke: "#6EE7B7"; font-color: "#065F46"; border-radius: 6; font-size: 13 }
+}
+es: Elasticsearch {
+  style: { fill: "#ECFDF5"; stroke: "#6EE7B7"; font-color: "#065F46"; border-radius: 6; font-size: 13 }
+}
+oss: OSS / S3 {
+  style: { fill: "#EFF6FF"; stroke: "#93C5FD"; font-color: "#1E293B"; border-radius: 6; font-size: 13 }
+}
+hdfs: HDFS {
+  style: { fill: "#EFF6FF"; stroke: "#93C5FD"; font-color: "#1E293B"; border-radius: 6; font-size: 13 }
+}
+
+# --- 连线 ---
+root -> structured: 表格/关系型 { style.stroke: "#94A3B8"; style.font-color: "#64748B"; style.font-size: 11 }
+root -> semi: JSON/文档 { style.stroke: "#94A3B8"; style.font-color: "#64748B"; style.font-size: 11 }
+root -> unstructured: 文件/二进制 { style.stroke: "#94A3B8"; style.font-color: "#64748B"; style.font-size: 11 }
+
+structured -> high-read { style.stroke: "#94A3B8" }
+structured -> need-tx { style.stroke: "#94A3B8" }
+
+high-read -> redis: 是 { style.stroke: "#10B981"; style.font-color: "#065F46"; style.font-size: 11 }
+high-read -> mysql: 否 { style.stroke: "#94A3B8"; style.font-color: "#64748B"; style.font-size: 11 }
+need-tx -> pg: 是 { style.stroke: "#10B981"; style.font-color: "#065F46"; style.font-size: 11 }
+
+semi -> json-heavy { style.stroke: "#94A3B8" }
+semi -> large-scale { style.stroke: "#94A3B8" }
+
+json-heavy -> mongo: 是 { style.stroke: "#10B981"; style.font-color: "#065F46"; style.font-size: 11 }
+large-scale -> es: 是 { style.stroke: "#10B981"; style.font-color: "#065F46"; style.font-size: 11 }
+
+unstructured -> oss: 小文件 { style.stroke: "#94A3B8"; style.font-color: "#64748B"; style.font-size: 11 }
+unstructured -> hdfs: 大数据 { style.stroke: "#94A3B8"; style.font-color: "#64748B"; style.font-size: 11 }

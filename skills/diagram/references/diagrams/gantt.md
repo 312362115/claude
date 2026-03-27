@@ -41,6 +41,12 @@
 
 ---
 
+## 模板
+
+`templates/mermaid/gantt.mmd`
+
+---
+
 ## 生成命令
 
 ```bash

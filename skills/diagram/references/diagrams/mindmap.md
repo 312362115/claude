@@ -29,6 +29,12 @@
 
 ---
 
+## 模板
+
+`templates/mermaid/mindmap.mmd`
+
+---
+
 ## 生成命令
 
 ```bash

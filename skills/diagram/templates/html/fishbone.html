@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1200, height=700">
+<title>鱼骨图 - 系统响应慢</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 1200px; height: 700px;
+    font-family: -apple-system, system-ui, 'PingFang SC', sans-serif;
+    background: #f8fafc;
+    overflow: hidden;
+  }
+  svg { display: block; }
+  .title { font-size: 20px; font-weight: 700; fill: #1e293b; }
+  .spine { stroke: #475569; stroke-width: 3; }
+  .bone { stroke-width: 2.5; }
+  .cat-label { font-size: 16px; font-weight: 700; }
+  .sub-label { font-size: 12.5px; fill: #475569; }
+  .sub-line { stroke: #94a3b8; stroke-width: 1.5; }
+  .head-rect { rx: 16; ry: 16; }
+  .head-text { font-size: 18px; font-weight: 700; fill: white; }
+</style>
+</head>
+<body>
+<svg width="1200" height="700" viewBox="0 0 1200 700">
+  <!-- Title -->
+  <text x="600" y="38" text-anchor="middle" class="title">鱼骨图（因果分析）— 系统响应慢</text>
+
+  <!-- Main spine -->
+  <line x1="80" y1="370" x2="1020" y2="370" class="spine"/>
+  <!-- Arrow head to problem -->
+  <polygon points="1020,370 1005,360 1005,380" fill="#475569"/>
+
+  <!-- Problem head -->
+  <rect x="1030" y="330" width="140" height="80" class="head-rect" fill="#ef4444" filter="url(#shadow)"/>
+  <text x="1100" y="365" text-anchor="middle" class="head-text">系统</text>
+  <text x="1100" y="388" text-anchor="middle" class="head-text">响应慢</text>
+
+  <defs>
+    <filter id="shadow" x="-10%" y="-10%" width="130%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.12"/>
+    </filter>
+  </defs>
+
+  <!-- Categories config: 6 bones, 3 top + 3 bottom -->
+  <!-- Top bones at x=180, 460, 740 -->
+  <!-- Bottom bones at x=180, 460, 740 -->
+
+  <!-- ===== TOP BONE 1: 人员 (x=200) ===== -->
+  <line x1="200" y1="370" x2="300" y2="140" class="bone" stroke="#6366f1"/>
+  <rect x="240" y="90" width="80" height="36" rx="10" fill="#6366f1" filter="url(#shadow)"/>
+  <text x="280" y="114" text-anchor="middle" class="cat-label" fill="white">人员</text>
+  <!-- Sub-causes -->
+  <line x1="220" y1="308" x2="300" y2="280" class="sub-line"/>
+  <text x="305" y="276" class="sub-label">经验不足</text>
+  <line x1="235" y1="270" x2="315" y2="242" class="sub-line"/>
+  <text x="320" y="238" class="sub-label">人手紧张</text>
+  <line x1="250" y1="232" x2="330" y2="204" class="sub-line"/>
+  <text x="335" y="200" class="sub-label">培训缺失</text>
+  <line x1="265" y1="194" x2="345" y2="166" class="sub-line"/>
+  <text x="350" y="162" class="sub-label">职责不清</text>
+
+  <!-- ===== TOP BONE 2: 技术 (x=480) ===== -->
+  <line x1="500" y1="370" x2="600" y2="140" class="bone" stroke="#0891b2"/>
+  <rect x="540" y="90" width="80" height="36" rx="10" fill="#0891b2" filter="url(#shadow)"/>
+  <text x="580" y="114" text-anchor="middle" class="cat-label" fill="white">技术</text>
+  <line x1="520" y1="308" x2="600" y2="280" class="sub-line"/>
+  <text x="605" y="276" class="sub-label">架构老旧</text>
+  <line x1="535" y1="270" x2="615" y2="242" class="sub-line"/>
+  <text x="620" y="238" class="sub-label">缓存失效</text>
+  <line x1="550" y1="232" x2="630" y2="204" class="sub-line"/>
+  <text x="635" y="200" class="sub-label">SQL 未优化</text>
+  <line x1="565" y1="194" x2="645" y2="166" class="sub-line"/>
+  <text x="650" y="162" class="sub-label">无异步处理</text>
+
+  <!-- ===== TOP BONE 3: 工具 (x=760) ===== -->
+  <line x1="800" y1="370" x2="900" y2="140" class="bone" stroke="#d946ef"/>
+  <rect x="840" y="90" width="80" height="36" rx="10" fill="#d946ef" filter="url(#shadow)"/>
+  <text x="880" y="114" text-anchor="middle" class="cat-label" fill="white">工具</text>
+  <line x1="820" y1="308" x2="900" y2="280" class="sub-line"/>
+  <text x="905" y="276" class="sub-label">监控缺失</text>
+  <line x1="835" y1="270" x2="915" y2="242" class="sub-line"/>
+  <text x="920" y="238" class="sub-label">日志不全</text>
+  <line x1="850" y1="232" x2="930" y2="204" class="sub-line"/>
+  <text x="935" y="200" class="sub-label">版本过旧</text>
+
+  <!-- ===== BOTTOM BONE 1: 流程 (x=200) ===== -->
+  <line x1="200" y1="370" x2="300" y2="600" class="bone" stroke="#f59e0b"/>
+  <rect x="240" y="610" width="80" height="36" rx="10" fill="#f59e0b" filter="url(#shadow)"/>
+  <text x="280" y="634" text-anchor="middle" class="cat-label" fill="white">流程</text>
+  <line x1="220" y1="432" x2="300" y2="460" class="sub-line"/>
+  <text x="305" y="464" class="sub-label">发布流程复杂</text>
+  <line x1="235" y1="470" x2="315" y2="498" class="sub-line"/>
+  <text x="320" y="502" class="sub-label">缺少压测环节</text>
+  <line x1="250" y1="508" x2="330" y2="536" class="sub-line"/>
+  <text x="335" y="540" class="sub-label">变更审批慢</text>
+
+  <!-- ===== BOTTOM BONE 2: 环境 (x=480) ===== -->
+  <line x1="500" y1="370" x2="600" y2="600" class="bone" stroke="#10b981"/>
+  <rect x="540" y="610" width="80" height="36" rx="10" fill="#10b981" filter="url(#shadow)"/>
+  <text x="580" y="634" text-anchor="middle" class="cat-label" fill="white">环境</text>
+  <line x1="520" y1="432" x2="600" y2="460" class="sub-line"/>
+  <text x="605" y="464" class="sub-label">服务器配置低</text>
+  <line x1="535" y1="470" x2="615" y2="498" class="sub-line"/>
+  <text x="620" y="502" class="sub-label">网络带宽不足</text>
+  <line x1="550" y1="508" x2="630" y2="536" class="sub-line"/>
+  <text x="635" y="540" class="sub-label">机房距离远</text>
+  <line x1="565" y1="546" x2="645" y2="574" class="sub-line"/>
+  <text x="650" y="578" class="sub-label">CDN 未配置</text>
+
+  <!-- ===== BOTTOM BONE 3: 数据 (x=760) ===== -->
+  <line x1="800" y1="370" x2="900" y2="600" class="bone" stroke="#f43f5e"/>
+  <rect x="840" y="610" width="80" height="36" rx="10" fill="#f43f5e" filter="url(#shadow)"/>
+  <text x="880" y="634" text-anchor="middle" class="cat-label" fill="white">数据</text>
+  <line x1="820" y1="432" x2="900" y2="460" class="sub-line"/>
+  <text x="905" y="464" class="sub-label">数据量暴增</text>
+  <line x1="835" y1="470" x2="915" y2="498" class="sub-line"/>
+  <text x="920" y="502" class="sub-label">索引缺失</text>
+  <line x1="850" y1="508" x2="930" y2="536" class="sub-line"/>
+  <text x="935" y="540" class="sub-label">冗余查询多</text>
+</svg>
+</body>
+</html>

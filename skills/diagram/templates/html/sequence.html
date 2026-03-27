@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<style>
+  :root {
+    --c-bg: #FFFFFF; --c-surface: #F8FAFC;
+    --c-border: #E2E8F0; --c-border-light: #CBD5E1;
+    --c-text: #1E293B; --c-text-secondary: #64748B; --c-text-heading: #0F172A;
+    --c-line: #94A3B8;
+    --c-blue: #3B82F6; --c-blue-light: #EFF6FF; --c-blue-mid: #93C5FD;
+    --c-emerald: #10B981; --c-emerald-light: #ECFDF5; --c-emerald-mid: #6EE7B7; --c-emerald-dark: #065F46;
+    --c-amber: #F59E0B; --c-amber-light: #FFFBEB; --c-amber-mid: #FCD34D;
+    --c-violet: #8B5CF6; --c-violet-light: #F5F3FF; --c-violet-mid: #C4B5FD; --c-violet-dark: #5B21B6;
+    --c-rose: #F43F5E; --c-rose-light: #FFF1F2; --c-rose-mid: #FDA4AF;
+    --c-cyan: #06B6D4; --c-cyan-light: #ECFEFF;
+    --font-sans: 'PingFang SC','Inter',-apple-system,sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--c-surface);
+    font-family: var(--font-sans);
+    display: flex; justify-content: center;
+    padding: 48px 32px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .diagram {
+    background: var(--c-bg);
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    padding: 32px;
+  }
+</style>
+</head>
+<body>
+<div class="diagram">
+  <svg width="700" height="620" viewBox="0 0 700 620" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="userSpaceOnUse">
+        <path d="M0,0 L9,4 L0,8 Z" fill="#94A3B8"/>
+      </marker>
+      <marker id="arrow-open" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="userSpaceOnUse">
+        <path d="M1,0 L9,4 L1,8" stroke="#94A3B8" stroke-width="1.5" fill="none"/>
+      </marker>
+    </defs>
+
+    <!-- 标题 -->
+    <text x="24" y="24" font-size="16" font-weight="700" fill="#0F172A" font-family="PingFang SC, Inter, sans-serif">API 登录鉴权时序图</text>
+    <text x="24" y="42" font-size="12" fill="#64748B" font-family="PingFang SC, Inter, sans-serif">Login Authentication Sequence</text>
+
+    <!--
+      参与者 X 坐标：
+      用户=80  前端=200  Gateway=320  Auth=440  MySQL=560  Redis=640
+      参与者宽度：80px，高度：36px
+    -->
+
+    <!-- ====== 参与者（顶部） ====== -->
+    <!-- 用户 -->
+    <rect x="40" y="64" width="80" height="36" rx="6" fill="#EFF6FF" stroke="#93C5FD" stroke-width="1.5"/>
+    <text x="80" y="87" text-anchor="middle" font-size="13" font-weight="600" fill="#1E293B" font-family="PingFang SC, Inter, sans-serif">用户</text>
+
+    <!-- 前端 -->
+    <rect x="160" y="64" width="80" height="36" rx="6" fill="#ECFDF5" stroke="#6EE7B7" stroke-width="1.5"/>
+    <text x="200" y="87" text-anchor="middle" font-size="13" font-weight="600" fill="#065F46" font-family="PingFang SC, Inter, sans-serif">前端</text>
+
+    <!-- API Gateway -->
+    <rect x="275" y="64" width="100" height="36" rx="6" fill="#FFFBEB" stroke="#FCD34D" stroke-width="1.5"/>
+    <text x="325" y="87" text-anchor="middle" font-size="13" font-weight="600" fill="#92400E" font-family="PingFang SC, Inter, sans-serif">API Gateway</text>
+
+    <!-- Auth 服务 -->
+    <rect x="405" y="64" width="80" height="36" rx="6" fill="#F5F3FF" stroke="#C4B5FD" stroke-width="1.5"/>
+    <text x="445" y="87" text-anchor="middle" font-size="13" font-weight="600" fill="#5B21B6" font-family="PingFang SC, Inter, sans-serif">Auth 服务</text>
+
+    <!-- MySQL（圆柱体：底部椭圆→矩形body→顶部椭圆盖子） -->
+    <ellipse cx="545" cy="102" rx="32" ry="8" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.5"/>
+    <rect x="513" y="72" width="64" height="30" fill="#F8FAFC"/>
+    <line x1="513" y1="72" x2="513" y2="102" stroke="#CBD5E1" stroke-width="1.5"/>
+    <line x1="577" y1="72" x2="577" y2="102" stroke="#CBD5E1" stroke-width="1.5"/>
+    <ellipse cx="545" cy="72" rx="32" ry="8" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.5"/>
+    <text x="545" y="94" text-anchor="middle" font-size="11" font-weight="600" fill="#64748B" font-family="PingFang SC, Inter, sans-serif">MySQL</text>
+
+    <!-- Redis（圆柱体：底部椭圆→矩形body→顶部椭圆盖子） -->
+    <ellipse cx="645" cy="102" rx="32" ry="8" fill="#FFF1F2" stroke="#FDA4AF" stroke-width="1.5"/>
+    <rect x="613" y="72" width="64" height="30" fill="#FFF1F2"/>
+    <line x1="613" y1="72" x2="613" y2="102" stroke="#FDA4AF" stroke-width="1.5"/>
+    <line x1="677" y1="72" x2="677" y2="102" stroke="#FDA4AF" stroke-width="1.5"/>
+    <ellipse cx="645" cy="72" rx="32" ry="8" fill="#FFF1F2" stroke="#FDA4AF" stroke-width="1.5"/>
+    <text x="645" y="94" text-anchor="middle" font-size="11" font-weight="600" fill="#9F1239" font-family="PingFang SC, Inter, sans-serif">Redis</text>
+
+    <!-- ====== 生命线（虚线） ====== -->
+    <line x1="80" y1="100" x2="80" y2="560" stroke="#CBD5E1" stroke-width="1" stroke-dasharray="4 3"/>
+    <line x1="200" y1="100" x2="200" y2="560" stroke="#CBD5E1" stroke-width="1" stroke-dasharray="4 3"/>
+    <line x1="325" y1="100" x2="325" y2="560" stroke="#CBD5E1" stroke-width="1" stroke-dasharray="4 3"/>
+    <line x1="445" y1="100" x2="445" y2="560" stroke="#CBD5E1" stroke-width="1" stroke-dasharray="4 3"/>
+    <line x1="545" y1="108" x2="545" y2="560" stroke="#CBD5E1" stroke-width="1" stroke-dasharray="4 3"/>
+    <line x1="645" y1="108" x2="645" y2="560" stroke="#CBD5E1" stroke-width="1" stroke-dasharray="4 3"/>
+
+    <!-- ====== 激活条（起止对齐消息线） ====== -->
+    <!-- 前端激活：收到消息1(y=150) → 发出返回11(y=520) -->
+    <rect x="195" y="150" width="10" height="370" rx="2" fill="#DBEAFE" stroke="#93C5FD" stroke-width="1"/>
+    <!-- Gateway 激活：收到消息2(y=190) → 发出返回10(y=480) -->
+    <rect x="320" y="190" width="10" height="290" rx="2" fill="#FEF3C7" stroke="#FCD34D" stroke-width="1"/>
+    <!-- Auth 激活：收到消息3(y=230) → 发出返回9(y=440) -->
+    <rect x="440" y="230" width="10" height="210" rx="2" fill="#EDE9FE" stroke="#C4B5FD" stroke-width="1"/>
+    <!-- MySQL 激活：收到消息4(y=270) → 发出返回5(y=300) -->
+    <rect x="540" y="270" width="10" height="30" rx="2" fill="#F1F5F9" stroke="#CBD5E1" stroke-width="1"/>
+    <!-- Redis 激活：收到消息7(y=385) → 发出返回8(y=410) -->
+    <rect x="640" y="385" width="10" height="25" rx="2" fill="#FCE7F3" stroke="#FDA4AF" stroke-width="1"/>
+
+    <!-- ====== 消息 ====== -->
+
+    <!-- 1. 用户→前端：输入账号密码 -->
+    <line x1="80" y1="150" x2="193" y2="150" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <text x="137" y="143" text-anchor="middle" font-size="11" fill="#1E293B" font-family="PingFang SC, Inter, sans-serif">1. 输入账号密码</text>
+
+    <!-- 2. 前端→Gateway：POST /login -->
+    <line x1="207" y1="190" x2="318" y2="190" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <text x="263" y="183" text-anchor="middle" font-size="11" fill="#1E293B" font-family="PingFang SC, Inter, sans-serif">2. POST /login</text>
+
+    <!-- 3. Gateway→Auth：转发请求 -->
+    <line x1="332" y1="230" x2="438" y2="230" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <text x="385" y="223" text-anchor="middle" font-size="11" fill="#1E293B" font-family="PingFang SC, Inter, sans-serif">3. 转发请求</text>
+
+    <!-- 4. Auth→MySQL：查询用户 -->
+    <line x1="452" y1="270" x2="538" y2="270" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <text x="495" y="263" text-anchor="middle" font-size="11" fill="#1E293B" font-family="PingFang SC, Inter, sans-serif">4. 查询用户</text>
+
+    <!-- 5. MySQL→Auth：返回用户信息（虚线返回） -->
+    <line x1="538" y1="300" x2="452" y2="300" stroke="#94A3B8" stroke-width="1.5" stroke-dasharray="6 3" marker-end="url(#arrow-open)"/>
+    <text x="495" y="293" text-anchor="middle" font-size="11" fill="#64748B" font-family="PingFang SC, Inter, sans-serif">5. 返回用户信息</text>
+
+    <!-- 6. Auth→Auth：验证密码 + 签发 Token（自调用，圆角转角） -->
+    <path d="M452,340 L472,340 Q480,340 480,348 L480,352 Q480,360 472,360 L452,360" stroke="#94A3B8" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
+    <text x="488" y="346" font-size="11" fill="#1E293B" font-family="PingFang SC, Inter, sans-serif">6. 验证密码 + 签发 Token</text>
+
+    <!-- 7. Auth→Redis：存储 Session -->
+    <line x1="452" y1="385" x2="638" y2="385" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <text x="545" y="378" text-anchor="middle" font-size="11" fill="#1E293B" font-family="PingFang SC, Inter, sans-serif">7. 存储 Session</text>
+
+    <!-- 8. Redis→Auth：OK（虚线返回） -->
+    <line x1="638" y1="410" x2="452" y2="410" stroke="#94A3B8" stroke-width="1.5" stroke-dasharray="6 3" marker-end="url(#arrow-open)"/>
+    <text x="545" y="403" text-anchor="middle" font-size="11" fill="#64748B" font-family="PingFang SC, Inter, sans-serif">8. OK</text>
+
+    <!-- 9. Auth→Gateway：返回 Token（虚线返回） -->
+    <line x1="438" y1="440" x2="332" y2="440" stroke="#94A3B8" stroke-width="1.5" stroke-dasharray="6 3" marker-end="url(#arrow-open)"/>
+    <text x="385" y="433" text-anchor="middle" font-size="11" fill="#64748B" font-family="PingFang SC, Inter, sans-serif">9. 返回 Token</text>
+
+    <!-- 10. Gateway→前端：200 OK（虚线返回） -->
+    <line x1="318" y1="480" x2="207" y2="480" stroke="#94A3B8" stroke-width="1.5" stroke-dasharray="6 3" marker-end="url(#arrow-open)"/>
+    <text x="263" y="473" text-anchor="middle" font-size="11" fill="#64748B" font-family="PingFang SC, Inter, sans-serif">10. 200 OK + Token</text>
+
+    <!-- 11. 前端→用户：登录成功（虚线返回） -->
+    <line x1="193" y1="520" x2="80" y2="520" stroke="#94A3B8" stroke-width="1.5" stroke-dasharray="6 3" marker-end="url(#arrow-open)"/>
+    <text x="137" y="513" text-anchor="middle" font-size="11" fill="#64748B" font-family="PingFang SC, Inter, sans-serif">11. 登录成功</text>
+
+    <!-- ====== 参与者（底部复制） ====== -->
+    <rect x="40" y="568" width="80" height="36" rx="6" fill="#EFF6FF" stroke="#93C5FD" stroke-width="1.5"/>
+    <text x="80" y="591" text-anchor="middle" font-size="13" font-weight="600" fill="#1E293B" font-family="PingFang SC, Inter, sans-serif">用户</text>
+
+    <rect x="160" y="568" width="80" height="36" rx="6" fill="#ECFDF5" stroke="#6EE7B7" stroke-width="1.5"/>
+    <text x="200" y="591" text-anchor="middle" font-size="13" font-weight="600" fill="#065F46" font-family="PingFang SC, Inter, sans-serif">前端</text>
+
+    <rect x="275" y="568" width="100" height="36" rx="6" fill="#FFFBEB" stroke="#FCD34D" stroke-width="1.5"/>
+    <text x="325" y="591" text-anchor="middle" font-size="13" font-weight="600" fill="#92400E" font-family="PingFang SC, Inter, sans-serif">API Gateway</text>
+
+    <rect x="405" y="568" width="80" height="36" rx="6" fill="#F5F3FF" stroke="#C4B5FD" stroke-width="1.5"/>
+    <text x="445" y="591" text-anchor="middle" font-size="13" font-weight="600" fill="#5B21B6" font-family="PingFang SC, Inter, sans-serif">Auth 服务</text>
+  </svg>
+</div>
+</body>
+</html>

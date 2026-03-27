@@ -83,6 +83,12 @@
 
 ---
 
+## 模板
+
+`templates/html/swimlane.html`
+
+---
+
 ## 生成方式
 
 1. 生成 HTML 文件

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #F8FAFC;
+    font-family: 'PingFang SC','Inter',-apple-system,sans-serif;
+    display: flex; justify-content: center;
+    padding: 48px 32px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .diagram {
+    background: #FFFFFF;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    padding: 32px;
+  }
+</style>
+</head>
+<body>
+<div class="diagram">
+  <svg width="920" height="400" viewBox="0 0 920 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="arr" markerWidth="12" markerHeight="10" refX="11" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+        <path d="M0,0 L11,5 L0,10 Z" fill="#94A3B8"/>
+      </marker>
+      <marker id="arr-r" markerWidth="12" markerHeight="10" refX="11" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+        <path d="M0,0 L11,5 L0,10 Z" fill="#F43F5E"/>
+      </marker>
+      <marker id="arr-g" markerWidth="12" markerHeight="10" refX="11" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+        <path d="M0,0 L11,5 L0,10 Z" fill="#10B981"/>
+      </marker>
+    </defs>
+
+    <!-- 标题 -->
+    <text x="24" y="24" font-size="16" font-weight="700" fill="#0F172A">订单状态机</text>
+    <text x="24" y="42" font-size="12" fill="#64748B">Order State Machine</text>
+
+    <!--
+      布局：横向，间距加宽到 70px
+      节点宽 100，高 40
+      主流程 y=120，异常 y=270
+      节点X: 80, 250, 420, 590, 760
+      节点中心X: 130, 300, 470, 640, 810
+    -->
+
+    <!-- ● 初始状态 -->
+    <circle cx="40" cy="120" r="10" fill="#1E293B"/>
+
+    <!-- 待支付 cx=130 -->
+    <rect x="80" y="100" width="100" height="40" rx="6" fill="#EFF6FF" stroke="#93C5FD" stroke-width="1.5"/>
+    <text x="130" y="125" text-anchor="middle" font-size="13" font-weight="500" fill="#1E293B">待支付</text>
+
+    <!-- 已支付 cx=300 -->
+    <rect x="250" y="100" width="100" height="40" rx="6" fill="#EFF6FF" stroke="#93C5FD" stroke-width="1.5"/>
+    <text x="300" y="125" text-anchor="middle" font-size="13" font-weight="500" fill="#1E293B">已支付</text>
+
+    <!-- 备货中 cx=470 -->
+    <rect x="420" y="100" width="100" height="40" rx="6" fill="#EFF6FF" stroke="#93C5FD" stroke-width="1.5"/>
+    <text x="470" y="125" text-anchor="middle" font-size="13" font-weight="500" fill="#1E293B">备货中</text>
+
+    <!-- 已发货 cx=640 -->
+    <rect x="590" y="100" width="100" height="40" rx="6" fill="#EFF6FF" stroke="#93C5FD" stroke-width="1.5"/>
+    <text x="640" y="125" text-anchor="middle" font-size="13" font-weight="500" fill="#1E293B">已发货</text>
+
+    <!-- 已完成 cx=810 -->
+    <rect x="760" y="100" width="100" height="40" rx="6" fill="#ECFDF5" stroke="#6EE7B7" stroke-width="1.5"/>
+    <text x="810" y="125" text-anchor="middle" font-size="13" font-weight="500" fill="#065F46">已完成</text>
+
+    <!-- 异常行 y=270 -->
+    <!-- 已取消 cx=130（和待支付对齐） -->
+    <rect x="80" y="250" width="100" height="40" rx="6" fill="#FFF1F2" stroke="#FDA4AF" stroke-width="1.5"/>
+    <text x="130" y="275" text-anchor="middle" font-size="13" font-weight="500" fill="#9F1239">已取消</text>
+
+    <!-- 退款中 cx=470 -->
+    <rect x="420" y="250" width="100" height="40" rx="6" fill="#FFF1F2" stroke="#FDA4AF" stroke-width="1.5"/>
+    <text x="470" y="275" text-anchor="middle" font-size="13" font-weight="500" fill="#9F1239">退款中</text>
+
+    <!-- 已退款 cx=640 -->
+    <rect x="590" y="250" width="100" height="40" rx="6" fill="#FFF1F2" stroke="#FDA4AF" stroke-width="1.5"/>
+    <text x="640" y="275" text-anchor="middle" font-size="13" font-weight="500" fill="#9F1239">已退款</text>
+
+    <!-- ◉ 终止状态 cx=810（和已完成对齐） -->
+    <circle cx="810" cy="270" r="12" fill="none" stroke="#64748B" stroke-width="2"/>
+    <circle cx="810" cy="270" r="6" fill="#64748B"/>
+
+    <!-- ====== 主路径连线 ====== -->
+
+    <!-- ● → 待支付 -->
+    <line x1="50" y1="120" x2="78" y2="120" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <!-- 待支付 → 已支付 -->
+    <line x1="180" y1="120" x2="248" y2="120" stroke="#10B981" stroke-width="2" marker-end="url(#arr-g)"/>
+    <text x="214" y="112" text-anchor="middle" font-size="10" fill="#065F46">支付成功</text>
+
+    <!-- 已支付 → 备货中 -->
+    <line x1="350" y1="120" x2="418" y2="120" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arr)"/>
+    <text x="384" y="112" text-anchor="middle" font-size="10" fill="#64748B">商家确认</text>
+
+    <!-- 备货中 → 已发货 -->
+    <line x1="520" y1="120" x2="588" y2="120" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arr)"/>
+    <text x="554" y="112" text-anchor="middle" font-size="10" fill="#64748B">发货</text>
+
+    <!-- 已发货 → 已完成 -->
+    <line x1="690" y1="120" x2="758" y2="120" stroke="#10B981" stroke-width="2" marker-end="url(#arr-g)"/>
+    <text x="724" y="112" text-anchor="middle" font-size="10" fill="#065F46">签收确认</text>
+
+    <!-- ====== 异常路径（标签统一在线上方） ====== -->
+
+    <!-- 待支付 → 已取消（直线向下，居中对齐） -->
+    <line x1="130" y1="140" x2="130" y2="248" stroke="#F43F5E" stroke-width="1.5" marker-end="url(#arr-r)"/>
+    <text x="142" y="195" font-size="10" fill="#9F1239">超时取消</text>
+
+    <!-- 已支付 → 退款中（向下，标签在上方） -->
+    <path d="M300,140 L300,190 Q300,200 310,200 L460,200 Q470,200 470,210 L470,248" stroke="#F43F5E" stroke-width="1.5" fill="none" marker-end="url(#arr-r)"/>
+    <text x="380" y="195" text-anchor="middle" font-size="10" fill="#9F1239">申请退款</text>
+
+    <!-- 已发货 → 退款中（向下，标签在上方） -->
+    <path d="M640,140 L640,190 Q640,200 630,200 L480,200 Q470,200 470,210 L470,248" stroke="#F43F5E" stroke-width="1.5" fill="none" marker-end="url(#arr-r)"/>
+    <text x="560" y="195" text-anchor="middle" font-size="10" fill="#9F1239">拒收退回</text>
+
+    <!-- 退款中 → 已退款 -->
+    <line x1="520" y1="270" x2="588" y2="270" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arr)"/>
+    <text x="554" y="262" text-anchor="middle" font-size="10" fill="#64748B">退款通过</text>
+
+    <!-- ====== 终止连线 ====== -->
+
+    <!-- 已完成 → ◉（居中向下） -->
+    <line x1="810" y1="140" x2="810" y2="256" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <!-- 已退款 → ◉（向右） -->
+    <line x1="690" y1="270" x2="796" y2="270" stroke="#94A3B8" stroke-width="1" stroke-dasharray="4 3" marker-end="url(#arr)"/>
+
+    <!-- ====== 图例 ====== -->
+    <rect x="40" y="370" width="12" height="12" rx="3" fill="#EFF6FF" stroke="#93C5FD" stroke-width="1"/>
+    <text x="58" y="381" font-size="11" fill="#64748B">普通状态</text>
+
+    <rect x="140" y="370" width="12" height="12" rx="3" fill="#ECFDF5" stroke="#6EE7B7" stroke-width="1"/>
+    <text x="158" y="381" font-size="11" fill="#64748B">成功终态</text>
+
+    <rect x="240" y="370" width="12" height="12" rx="3" fill="#FFF1F2" stroke="#FDA4AF" stroke-width="1"/>
+    <text x="258" y="381" font-size="11" fill="#64748B">异常状态</text>
+
+    <circle cx="346" cy="376" r="5" fill="#1E293B"/>
+    <text x="358" y="381" font-size="11" fill="#64748B">初始</text>
+
+    <circle cx="406" cy="376" r="6" fill="none" stroke="#64748B" stroke-width="1.5"/>
+    <circle cx="406" cy="376" r="3" fill="#64748B"/>
+    <text x="418" y="381" font-size="11" fill="#64748B">终止</text>
+  </svg>
+</div>
+</body>
+</html>

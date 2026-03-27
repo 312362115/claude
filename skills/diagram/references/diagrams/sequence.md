@@ -81,6 +81,13 @@ shape: sequence_diagram
 
 ---
 
+## 模板
+
+- 快速模式：`templates/d2/sequence.d2`
+- 精品模式：`templates/html/sequence.html`
+
+---
+
 ## 禁忌
 
 - 参与者不超过 6 个

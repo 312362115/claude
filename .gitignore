@@ -33,6 +33,7 @@ tasks/
 
 
 plans/
+!docs/plans/
 .history
 file-history
 sessions/

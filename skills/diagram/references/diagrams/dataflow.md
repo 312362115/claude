@@ -30,6 +30,12 @@
 
 ---
 
+## 模板
+
+`templates/d2/dataflow.d2`
+
+---
+
 ## 生成命令
 
 ```bash

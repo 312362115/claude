@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>一周用户活跃时段分布</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #ffffff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  #chart { width: 1200px; height: 800px; }
+</style>
+</head>
+<body>
+<div id="chart"></div>
+<script>
+const chart = echarts.init(document.getElementById('chart'));
+
+const hours = Array.from({ length: 24 }, (_, i) => `${i}:00`);
+const days = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+
+// Generate realistic heatmap data: [hour, day, value]
+const rawData = [
+  // 周一
+  [0,0,12],[1,0,8],[2,0,5],[3,0,3],[4,0,2],[5,0,5],[6,0,18],[7,0,45],[8,0,78],[9,0,92],[10,0,95],[11,0,88],
+  [12,0,72],[13,0,85],[14,0,90],[15,0,88],[16,0,82],[17,0,75],[18,0,68],[19,0,55],[20,0,48],[21,0,42],[22,0,30],[23,0,18],
+  // 周二
+  [0,1,10],[1,1,7],[2,1,4],[3,1,3],[4,1,2],[5,1,6],[6,1,20],[7,1,48],[8,1,80],[9,1,94],[10,1,96],[11,1,90],
+  [12,1,75],[13,1,88],[14,1,92],[15,1,89],[16,1,84],[17,1,76],[18,1,70],[19,1,58],[20,1,50],[21,1,40],[22,1,28],[23,1,16],
+  // 周三
+  [0,2,11],[1,2,8],[2,2,5],[3,2,3],[4,2,2],[5,2,5],[6,2,19],[7,2,46],[8,2,79],[9,2,93],[10,2,97],[11,2,91],
+  [12,2,74],[13,2,86],[14,2,91],[15,2,90],[16,2,85],[17,2,77],[18,2,69],[19,2,56],[20,2,49],[21,2,41],[22,2,29],[23,2,17],
+  // 周四
+  [0,3,13],[1,3,9],[2,3,6],[3,3,4],[4,3,3],[5,3,6],[6,3,18],[7,3,44],[8,3,76],[9,3,90],[10,3,93],[11,3,87],
+  [12,3,70],[13,3,83],[14,3,88],[15,3,86],[16,3,80],[17,3,73],[18,3,66],[19,3,54],[20,3,47],[21,3,43],[22,3,32],[23,3,20],
+  // 周五
+  [0,4,15],[1,4,10],[2,4,7],[3,4,5],[4,4,3],[5,4,5],[6,4,16],[7,4,40],[8,4,72],[9,4,86],[10,4,90],[11,4,85],
+  [12,4,68],[13,4,80],[14,4,84],[15,4,82],[16,4,78],[17,4,72],[18,4,65],[19,4,60],[20,4,55],[21,4,52],[22,4,45],[23,4,30],
+  // 周六
+  [0,5,28],[1,5,22],[2,5,15],[3,5,8],[4,5,5],[5,5,4],[6,5,6],[7,5,15],[8,5,30],[9,5,52],[10,5,68],[11,5,75],
+  [12,5,70],[13,5,72],[14,5,78],[15,5,80],[16,5,82],[17,5,85],[18,5,80],[19,5,78],[20,5,75],[21,5,70],[22,5,58],[23,5,40],
+  // 周日
+  [0,6,25],[1,6,20],[2,6,14],[3,6,8],[4,6,5],[5,6,4],[6,6,5],[7,6,12],[8,6,25],[9,6,48],[10,6,65],[11,6,72],
+  [12,6,68],[13,6,70],[14,6,75],[15,6,78],[16,6,80],[17,6,82],[18,6,76],[19,6,72],[20,6,68],[21,6,60],[22,6,50],[23,6,35]
+];
+
+const option = {
+  title: {
+    text: '一周用户活跃时段分布',
+    subtext: '活跃指数 0-100',
+    left: 'center',
+    top: 16,
+    textStyle: { fontSize: 22, fontWeight: 'bold', color: '#1a1a2e' },
+    subtextStyle: { fontSize: 14, color: '#888' }
+  },
+  tooltip: {
+    backgroundColor: 'rgba(30, 30, 60, 0.92)',
+    borderColor: 'transparent',
+    textStyle: { color: '#fff', fontSize: 13 },
+    formatter: function(p) {
+      return `<b>${days[p.value[1]]} ${hours[p.value[0]]}</b><br/>活跃指数：<b>${p.value[2]}</b>`;
+    }
+  },
+  grid: {
+    left: 90,
+    right: 80,
+    top: 90,
+    bottom: 60
+  },
+  xAxis: {
+    type: 'category',
+    data: hours,
+    axisLabel: { fontSize: 12, color: '#666', interval: 1 },
+    axisLine: { lineStyle: { color: '#ddd' } },
+    axisTick: { show: false },
+    splitArea: { show: true, areaStyle: { color: ['rgba(250,250,252,0.3)', 'rgba(245,245,250,0.3)'] } }
+  },
+  yAxis: {
+    type: 'category',
+    data: days,
+    axisLabel: { fontSize: 14, color: '#555', fontWeight: 'bold' },
+    axisLine: { lineStyle: { color: '#ddd' } },
+    axisTick: { show: false }
+  },
+  visualMap: {
+    min: 0,
+    max: 100,
+    calculable: true,
+    orient: 'vertical',
+    right: 10,
+    top: 'center',
+    itemHeight: 300,
+    inRange: {
+      color: ['#e8f4fd', '#b3d9f7', '#6cb4ee', '#3a8fd6', '#e8755a', '#d94535', '#b91c1c']
+    },
+    textStyle: { color: '#666', fontSize: 12 }
+  },
+  series: [
+    {
+      type: 'heatmap',
+      data: rawData,
+      label: {
+        show: true,
+        fontSize: 10,
+        color: function(p) {
+          return p.value[2] > 60 ? '#fff' : '#666';
+        }
+      },
+      emphasis: {
+        itemStyle: { shadowBlur: 10, shadowColor: 'rgba(0,0,0,0.3)' }
+      },
+      itemStyle: {
+        borderColor: '#fff',
+        borderWidth: 2,
+        borderRadius: 3
+      }
+    }
+  ],
+  animationDuration: 1000
+};
+
+chart.setOption(option);
+</script>
+</body>
+</html>
