@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #F8FAFC;
+    font-family: 'PingFang SC','Inter',-apple-system,sans-serif;
+    display: flex; justify-content: center;
+    padding: 48px 32px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .diagram {
+    background: #FFFFFF;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    padding: 32px;
+  }
+</style>
+</head>
+<body>
+<div class="diagram">
+  <svg width="820" height="570" viewBox="0 0 820 570" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="arr" markerWidth="12" markerHeight="10" refX="11" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+        <path d="M0,0 L11,5 L0,10 Z" fill="#94A3B8"/>
+      </marker>
+    </defs>
+
+    <!-- 标题 -->
+    <text x="24" y="24" font-size="16" font-weight="700" fill="#0F172A">电商数据库 ER 图</text>
+    <text x="24" y="42" font-size="12" fill="#64748B">E-Commerce Database Schema</text>
+
+    <!--
+      布局 2×3 网格：
+      col1 x=40   col2 x=320  col3 x=600
+      row1 y=80   row2 y=300
+      表宽 200，表头高 32，字段行高 23
+    -->
+
+    <!-- ====== users (col1, row1) ====== -->
+    <rect x="40" y="80" width="200" height="32" rx="6" fill="#3B82F6"/>
+    <rect x="40" y="106" width="200" height="6" fill="#3B82F6"/>
+    <text x="140" y="102" text-anchor="middle" font-size="13" font-weight="700" fill="#FFFFFF">用户表 users</text>
+    <rect x="40" y="112" width="200" height="140" rx="0" fill="#FFFFFF"/>
+    <text x="52" y="132" font-size="12" font-weight="600" fill="#3B82F6">id</text>
+    <text x="228" y="132" text-anchor="end" font-size="11" fill="#94A3B8">INT · PK</text>
+    <line x1="52" y1="138" x2="228" y2="138" stroke="#F1F5F9" stroke-width="1"/>
+    <text x="52" y="155" font-size="12" fill="#1E293B">username</text>
+    <text x="228" y="155" text-anchor="end" font-size="11" fill="#94A3B8">VARCHAR(50)</text>
+    <line x1="52" y1="161" x2="228" y2="161" stroke="#F1F5F9" stroke-width="1"/>
+    <text x="52" y="178" font-size="12" fill="#1E293B">email</text>
+    <text x="228" y="178" text-anchor="end" font-size="11" fill="#94A3B8">VARCHAR(100)</text>
+    <line x1="52" y1="184" x2="228" y2="184" stroke="#F1F5F9" stroke-width="1"/>
+    <text x="52" y="201" font-size="12" fill="#1E293B">phone</text>
+    <text x="228" y="201" text-anchor="end" font-size="11" fill="#94A3B8">VARCHAR(20)</text>
+    <line x1="52" y1="207" x2="228" y2="207" stroke="#F1F5F9" stroke-width="1"/>
+    <text x="52" y="224" font-size="12" fill="#1E293B">status</text>
+    <text x="228" y="224" text-anchor="end" font-size="11" fill="#94A3B8">ENUM</text>
+    <line x1="52" y1="230" x2="228" y2="230" stroke="#F1F5F9" stroke-width="1"/>
+    <text x="52" y="247" font-size="12" fill="#1E293B">created_at</text>
+    <text x="228" y="247" text-anchor="end" font-size="11" fill="#94A3B8">TIMESTAMP</text>
+    <rect x="40" y="80" width="200" height="172" rx="6" fill="none" stroke="#E2E8F0" stroke-width="1"/>
+
+    <!-- ====== orders (col1, row2) ====== -->
+    <rect x="40" y="300" width="200" height="32" rx="6" fill="#3B82F6"/>
+    <rect x="40" y="326" width="200" height="6" fill="#3B82F6"/>
+    <text x="140" y="322" text-anchor="middle" font-size="13" font-weight="700" fill="#FFFFFF">订单表 orders</text>
+    <rect x="40" y="332" width="200" height="118" rx="0" fill="#FFFFFF"/>
+    <text x="52" y="352" font-size="12" font-weight="600" fill="#3B82F6">id</text>
+    <text x="228" y="352" text-anchor="end" font-size="11" fill="#94A3B8">INT · PK</text>
+    <line x1="52" y1="358" x2="228" y2="358" stroke="#F1F5F9" stroke-width="1"/>
+    <text x="52" y="375" font-size="12" font-weight="500" fill="#8B5CF6">user_id</text>
+    <text x="228" y="375" text-anchor="end" font-size="11" fill="#94A3B8">INT · FK</text>
+    <line x1="52" y1="381" x2="228" y2="381" stroke="#F1F5F9" stroke-width="1"/>
+    <text x="52" y="398" font-size="12" fill="#1E293B">total_amount</text>
+    <text x="228" y="398" text-anchor="end" font-size="11" fill="#94A3B8">DECIMAL</text>
+    <line x1="52" y1="404" x2="228" y2="404" stroke="#F1F5F9" stroke-width="1"/>
+    <text x="52" y="421" font-size="12" fill="#1E293B">status</text>
+    <text x="228" y="421" text-anchor="end" font-size="11" fill="#94A3B8">ENUM</text>
+    <line x1="52" y1="427" x2="228" y2="427" stroke="#F1F5F9" stroke-width="1"/>
+    <text x="52" y="444" font-size="12" fill="#1E293B">created_at</text>
+    <text x="228" y="444" text-anchor="end" font-size="11" fill="#94A3B8">TIMESTAMP</text>
+    <rect x="40" y="300" width="200" height="150" rx="6" fill="none" stroke="#E2E8F0" stroke-width="1"/>
+
+    <!-- ====== products (col2, row1) ====== -->
+    <rect x="320" y="80" width="200" height="32" rx="6" fill="#10B981"/>
+    <rect x="320" y="106" width="200" height="6" fill="#10B981"/>
+    <text x="420" y="102" text-anchor="middle" font-size="13" font-weight="700" fill="#FFFFFF">商品表 products</text>
+    <rect x="320" y="112" width="200" height="118" rx="0" fill="#FFFFFF"/>
+    <text x="332" y="132" font-size="12" font-weight="600" fill="#10B981">id</text>
+    <text x="508" y="132" text-anchor="end" font-size="11" fill="#94A3B8">INT · PK</text>
+    <line x1="332" y1="138" x2="508" y2="138" stroke="#F1F5F9" stroke-width="1"/>
+    <text x="332" y="155" font-size="12" fill="#1E293B">name</text>
+    <text x="508" y="155" text-anchor="end" font-size="11" fill="#94A3B8">VARCHAR(200)</text>
+    <line x1="332" y1="161" x2="508" y2="161" stroke="#F1F5F9" stroke-width="1"/>
+    <text x="332" y="178" font-size="12" fill="#1E293B">price</text>
+    <text x="508" y="178" text-anchor="end" font-size="11" fill="#94A3B8">DECIMAL</text>
+    <line x1="332" y1="184" x2="508" y2="184" stroke="#F1F5F9" stroke-width="1"/>
+    <text x="332" y="201" font-size="12" fill="#1E293B">stock</text>
+    <text x="508" y="201" text-anchor="end" font-size="11" fill="#94A3B8">INT</text>
+    <line x1="332" y1="207" x2="508" y2="207" stroke="#F1F5F9" stroke-width="1"/>
+    <text x="332" y="224" font-size="12" font-weight="500" fill="#8B5CF6">category_id</text>
+    <text x="508" y="224" text-anchor="end" font-size="11" fill="#94A3B8">INT · FK</text>
+    <rect x="320" y="80" width="200" height="150" rx="6" fill="none" stroke="#E2E8F0" stroke-width="1"/>
+
+    <!-- ====== categories (col3, row1) ====== -->
+    <rect x="600" y="80" width="200" height="32" rx="6" fill="#64748B"/>
+    <rect x="600" y="106" width="200" height="6" fill="#64748B"/>
+    <text x="700" y="102" text-anchor="middle" font-size="13" font-weight="700" fill="#FFFFFF">分类表 categories</text>
+    <rect x="600" y="112" width="200" height="72" rx="0" fill="#FFFFFF"/>
+    <text x="612" y="132" font-size="12" font-weight="600" fill="#64748B">id</text>
+    <text x="788" y="132" text-anchor="end" font-size="11" fill="#94A3B8">INT · PK</text>
+    <line x1="612" y1="138" x2="788" y2="138" stroke="#F1F5F9" stroke-width="1"/>
+    <text x="612" y="155" font-size="12" fill="#1E293B">name</text>
+    <text x="788" y="155" text-anchor="end" font-size="11" fill="#94A3B8">VARCHAR(100)</text>
+    <line x1="612" y1="161" x2="788" y2="161" stroke="#F1F5F9" stroke-width="1"/>
+    <text x="612" y="178" font-size="12" fill="#1E293B">parent_id</text>
+    <text x="788" y="178" text-anchor="end" font-size="11" fill="#94A3B8">INT</text>
+    <rect x="600" y="80" width="200" height="104" rx="6" fill="none" stroke="#E2E8F0" stroke-width="1"/>
+
+    <!-- ====== order_items (col2, row2) ====== -->
+    <rect x="320" y="300" width="200" height="32" rx="6" fill="#64748B"/>
+    <rect x="320" y="326" width="200" height="6" fill="#64748B"/>
+    <text x="420" y="322" text-anchor="middle" font-size="13" font-weight="700" fill="#FFFFFF">订单明细 order_items</text>
+    <rect x="320" y="332" width="200" height="118" rx="0" fill="#FFFFFF"/>
+    <text x="332" y="352" font-size="12" font-weight="600" fill="#64748B">id</text>
+    <text x="508" y="352" text-anchor="end" font-size="11" fill="#94A3B8">INT · PK</text>
+    <line x1="332" y1="358" x2="508" y2="358" stroke="#F1F5F9" stroke-width="1"/>
+    <text x="332" y="375" font-size="12" font-weight="500" fill="#8B5CF6">order_id</text>
+    <text x="508" y="375" text-anchor="end" font-size="11" fill="#94A3B8">INT · FK</text>
+    <line x1="332" y1="381" x2="508" y2="381" stroke="#F1F5F9" stroke-width="1"/>
+    <text x="332" y="398" font-size="12" font-weight="500" fill="#8B5CF6">product_id</text>
+    <text x="508" y="398" text-anchor="end" font-size="11" fill="#94A3B8">INT · FK</text>
+    <line x1="332" y1="404" x2="508" y2="404" stroke="#F1F5F9" stroke-width="1"/>
+    <text x="332" y="421" font-size="12" fill="#1E293B">quantity</text>
+    <text x="508" y="421" text-anchor="end" font-size="11" fill="#94A3B8">INT</text>
+    <line x1="332" y1="427" x2="508" y2="427" stroke="#F1F5F9" stroke-width="1"/>
+    <text x="332" y="444" font-size="12" fill="#1E293B">price</text>
+    <text x="508" y="444" text-anchor="end" font-size="11" fill="#94A3B8">DECIMAL</text>
+    <rect x="320" y="300" width="200" height="150" rx="6" fill="none" stroke="#E2E8F0" stroke-width="1"/>
+
+    <!-- ====== payments (col3, row2) ====== -->
+    <rect x="600" y="300" width="200" height="32" rx="6" fill="#64748B"/>
+    <rect x="600" y="326" width="200" height="6" fill="#64748B"/>
+    <text x="700" y="322" text-anchor="middle" font-size="13" font-weight="700" fill="#FFFFFF">支付记录 payments</text>
+    <rect x="600" y="332" width="200" height="140" rx="0" fill="#FFFFFF"/>
+    <text x="612" y="352" font-size="12" font-weight="600" fill="#64748B">id</text>
+    <text x="788" y="352" text-anchor="end" font-size="11" fill="#94A3B8">INT · PK</text>
+    <line x1="612" y1="358" x2="788" y2="358" stroke="#F1F5F9" stroke-width="1"/>
+    <text x="612" y="375" font-size="12" font-weight="500" fill="#8B5CF6">order_id</text>
+    <text x="788" y="375" text-anchor="end" font-size="11" fill="#94A3B8">INT · FK</text>
+    <line x1="612" y1="381" x2="788" y2="381" stroke="#F1F5F9" stroke-width="1"/>
+    <text x="612" y="398" font-size="12" fill="#1E293B">amount</text>
+    <text x="788" y="398" text-anchor="end" font-size="11" fill="#94A3B8">DECIMAL</text>
+    <line x1="612" y1="404" x2="788" y2="404" stroke="#F1F5F9" stroke-width="1"/>
+    <text x="612" y="421" font-size="12" fill="#1E293B">method</text>
+    <text x="788" y="421" text-anchor="end" font-size="11" fill="#94A3B8">ENUM</text>
+    <line x1="612" y1="427" x2="788" y2="427" stroke="#F1F5F9" stroke-width="1"/>
+    <text x="612" y="444" font-size="12" fill="#1E293B">status</text>
+    <text x="788" y="444" text-anchor="end" font-size="11" fill="#94A3B8">ENUM</text>
+    <line x1="612" y1="450" x2="788" y2="450" stroke="#F1F5F9" stroke-width="1"/>
+    <text x="612" y="467" font-size="12" fill="#1E293B">paid_at</text>
+    <text x="788" y="467" text-anchor="end" font-size="11" fill="#94A3B8">TIMESTAMP</text>
+    <rect x="600" y="300" width="200" height="172" rx="6" fill="none" stroke="#E2E8F0" stroke-width="1"/>
+
+    <!-- ====== 关系连线（绕开表，不穿过） ====== -->
+
+    <!-- users → orders (垂直向下，左侧居中) -->
+    <line x1="140" y1="252" x2="140" y2="298" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arr)"/>
+    <text x="152" y="280" font-size="10" fill="#64748B">1 : N</text>
+
+    <!-- orders → order_items (水平向右，row2 中间) -->
+    <line x1="240" y1="375" x2="318" y2="375" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arr)"/>
+    <text x="279" y="368" text-anchor="middle" font-size="10" fill="#64748B">1 : N</text>
+
+    <!-- products → order_items (垂直向下) -->
+    <line x1="420" y1="230" x2="420" y2="298" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arr)"/>
+    <text x="432" y="268" font-size="10" fill="#64748B">1 : N</text>
+
+    <!-- categories → products (水平向左) -->
+    <line x1="600" y1="150" x2="522" y2="150" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arr)"/>
+    <text x="561" y="143" text-anchor="middle" font-size="10" fill="#64748B">1 : N</text>
+
+    <!-- orders → payments (底部绕过，从 payments 底边中点垂直进入) -->
+    <path d="M240,440 L280,440 Q290,440 290,450 L290,490 Q290,500 300,500 L690,500 Q700,500 700,490 L700,474" stroke="#94A3B8" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+    <text x="495" y="496" text-anchor="middle" font-size="10" fill="#64748B">1 : N</text>
+
+    <!-- ====== 图例 ====== -->
+    <rect x="40" y="540" width="16" height="12" rx="3" fill="#3B82F6"/>
+    <text x="62" y="550" font-size="11" fill="#64748B">核心表</text>
+
+    <rect x="120" y="540" width="16" height="12" rx="3" fill="#10B981"/>
+    <text x="142" y="550" font-size="11" fill="#64748B">业务表</text>
+
+    <rect x="200" y="540" width="16" height="12" rx="3" fill="#64748B"/>
+    <text x="222" y="550" font-size="11" fill="#64748B">关联/辅助表</text>
+
+    <text x="340" y="550" font-size="12" font-weight="500" fill="#8B5CF6">FK字段</text>
+    <text x="390" y="550" font-size="11" fill="#64748B">外键用紫色标注</text>
+  </svg>
+</div>
+</body>
+</html>
