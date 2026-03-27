@@ -386,6 +386,16 @@ function buildHTML(filePath) {
         tocList.appendChild(li);
       });
 
+      // 改写相对路径图片为服务器端点
+      const mdDir = decodeURIComponent(FILE_DIR);
+      document.querySelectorAll('#content img').forEach(img => {
+        const src = img.getAttribute('src');
+        if (src && !src.startsWith('http') && !src.startsWith('/') && !src.startsWith('data:')) {
+          const absPath = mdDir + '/' + src;
+          img.setAttribute('src', '/api/file?path=' + encodeURIComponent(absPath));
+        }
+      });
+
       setupScrollHighlight();
     }
 

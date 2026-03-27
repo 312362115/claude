@@ -2,353 +2,90 @@
 
 direction: down
 
-# ============ 根节点 ============
-root: 数据类型是什么？ {
+# --- 根节点 ---
+root: 数据类型？ {
   style: {
-    fill: "#5c6bc0"
-    stroke: "#3949ab"
-    font-color: "#ffffff"
-    border-radius: 12
-    shadow: true
+    fill: "#3B82F6"
+    stroke: "#3B82F6"
+    font-color: "#FFFFFF"
+    border-radius: 6
+    font-size: 14
+    bold: true
   }
 }
 
-# ============ 一级分支 ============
+# --- 一级分支 ---
 structured: 结构化数据 {
-  style: {
-    fill: "#42a5f5"
-    stroke: "#1e88e5"
-    font-color: "#ffffff"
-    border-radius: 10
-    shadow: true
-  }
+  shape: diamond
+  style: { fill: "#FFFBEB"; stroke: "#FCD34D"; font-color: "#92400E"; font-size: 12 }
 }
-
-semi-structured: 半结构化数据 {
-  style: {
-    fill: "#26a69a"
-    stroke: "#00897b"
-    font-color: "#ffffff"
-    border-radius: 10
-    shadow: true
-  }
+semi: 半结构化数据 {
+  shape: diamond
+  style: { fill: "#FFFBEB"; stroke: "#FCD34D"; font-color: "#92400E"; font-size: 12 }
 }
-
 unstructured: 非结构化数据 {
-  style: {
-    fill: "#ab47bc"
-    stroke: "#8e24aa"
-    font-color: "#ffffff"
-    border-radius: 10
-    shadow: true
-  }
-}
-
-# ============ 结构化 - 二级分支 ============
-rw-ratio: 读写比例？ {
   shape: diamond
-  style: {
-    fill: "#e3f2fd"
-    stroke: "#42a5f5"
-    font-color: "#1565c0"
-  }
+  style: { fill: "#FFFBEB"; stroke: "#FCD34D"; font-color: "#92400E"; font-size: 12 }
 }
 
-read-heavy: 读多写少 {
-  style: {
-    fill: "#e3f2fd"
-    stroke: "#42a5f5"
-    font-color: "#1565c0"
-    border-radius: 8
-  }
-}
-
-write-heavy: 写多读少 {
-  style: {
-    fill: "#e3f2fd"
-    stroke: "#42a5f5"
-    font-color: "#1565c0"
-    border-radius: 8
-  }
-}
-
-balanced: 读写均衡 {
-  style: {
-    fill: "#e3f2fd"
-    stroke: "#42a5f5"
-    font-color: "#1565c0"
-    border-radius: 8
-  }
-}
-
-# ============ 结构化 - 三级 ============
-consistency: 一致性要求？ {
+# --- 二级分支 ---
+high-read: 读多写少？ {
   shape: diamond
-  style: {
-    fill: "#e3f2fd"
-    stroke: "#42a5f5"
-    font-color: "#1565c0"
-  }
+  style: { fill: "#FFFBEB"; stroke: "#FCD34D"; font-color: "#92400E"; font-size: 11 }
 }
-
-data-volume: 数据量级？ {
+need-tx: 需要事务？ {
   shape: diamond
-  style: {
-    fill: "#e3f2fd"
-    stroke: "#42a5f5"
-    font-color: "#1565c0"
-  }
+  style: { fill: "#FFFBEB"; stroke: "#FCD34D"; font-color: "#92400E"; font-size: 11 }
 }
-
-# ============ 半结构化 - 二级分支 ============
-semi-query: 查询模式？ {
+json-heavy: JSON 为主？ {
   shape: diamond
-  style: {
-    fill: "#e0f2f1"
-    stroke: "#26a69a"
-    font-color: "#00695c"
-  }
+  style: { fill: "#FFFBEB"; stroke: "#FCD34D"; font-color: "#92400E"; font-size: 11 }
 }
-
-flexible-schema: 灵活 Schema {
-  style: {
-    fill: "#e0f2f1"
-    stroke: "#26a69a"
-    font-color: "#00695c"
-    border-radius: 8
-  }
-}
-
-full-text: 全文检索 {
-  style: {
-    fill: "#e0f2f1"
-    stroke: "#26a69a"
-    font-color: "#00695c"
-    border-radius: 8
-  }
-}
-
-# ============ 非结构化 - 二级分支 ============
-unstruct-type: 使用场景？ {
+large-scale: 数据量大？ {
   shape: diamond
-  style: {
-    fill: "#f3e5f5"
-    stroke: "#ab47bc"
-    font-color: "#6a1b9a"
-  }
+  style: { fill: "#FFFBEB"; stroke: "#FCD34D"; font-color: "#92400E"; font-size: 11 }
 }
 
-cache-kv: 缓存 / KV 存储 {
-  style: {
-    fill: "#f3e5f5"
-    stroke: "#ab47bc"
-    font-color: "#6a1b9a"
-    border-radius: 8
-  }
-}
-
-time-series: 时序 / 日志分析 {
-  style: {
-    fill: "#f3e5f5"
-    stroke: "#ab47bc"
-    font-color: "#6a1b9a"
-    border-radius: 8
-  }
-}
-
-graph-data: 关系图谱 {
-  style: {
-    fill: "#f3e5f5"
-    stroke: "#ab47bc"
-    font-color: "#6a1b9a"
-    border-radius: 8
-  }
-}
-
-# ============ 叶子节点（推荐数据库） ============
+# --- 推荐结果 ---
 mysql: MySQL {
-  style: {
-    fill: "#1565c0"
-    stroke: "#0d47a1"
-    font-color: "#ffffff"
-    border-radius: 20
-    shadow: true
-  }
+  style: { fill: "#ECFDF5"; stroke: "#6EE7B7"; font-color: "#065F46"; border-radius: 6; font-size: 13 }
 }
-
-postgresql: PostgreSQL {
-  style: {
-    fill: "#2e7d32"
-    stroke: "#1b5e20"
-    font-color: "#ffffff"
-    border-radius: 20
-    shadow: true
-  }
+pg: PostgreSQL {
+  style: { fill: "#ECFDF5"; stroke: "#6EE7B7"; font-color: "#065F46"; border-radius: 6; font-size: 13 }
 }
-
-tidb: TiDB {
-  style: {
-    fill: "#e65100"
-    stroke: "#bf360c"
-    font-color: "#ffffff"
-    border-radius: 20
-    shadow: true
-  }
-}
-
-clickhouse: ClickHouse {
-  style: {
-    fill: "#f9a825"
-    stroke: "#f57f17"
-    font-color: "#ffffff"
-    border-radius: 20
-    shadow: true
-  }
-}
-
-mongodb: MongoDB {
-  style: {
-    fill: "#00897b"
-    stroke: "#00695c"
-    font-color: "#ffffff"
-    border-radius: 20
-    shadow: true
-  }
-}
-
-elasticsearch: Elasticsearch {
-  style: {
-    fill: "#00acc1"
-    stroke: "#00838f"
-    font-color: "#ffffff"
-    border-radius: 20
-    shadow: true
-  }
-}
-
 redis: Redis {
-  style: {
-    fill: "#d32f2f"
-    stroke: "#b71c1c"
-    font-color: "#ffffff"
-    border-radius: 20
-    shadow: true
-  }
+  style: { fill: "#ECFDF5"; stroke: "#6EE7B7"; font-color: "#065F46"; border-radius: 6; font-size: 13 }
+}
+mongo: MongoDB {
+  style: { fill: "#ECFDF5"; stroke: "#6EE7B7"; font-color: "#065F46"; border-radius: 6; font-size: 13 }
+}
+es: Elasticsearch {
+  style: { fill: "#ECFDF5"; stroke: "#6EE7B7"; font-color: "#065F46"; border-radius: 6; font-size: 13 }
+}
+oss: OSS / S3 {
+  style: { fill: "#EFF6FF"; stroke: "#93C5FD"; font-color: "#1E293B"; border-radius: 6; font-size: 13 }
+}
+hdfs: HDFS {
+  style: { fill: "#EFF6FF"; stroke: "#93C5FD"; font-color: "#1E293B"; border-radius: 6; font-size: 13 }
 }
 
-influxdb: InfluxDB / ClickHouse {
-  style: {
-    fill: "#6a1b9a"
-    stroke: "#4a148c"
-    font-color: "#ffffff"
-    border-radius: 20
-    shadow: true
-  }
-}
+# --- 连线 ---
+root -> structured: 表格/关系型 { style.stroke: "#94A3B8"; style.font-color: "#64748B"; style.font-size: 11 }
+root -> semi: JSON/文档 { style.stroke: "#94A3B8"; style.font-color: "#64748B"; style.font-size: 11 }
+root -> unstructured: 文件/二进制 { style.stroke: "#94A3B8"; style.font-color: "#64748B"; style.font-size: 11 }
 
-neo4j: Neo4j {
-  style: {
-    fill: "#4527a0"
-    stroke: "#311b92"
-    font-color: "#ffffff"
-    border-radius: 20
-    shadow: true
-  }
-}
+structured -> high-read { style.stroke: "#94A3B8" }
+structured -> need-tx { style.stroke: "#94A3B8" }
 
-# ============ 连接关系 ============
+high-read -> redis: 是 { style.stroke: "#10B981"; style.font-color: "#065F46"; style.font-size: 11 }
+high-read -> mysql: 否 { style.stroke: "#94A3B8"; style.font-color: "#64748B"; style.font-size: 11 }
+need-tx -> pg: 是 { style.stroke: "#10B981"; style.font-color: "#065F46"; style.font-size: 11 }
 
-root -> structured: 表格/行列 {
-  style: { stroke: "#42a5f5"; font-color: "#1565c0" }
-}
-root -> semi-structured: JSON/文档 {
-  style: { stroke: "#26a69a"; font-color: "#00695c" }
-}
-root -> unstructured: KV/二进制/图 {
-  style: { stroke: "#ab47bc"; font-color: "#6a1b9a" }
-}
+semi -> json-heavy { style.stroke: "#94A3B8" }
+semi -> large-scale { style.stroke: "#94A3B8" }
 
-# 结构化分支
-structured -> rw-ratio {
-  style: { stroke: "#42a5f5" }
-}
+json-heavy -> mongo: 是 { style.stroke: "#10B981"; style.font-color: "#065F46"; style.font-size: 11 }
+large-scale -> es: 是 { style.stroke: "#10B981"; style.font-color: "#065F46"; style.font-size: 11 }
 
-rw-ratio -> read-heavy: 读 >> 写 {
-  style: { stroke: "#42a5f5"; font-color: "#1565c0" }
-}
-rw-ratio -> write-heavy: 写 >> 读 {
-  style: { stroke: "#42a5f5"; font-color: "#1565c0" }
-}
-rw-ratio -> balanced: 读写相当 {
-  style: { stroke: "#42a5f5"; font-color: "#1565c0" }
-}
-
-read-heavy -> mysql: OLTP 场景，主从读写分离 {
-  style: { stroke: "#1565c0"; font-color: "#1565c0" }
-}
-
-write-heavy -> data-volume {
-  style: { stroke: "#42a5f5" }
-}
-
-data-volume -> tidb: TB 级以上，分布式 {
-  style: { stroke: "#e65100"; font-color: "#e65100" }
-}
-data-volume -> clickhouse: 分析型，列存储 {
-  style: { stroke: "#f9a825"; font-color: "#f57f17" }
-}
-
-balanced -> consistency {
-  style: { stroke: "#42a5f5" }
-}
-
-consistency -> postgresql: 强一致，复杂查询 {
-  style: { stroke: "#2e7d32"; font-color: "#2e7d32" }
-}
-consistency -> mysql: 通用业务 CRUD {
-  style: { stroke: "#1565c0"; font-color: "#1565c0" }
-}
-
-# 半结构化分支
-semi-structured -> semi-query {
-  style: { stroke: "#26a69a" }
-}
-
-semi-query -> flexible-schema: 灵活文档 {
-  style: { stroke: "#26a69a"; font-color: "#00695c" }
-}
-semi-query -> full-text: 搜索分析 {
-  style: { stroke: "#26a69a"; font-color: "#00695c" }
-}
-
-flexible-schema -> mongodb: 文档模型，Schema 灵活 {
-  style: { stroke: "#00897b"; font-color: "#00897b" }
-}
-full-text -> elasticsearch: 倒排索引，聚合分析 {
-  style: { stroke: "#00acc1"; font-color: "#00838f" }
-}
-
-# 非结构化分支
-unstructured -> unstruct-type {
-  style: { stroke: "#ab47bc" }
-}
-
-unstruct-type -> cache-kv: 高速缓存 {
-  style: { stroke: "#ab47bc"; font-color: "#6a1b9a" }
-}
-unstruct-type -> time-series: 时序日志 {
-  style: { stroke: "#ab47bc"; font-color: "#6a1b9a" }
-}
-unstruct-type -> graph-data: 图关系 {
-  style: { stroke: "#ab47bc"; font-color: "#6a1b9a" }
-}
-
-cache-kv -> redis: 内存 KV，亚毫秒延迟 {
-  style: { stroke: "#d32f2f"; font-color: "#d32f2f" }
-}
-time-series -> influxdb: 时序存储 + 分析 {
-  style: { stroke: "#6a1b9a"; font-color: "#6a1b9a" }
-}
-graph-data -> neo4j: 图遍历，关系查询 {
-  style: { stroke: "#4527a0"; font-color: "#4527a0" }
-}
+unstructured -> oss: 小文件 { style.stroke: "#94A3B8"; style.font-color: "#64748B"; style.font-size: 11 }
+unstructured -> hdfs: 大数据 { style.stroke: "#94A3B8"; style.font-color: "#64748B"; style.font-size: 11 }

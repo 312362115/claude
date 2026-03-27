@@ -2,275 +2,104 @@
 
 direction: down
 
-# ============ 外部网络 ============
+# --- 外部 ---
 internet: 互联网 {
   shape: cloud
   style: {
-    fill: "#e3f2fd"
-    stroke: "#42a5f5"
-    font-color: "#1565c0"
-    shadow: true
+    fill: "#ECFEFF"
+    stroke: "#06B6D4"
+    font-color: "#155E75"
+    font-size: 13
   }
 }
 
-# ============ 边界防护 ============
-firewall: 防火墙 Palo Alto {
+# --- 边界 ---
+firewall: 防火墙 {
   style: {
-    fill: "#ffebee"
-    stroke: "#ef5350"
-    font-color: "#c62828"
+    fill: "#FFFFFF"
+    stroke: "#FDA4AF"
+    font-color: "#9F1239"
+    border-radius: 6
+    font-size: 13
+  }
+}
+
+# --- DMZ ---
+dmz: DMZ {
+  style: {
+    fill: "#FFFBEB"
+    stroke: "#FDE68A"
     border-radius: 8
-    shadow: true
+    font-color: "#92400E"
+    font-size: 13
+    bold: true
+  }
+
+  lb: 负载均衡 {
+    style: { fill: "#FFFFFF"; stroke: "#FCD34D"; font-color: "#92400E"; border-radius: 6; font-size: 12 }
+  }
+  waf: WAF {
+    style: { fill: "#FFFFFF"; stroke: "#FCD34D"; font-color: "#92400E"; border-radius: 6; font-size: 12 }
+  }
+  dns: DNS {
+    style: { fill: "#FFFFFF"; stroke: "#FCD34D"; font-color: "#92400E"; border-radius: 6; font-size: 12 }
   }
 }
 
-# ============ DMZ 区域 ============
-dmz: DMZ 非军事区 {
+# --- 内网-服务区 ---
+servers: 服务器区 {
   style: {
-    fill: "#fff8e1"
-    stroke: "#ffa726"
-    border-radius: 12
-    font-color: "#e65100"
-    shadow: true
-  }
-
-  dmz-switch: 核心交换机 {
-    style: { fill: "#ffffff"; stroke: "#ffa726"; border-radius: 8 }
-  }
-
-  lb: 负载均衡器 F5 {
-    style: { fill: "#fff3e0"; stroke: "#ffa726"; border-radius: 8 }
-  }
-
-  web1: Web 服务器 1 {
-    style: { fill: "#fff3e0"; stroke: "#ffa726"; border-radius: 8 }
-  }
-
-  web2: Web 服务器 2 {
-    style: { fill: "#fff3e0"; stroke: "#ffa726"; border-radius: 8 }
-  }
-
-  dns: DNS 服务器 {
-    style: { fill: "#fff3e0"; stroke: "#ffa726"; border-radius: 8 }
-  }
-
-  mail: 邮件网关 {
-    style: { fill: "#fff3e0"; stroke: "#ffa726"; border-radius: 8 }
-  }
-
-  dmz-switch -> lb
-  dmz-switch -> dns
-  dmz-switch -> mail
-  lb -> web1
-  lb -> web2
-}
-
-# ============ 内部防火墙 ============
-inner-fw: 内部防火墙 {
-  style: {
-    fill: "#ffebee"
-    stroke: "#ef5350"
-    font-color: "#c62828"
+    fill: "#ECFDF5"
+    stroke: "#A7F3D0"
     border-radius: 8
-    shadow: true
+    font-color: "#065F46"
+    font-size: 13
+    bold: true
+  }
+
+  app1: 应用服务器 {
+    style: { fill: "#FFFFFF"; stroke: "#6EE7B7"; font-color: "#065F46"; border-radius: 6; font-size: 12 }
+  }
+  app2: API 服务器 {
+    style: { fill: "#FFFFFF"; stroke: "#6EE7B7"; font-color: "#065F46"; border-radius: 6; font-size: 12 }
+  }
+  mq: 消息队列 {
+    style: { fill: "#FFFFFF"; stroke: "#6EE7B7"; font-color: "#065F46"; border-radius: 6; font-size: 12 }
   }
 }
 
-# ============ 核心交换层 ============
-core-switch: 核心交换机 Cisco Nexus {
+# --- 内网-数据区 ---
+data: 数据区 {
   style: {
-    fill: "#ede7f6"
-    stroke: "#7e57c2"
-    font-color: "#4527a0"
+    fill: "#F5F3FF"
+    stroke: "#C4B5FD"
     border-radius: 8
-    shadow: true
+    font-color: "#5B21B6"
+    font-size: 13
+    bold: true
+  }
+
+  db: MySQL 主从 {
+    shape: cylinder
+    style: { fill: "#FFFFFF"; stroke: "#C4B5FD"; font-color: "#5B21B6"; font-size: 12 }
+  }
+  redis: Redis 集群 {
+    shape: cylinder
+    style: { fill: "#FFFFFF"; stroke: "#C4B5FD"; font-color: "#5B21B6"; font-size: 12 }
+  }
+  es: Elasticsearch {
+    shape: cylinder
+    style: { fill: "#FFFFFF"; stroke: "#C4B5FD"; font-color: "#5B21B6"; font-size: 12 }
   }
 }
 
-# ============ 服务器区 ============
-server-zone: 服务器区 {
-  style: {
-    fill: "#e8f5e9"
-    stroke: "#43a047"
-    border-radius: 12
-    font-color: "#2e7d32"
-    shadow: true
-  }
-
-  server-switch: 接入交换机 {
-    style: { fill: "#ffffff"; stroke: "#43a047"; border-radius: 8 }
-  }
-
-  app-cluster: 应用服务器集群 {
-    style: { fill: "#c8e6c9"; stroke: "#43a047"; border-radius: 8 }
-
-    app1: App Server 1 {
-      style: { fill: "#ffffff"; stroke: "#66bb6a"; border-radius: 6 }
-    }
-    app2: App Server 2 {
-      style: { fill: "#ffffff"; stroke: "#66bb6a"; border-radius: 6 }
-    }
-    app3: App Server 3 {
-      style: { fill: "#ffffff"; stroke: "#66bb6a"; border-radius: 6 }
-    }
-  }
-
-  db-cluster: 数据库集群 {
-    style: { fill: "#c8e6c9"; stroke: "#43a047"; border-radius: 8 }
-
-    mysql-master: MySQL 主库 {
-      style: { fill: "#ffffff"; stroke: "#66bb6a"; border-radius: 6 }
-    }
-    mysql-slave: MySQL 从库 {
-      style: { fill: "#ffffff"; stroke: "#66bb6a"; border-radius: 6 }
-    }
-    redis-cluster: Redis 集群 {
-      style: { fill: "#ffffff"; stroke: "#ef5350"; border-radius: 6 }
-    }
-  }
-
-  storage: 存储阵列 NAS-SAN {
-    style: { fill: "#c8e6c9"; stroke: "#43a047"; border-radius: 8 }
-  }
-
-  server-switch -> app-cluster
-  server-switch -> db-cluster
-  server-switch -> storage
-}
-
-# ============ 办公区 ============
-office-zone: 办公区 {
-  style: {
-    fill: "#e3f2fd"
-    stroke: "#42a5f5"
-    border-radius: 12
-    font-color: "#1565c0"
-    shadow: true
-  }
-
-  office-switch: 接入交换机 {
-    style: { fill: "#ffffff"; stroke: "#42a5f5"; border-radius: 8 }
-  }
-
-  wifi: 无线 AP Wi-Fi 6 {
-    style: { fill: "#e3f2fd"; stroke: "#42a5f5"; border-radius: 8 }
-  }
-
-  workstations: 办公电脑 200台 {
-    style: { fill: "#e3f2fd"; stroke: "#42a5f5"; border-radius: 8 }
-  }
-
-  printer: 网络打印机 {
-    style: { fill: "#e3f2fd"; stroke: "#42a5f5"; border-radius: 8 }
-  }
-
-  voip: IP 电话 {
-    style: { fill: "#e3f2fd"; stroke: "#42a5f5"; border-radius: 8 }
-  }
-
-  office-switch -> wifi
-  office-switch -> workstations
-  office-switch -> printer
-  office-switch -> voip
-}
-
-# ============ 开发区 ============
-dev-zone: 开发区 {
-  style: {
-    fill: "#f3e5f5"
-    stroke: "#ab47bc"
-    border-radius: 12
-    font-color: "#6a1b9a"
-    shadow: true
-  }
-
-  dev-switch: 接入交换机 {
-    style: { fill: "#ffffff"; stroke: "#ab47bc"; border-radius: 8 }
-  }
-
-  dev-machines: 开发机 50台 {
-    style: { fill: "#f3e5f5"; stroke: "#ab47bc"; border-radius: 8 }
-  }
-
-  ci-server: CI/CD 服务器 Jenkins {
-    style: { fill: "#f3e5f5"; stroke: "#ab47bc"; border-radius: 8 }
-  }
-
-  git-server: GitLab 服务器 {
-    style: { fill: "#f3e5f5"; stroke: "#ab47bc"; border-radius: 8 }
-  }
-
-  test-env: 测试环境集群 {
-    style: { fill: "#f3e5f5"; stroke: "#ab47bc"; border-radius: 8 }
-  }
-
-  dev-switch -> dev-machines
-  dev-switch -> ci-server
-  dev-switch -> git-server
-  dev-switch -> test-env
-}
-
-# ============ 运维监控 ============
-ops-zone: 运维监控区 {
-  style: {
-    fill: "#eceff1"
-    stroke: "#78909c"
-    border-radius: 12
-    font-color: "#37474f"
-    shadow: true
-  }
-
-  monitor: Zabbix 监控 {
-    style: { fill: "#eceff1"; stroke: "#78909c"; border-radius: 8 }
-  }
-
-  log: ELK 日志平台 {
-    style: { fill: "#eceff1"; stroke: "#78909c"; border-radius: 8 }
-  }
-
-  backup: 备份服务器 {
-    style: { fill: "#eceff1"; stroke: "#78909c"; border-radius: 8 }
-  }
-}
-
-# ============ 连接关系 ============
-
-internet -> firewall: 公网入口 {
-  style: { stroke: "#ef5350" }
-}
-
-firewall -> dmz.dmz-switch: 外部流量 {
-  style: { stroke: "#ffa726" }
-}
-
-dmz.dmz-switch -> inner-fw: 穿透请求 {
-  style: { stroke: "#ef5350" }
-}
-
-inner-fw -> core-switch: 内部路由 {
-  style: { stroke: "#7e57c2" }
-}
-
-core-switch -> server-zone.server-switch: 10Gbps Trunk {
-  style: { stroke: "#43a047" }
-}
-
-core-switch -> office-zone.office-switch: 1Gbps {
-  style: { stroke: "#42a5f5" }
-}
-
-core-switch -> dev-zone.dev-switch: 1Gbps {
-  style: { stroke: "#ab47bc" }
-}
-
-core-switch -> ops-zone: 管理 VLAN {
-  style: { stroke: "#78909c"; stroke-dash: 5 }
-}
-
-ops-zone.monitor -> server-zone: SNMP 监控 {
-  style: { stroke: "#78909c"; stroke-dash: 5 }
-}
-
-ops-zone.backup -> server-zone.storage: 定时备份 {
-  style: { stroke: "#78909c"; stroke-dash: 5 }
-}
+# --- 连线 ---
+internet -> firewall { style.stroke: "#94A3B8" }
+firewall -> dmz.lb { style.stroke: "#94A3B8" }
+dmz.lb -> dmz.waf { style.stroke: "#94A3B8" }
+dmz.lb -> servers.app1 { style.stroke: "#94A3B8" }
+dmz.lb -> servers.app2 { style.stroke: "#94A3B8" }
+servers.app1 -> data.db { style.stroke: "#94A3B8" }
+servers.app2 -> data.redis { style.stroke: "#94A3B8" }
+servers.app1 -> servers.mq { style.stroke: "#94A3B8" }
+servers.mq -> data.es { style.stroke: "#94A3B8"; style.stroke-dash: 3 }

@@ -1,203 +1,123 @@
-# 电商系统 ER 图 / 数据库 Schema
+# 电商数据库 ER 图
 
 direction: right
 
-# ============ 用户表 ============
-users: users 用户表 {
+# --- 核心表 ---
+users: 用户表 users {
   shape: sql_table
-
-  id: BIGINT {constraint: [PK; AUTO_INCREMENT]}
-  username: VARCHAR(50) {constraint: [UNIQUE; NOT NULL]}
-  email: VARCHAR(100) {constraint: [UNIQUE; NOT NULL]}
-  password_hash: VARCHAR(255) {constraint: [NOT NULL]}
-  phone: VARCHAR(20) {constraint: [UNIQUE]}
-  nickname: VARCHAR(50)
-  avatar_url: VARCHAR(500)
-  status: TINYINT {constraint: [NOT NULL; DEFAULT 1]}
-  created_at: DATETIME {constraint: [NOT NULL]}
-  updated_at: DATETIME {constraint: [NOT NULL]}
-
   style: {
-    fill: "#e3f2fd"
-    stroke: "#42a5f5"
-    font-color: "#1565c0"
-    shadow: true
+    fill: "#F8FAFC"
+    stroke: "#93C5FD"
+    font-color: "#1E293B"
+    font-size: 13
   }
+  id: INT {constraint: primary_key}
+  username: VARCHAR(50)
+  email: VARCHAR(100)
+  phone: VARCHAR(20)
+  status: ENUM
+  created_at: TIMESTAMP
 }
 
-# ============ 地址表 ============
-addresses: addresses 收货地址表 {
+orders: 订单表 orders {
   shape: sql_table
-
-  id: BIGINT {constraint: [PK; AUTO_INCREMENT]}
-  user_id: BIGINT {constraint: [FK; NOT NULL]}
-  receiver_name: VARCHAR(50) {constraint: [NOT NULL]}
-  phone: VARCHAR(20) {constraint: [NOT NULL]}
-  province: VARCHAR(30) {constraint: [NOT NULL]}
-  city: VARCHAR(30) {constraint: [NOT NULL]}
-  district: VARCHAR(30) {constraint: [NOT NULL]}
-  detail_address: VARCHAR(200) {constraint: [NOT NULL]}
-  is_default: TINYINT {constraint: [DEFAULT 0]}
-  created_at: DATETIME {constraint: [NOT NULL]}
-
   style: {
-    fill: "#e3f2fd"
-    stroke: "#42a5f5"
-    font-color: "#1565c0"
-    shadow: true
+    fill: "#F8FAFC"
+    stroke: "#93C5FD"
+    font-color: "#1E293B"
+    font-size: 13
   }
+  id: INT {constraint: primary_key}
+  user_id: INT {constraint: foreign_key}
+  total_amount: DECIMAL
+  status: ENUM
+  created_at: TIMESTAMP
 }
 
-# ============ 分类表 ============
-categories: categories 商品分类表 {
+# --- 普通表 ---
+products: 商品表 products {
   shape: sql_table
-
-  id: BIGINT {constraint: [PK; AUTO_INCREMENT]}
-  name: VARCHAR(50) {constraint: [NOT NULL]}
-  parent_id: BIGINT {constraint: [FK]}
-  level: TINYINT {constraint: [NOT NULL]}
-  sort_order: INT {constraint: [DEFAULT 0]}
-  icon_url: VARCHAR(500)
-  is_active: TINYINT {constraint: [DEFAULT 1]}
-
   style: {
-    fill: "#e8f5e9"
-    stroke: "#66bb6a"
-    font-color: "#2e7d32"
-    shadow: true
+    fill: "#F8FAFC"
+    stroke: "#93C5FD"
+    font-color: "#1E293B"
+    font-size: 13
   }
+  id: INT {constraint: primary_key}
+  name: VARCHAR(200)
+  price: DECIMAL
+  stock: INT
+  category_id: INT {constraint: foreign_key}
 }
 
-# ============ 商品表 ============
-products: products 商品表 {
+categories: 分类表 categories {
   shape: sql_table
-
-  id: BIGINT {constraint: [PK; AUTO_INCREMENT]}
-  category_id: BIGINT {constraint: [FK; NOT NULL]}
-  name: VARCHAR(200) {constraint: [NOT NULL]}
-  description: TEXT
-  price: DECIMAL(10,2) {constraint: [NOT NULL]}
-  original_price: DECIMAL(10,2)
-  cover_image: VARCHAR(500) {constraint: [NOT NULL]}
-  stock: INT {constraint: [NOT NULL; DEFAULT 0]}
-  sales_count: INT {constraint: [DEFAULT 0]}
-  status: TINYINT {constraint: [NOT NULL; DEFAULT 1]}
-  created_at: DATETIME {constraint: [NOT NULL]}
-  updated_at: DATETIME {constraint: [NOT NULL]}
-
   style: {
-    fill: "#e8f5e9"
-    stroke: "#66bb6a"
-    font-color: "#2e7d32"
-    shadow: true
+    fill: "#F8FAFC"
+    stroke: "#93C5FD"
+    font-color: "#1E293B"
+    font-size: 13
   }
+  id: INT {constraint: primary_key}
+  name: VARCHAR(100)
+  parent_id: INT
 }
 
-# ============ 订单表 ============
-orders: orders 订单表 {
+# --- 关联表 ---
+order_items: 订单明细 order_items {
   shape: sql_table
-
-  id: BIGINT {constraint: [PK; AUTO_INCREMENT]}
-  order_no: VARCHAR(32) {constraint: [UNIQUE; NOT NULL]}
-  user_id: BIGINT {constraint: [FK; NOT NULL]}
-  address_id: BIGINT {constraint: [FK; NOT NULL]}
-  total_amount: DECIMAL(10,2) {constraint: [NOT NULL]}
-  discount_amount: DECIMAL(10,2) {constraint: [DEFAULT 0]}
-  pay_amount: DECIMAL(10,2) {constraint: [NOT NULL]}
-  status: TINYINT {constraint: [NOT NULL; DEFAULT 0]}
-  remark: VARCHAR(500)
-  paid_at: DATETIME
-  shipped_at: DATETIME
-  completed_at: DATETIME
-  created_at: DATETIME {constraint: [NOT NULL]}
-  updated_at: DATETIME {constraint: [NOT NULL]}
-
   style: {
-    fill: "#fff3e0"
-    stroke: "#ffa726"
-    font-color: "#e65100"
-    shadow: true
+    fill: "#F8FAFC"
+    stroke: "#CBD5E1"
+    font-color: "#1E293B"
+    font-size: 13
   }
+  id: INT {constraint: primary_key}
+  order_id: INT {constraint: foreign_key}
+  product_id: INT {constraint: foreign_key}
+  quantity: INT
+  price: DECIMAL
 }
 
-# ============ 订单项表 ============
-order_items: order_items 订单明细表 {
+payments: 支付记录 payments {
   shape: sql_table
-
-  id: BIGINT {constraint: [PK; AUTO_INCREMENT]}
-  order_id: BIGINT {constraint: [FK; NOT NULL]}
-  product_id: BIGINT {constraint: [FK; NOT NULL]}
-  product_name: VARCHAR(200) {constraint: [NOT NULL]}
-  product_image: VARCHAR(500)
-  price: DECIMAL(10,2) {constraint: [NOT NULL]}
-  quantity: INT {constraint: [NOT NULL]}
-  subtotal: DECIMAL(10,2) {constraint: [NOT NULL]}
-
   style: {
-    fill: "#fff3e0"
-    stroke: "#ffa726"
-    font-color: "#e65100"
-    shadow: true
+    fill: "#F8FAFC"
+    stroke: "#CBD5E1"
+    font-color: "#1E293B"
+    font-size: 13
   }
+  id: INT {constraint: primary_key}
+  order_id: INT {constraint: foreign_key}
+  amount: DECIMAL
+  method: ENUM
+  status: ENUM
+  paid_at: TIMESTAMP
 }
 
-# ============ 支付表 ============
-payments: payments 支付记录表 {
-  shape: sql_table
-
-  id: BIGINT {constraint: [PK; AUTO_INCREMENT]}
-  payment_no: VARCHAR(64) {constraint: [UNIQUE; NOT NULL]}
-  order_id: BIGINT {constraint: [FK; NOT NULL]}
-  user_id: BIGINT {constraint: [FK; NOT NULL]}
-  amount: DECIMAL(10,2) {constraint: [NOT NULL]}
-  method: VARCHAR(20) {constraint: [NOT NULL]}
-  channel_trade_no: VARCHAR(64)
-  status: TINYINT {constraint: [NOT NULL; DEFAULT 0]}
-  paid_at: DATETIME
-  created_at: DATETIME {constraint: [NOT NULL]}
-
-  style: {
-    fill: "#f3e5f5"
-    stroke: "#ab47bc"
-    font-color: "#6a1b9a"
-    shadow: true
-  }
+# --- 关系连线 ---
+users -> orders: 1:N {
+  style.stroke: "#94A3B8"
+  style.font-color: "#64748B"
+  style.font-size: 11
 }
-
-# ============ 关系 ============
-
-users.id <-> addresses.user_id: 1:N {
-  style: { stroke: "#42a5f5" }
+orders -> order_items: 1:N {
+  style.stroke: "#94A3B8"
+  style.font-color: "#64748B"
+  style.font-size: 11
 }
-
-users.id <-> orders.user_id: 1:N {
-  style: { stroke: "#ffa726" }
+products -> order_items: 1:N {
+  style.stroke: "#94A3B8"
+  style.font-color: "#64748B"
+  style.font-size: 11
 }
-
-addresses.id <-> orders.address_id: 1:N {
-  style: { stroke: "#ffa726" }
+categories -> products: 1:N {
+  style.stroke: "#94A3B8"
+  style.font-color: "#64748B"
+  style.font-size: 11
 }
-
-categories.id <-> products.category_id: 1:N {
-  style: { stroke: "#66bb6a" }
-}
-
-categories.id <-> categories.parent_id: 1:N 自引用 {
-  style: { stroke: "#66bb6a"; stroke-dash: 5 }
-}
-
-orders.id <-> order_items.order_id: 1:N {
-  style: { stroke: "#ffa726" }
-}
-
-products.id <-> order_items.product_id: 1:N {
-  style: { stroke: "#66bb6a" }
-}
-
-orders.id <-> payments.order_id: 1:N {
-  style: { stroke: "#ab47bc" }
-}
-
-users.id <-> payments.user_id: 1:N {
-  style: { stroke: "#ab47bc" }
+orders -> payments: 1:N {
+  style.stroke: "#94A3B8"
+  style.font-color: "#64748B"
+  style.font-size: 11
 }

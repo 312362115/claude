@@ -1,51 +1,60 @@
----
-title: 订单处理流程
----
+%%{init: {'theme':'base','themeVariables':{
+  'primaryColor':'#EFF6FF','primaryBorderColor':'#93C5FD','primaryTextColor':'#1E293B',
+  'secondaryColor':'#FFFBEB','secondaryBorderColor':'#FCD34D','secondaryTextColor':'#92400E',
+  'tertiaryColor':'#ECFDF5','tertiaryBorderColor':'#6EE7B7','tertiaryTextColor':'#065F46',
+  'lineColor':'#94A3B8','textColor':'#1E293B','fontSize':'13px',
+  'fontFamily':'PingFang SC, Inter, sans-serif',
+  'edgeLabelBackground':'#FFFFFF'
+}}}%%
+
 flowchart TD
-    classDef startEnd fill:#10B981,stroke:#059669,color:#ffffff,stroke-width:2px
-    classDef process fill:#4F46E5,stroke:#3730A3,color:#ffffff,stroke-width:2px
-    classDef decision fill:#F59E0B,stroke:#D97706,color:#1E293B,stroke-width:2px
-    classDef error fill:#EF4444,stroke:#DC2626,color:#ffffff,stroke-width:2px
-    classDef success fill:#06B6D4,stroke:#0891B2,color:#ffffff,stroke-width:2px
+    start([用户提交订单]):::termStart
+    validate[订单参数校验]:::process
+    isValid{参数合法?}:::decision
+    checkStock[库存检查]:::process
+    hasStock{库存充足?}:::decision
+    lockStock[锁定库存]:::process
+    createOrder[创建订单记录]:::highlight
 
-    Start([🛒 用户提交订单]):::startEnd
-
-    subgraph 订单验证
-        A[接收订单请求]:::process
-        B{库存是否充足?}:::decision
-        C[锁定库存]:::process
-        D[库存不足通知]:::error
+    subgraph payment [支付处理]
+        callPay[调用支付服务]:::process
+        payOk{支付成功?}:::decision
     end
 
-    subgraph 支付处理
-        E[生成支付订单]:::process
-        F{支付是否成功?}:::decision
-        G[记录支付信息]:::process
-        H[支付失败处理]:::error
-        I{重试次数 < 3?}:::decision
-    end
+    confirm[确认订单]:::success
+    notify[发送订单通知]:::process
+    done([订单完成]):::termStart
 
-    subgraph 订单履约
-        J[通知仓库备货]:::process
-        K[生成物流单号]:::process
-        L[更新订单状态]:::process
-        M[发送发货通知]:::success
-    end
+    errInvalid[返回参数错误]:::error
+    errStock[退回库存不足]:::error
+    errPay[支付失败处理]:::error
+    fail([订单失败]):::termEnd
 
-    Start --> A
-    A --> B
-    B -->|是| C
-    B -->|否| D
-    D --> End2([❌ 订单关闭]):::error
-    C --> E
-    E --> F
-    F -->|成功| G
-    F -->|失败| H
-    H --> I
-    I -->|是| E
-    I -->|否| End3([⚠️ 人工介入]):::error
-    G --> J
-    J --> K
-    K --> L
-    L --> M
-    M --> End1([✅ 订单完成]):::startEnd
+    start --> validate
+    validate --> isValid
+    isValid -->|是| checkStock
+    isValid -->|否| errInvalid
+    checkStock --> hasStock
+    hasStock -->|是| lockStock
+    hasStock -->|否| errStock
+    lockStock --> createOrder
+    createOrder --> callPay
+    callPay --> payOk
+    payOk -->|是| confirm
+    payOk -->|否| errPay
+    confirm --> notify
+    notify --> done
+
+    errInvalid -.-> fail
+    errStock -.-> fail
+    errPay -.-> fail
+
+    classDef termStart fill:#ECFDF5,stroke:#6EE7B7,stroke-width:1.5px,color:#065F46,rx:20
+    classDef termEnd fill:#F1F5F9,stroke:#CBD5E1,stroke-width:1.5px,color:#64748B,rx:20
+    classDef process fill:#EFF6FF,stroke:#93C5FD,stroke-width:1.5px,color:#1E293B,rx:6
+    classDef decision fill:#FFFBEB,stroke:#FCD34D,stroke-width:1.5px,color:#92400E
+    classDef highlight fill:#3B82F6,stroke:#3B82F6,stroke-width:1.5px,color:#FFFFFF,rx:6
+    classDef success fill:#ECFDF5,stroke:#6EE7B7,stroke-width:1.5px,color:#065F46,rx:6
+    classDef error fill:#FFF1F2,stroke:#FDA4AF,stroke-width:1.5px,color:#9F1239,rx:6
+
+    style payment fill:#EFF6FF,stroke:#BFDBFE,stroke-width:1px,color:#1E40AF,rx:8
