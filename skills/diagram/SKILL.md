@@ -83,7 +83,7 @@ description: >
 ```
 1. 读取专属规范 → 了解该图表的规则和模板
 2. 基于模板生成源文件（.d2 / .mmd / .html）
-3. 渲染为 PNG：Playwright 截图（fullPage 模式）→ output.png
+3. 渲染为 PNG：用 `browser_run_code` 截图（fullPage, 原生 DPI）→ output.png
 4. 输出到指定目录
 ```
 
@@ -95,12 +95,31 @@ description: >
 - 格式：PNG
 - 背景：白色 `#FFFFFF`
 - 四周 padding：至少 24px
-- 缩放：2x（Retina）
+- 缩放：原生设备 DPI（Retina 设备自动输出 2x 清晰图）
 
-### 3.2 文件命名
+### 3.2 截图方式
+
+**必须使用 `browser_run_code` + body 元素截图**，不要用 `browser_take_screenshot`（它强制 `scale: 'css'` 且按视口宽度截图，导致 1x 模糊 + 大片空白）。
+
+```javascript
+// 正确的截图方式：body 元素截图
+async (page) => {
+  await page.locator('body').screenshot({
+    path: '<输出路径>.png',
+    type: 'png'
+  });
+}
+```
+
+> **为什么用 body 元素截图**：
+> - 自动裁切到内容区域，无多余空白
+> - 默认 `scale: 'device'`，Retina 设备输出 2x 清晰图
+> - 模板 CSS 设置 `body { display: inline-block }` 确保 body 收缩包裹 SVG 内容
+
+### 3.3 文件命名
 `<图表类型>-<描述>.png`（英文小写 + 连字符）
 
-### 3.3 存放位置
+### 3.4 存放位置
 - 默认：与调用方的 Markdown 文件同级的 `assets/` 或 `images/` 目录
 - deep-research 调用时：`docs/research/assets/`
 
@@ -110,6 +129,6 @@ description: >
 
 | 工具 | 安装方式 | 用途 |
 |------|---------|------|
-| Playwright | MCP 插件（已集成） | HTML/SVG → PNG 截图（fullPage 模式） |
+| Playwright | MCP 插件（已集成） | HTML/SVG → PNG 截图（用 `browser_run_code` 截图） |
 
 首次使用时检测依赖是否已安装，未安装则提示安装命令。

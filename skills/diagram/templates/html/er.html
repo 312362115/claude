@@ -5,201 +5,384 @@
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
-    background: #F8FAFC;
-    font-family: 'PingFang SC','Inter',-apple-system,sans-serif;
-    display: flex; justify-content: center;
-    padding: 48px 32px;
-    -webkit-font-smoothing: antialiased;
-  }
-  .diagram {
-    background: #FFFFFF;
-    border-radius: 12px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-    padding: 32px;
+    font-family: -apple-system, system-ui, 'PingFang SC', sans-serif;
+    background: #ffffff;
+    padding: 24px;
+    display: inline-block;
   }
 </style>
 </head>
 <body>
-<div class="diagram">
-  <svg width="960" height="570" viewBox="0 0 960 570" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <marker id="arr" markerWidth="12" markerHeight="10" refX="11" refY="5" orient="auto" markerUnits="userSpaceOnUse">
-        <path d="M0,0 L11,5 L0,10 Z" fill="#94A3B8"/>
-      </marker>
-    </defs>
+<svg id="canvas"></svg>
 
-    <!-- 标题 -->
-    <text x="24" y="24" font-size="16" font-weight="700" fill="#0F172A">电商数据库 ER 图</text>
-    <text x="24" y="42" font-size="12" fill="#64748B">E-Commerce Database Schema</text>
+<script>
+(function() {
+  var NS = 'http://www.w3.org/2000/svg';
+  var svg = document.getElementById('canvas');
 
-    <!--
-      布局 2×3 网格：
-      col1 x=40   col2 x=380  col3 x=720
-      row1 y=80   row2 y=300
-      表宽 200，表头高 32，字段行高 23
-    -->
+  // ========== 数据定义 ==========
+  var title = '电商数据库 ER 图';
+  var subtitle = 'E-Commerce Database Schema';
 
-    <!-- ====== users (col1, row1) ====== -->
-    <rect x="40" y="80" width="200" height="32" rx="6" fill="#3B82F6"/>
-    <rect x="40" y="106" width="200" height="6" fill="#3B82F6"/>
-    <text x="140" y="102" text-anchor="middle" font-size="13" font-weight="700" fill="#FFFFFF">用户表 users</text>
-    <rect x="40" y="112" width="200" height="140" rx="0" fill="#FFFFFF"/>
-    <text x="52" y="132" font-size="12" font-weight="600" fill="#3B82F6">id</text>
-    <text x="228" y="132" text-anchor="end" font-size="11" fill="#94A3B8">INT · PK</text>
-    <line x1="52" y1="138" x2="228" y2="138" stroke="#F1F5F9" stroke-width="1"/>
-    <text x="52" y="155" font-size="12" fill="#1E293B">username</text>
-    <text x="228" y="155" text-anchor="end" font-size="11" fill="#94A3B8">VARCHAR(50)</text>
-    <line x1="52" y1="161" x2="228" y2="161" stroke="#F1F5F9" stroke-width="1"/>
-    <text x="52" y="178" font-size="12" fill="#1E293B">email</text>
-    <text x="228" y="178" text-anchor="end" font-size="11" fill="#94A3B8">VARCHAR(100)</text>
-    <line x1="52" y1="184" x2="228" y2="184" stroke="#F1F5F9" stroke-width="1"/>
-    <text x="52" y="201" font-size="12" fill="#1E293B">phone</text>
-    <text x="228" y="201" text-anchor="end" font-size="11" fill="#94A3B8">VARCHAR(20)</text>
-    <line x1="52" y1="207" x2="228" y2="207" stroke="#F1F5F9" stroke-width="1"/>
-    <text x="52" y="224" font-size="12" fill="#1E293B">status</text>
-    <text x="228" y="224" text-anchor="end" font-size="11" fill="#94A3B8">ENUM</text>
-    <line x1="52" y1="230" x2="228" y2="230" stroke="#F1F5F9" stroke-width="1"/>
-    <text x="52" y="247" font-size="12" fill="#1E293B">created_at</text>
-    <text x="228" y="247" text-anchor="end" font-size="11" fill="#94A3B8">TIMESTAMP</text>
-    <rect x="40" y="80" width="200" height="172" rx="6" fill="none" stroke="#E2E8F0" stroke-width="1"/>
+  // 表定义：type = 'core'（蓝色高亮）| 'normal'（蓝色浅）| 'junction'（灰色）
+  // 字段：pk=主键（表头色标注）, fk=外键（紫色标注）
+  var tables = [
+    { id: 'users', label: '用户表 users', type: 'core', fields: [
+      { name: 'id', dtype: 'INT', pk: true },
+      { name: 'username', dtype: 'VARCHAR(50)' },
+      { name: 'email', dtype: 'VARCHAR(100)' },
+      { name: 'phone', dtype: 'VARCHAR(20)' },
+      { name: 'status', dtype: 'ENUM' },
+      { name: 'created_at', dtype: 'TIMESTAMP' }
+    ]},
+    { id: 'orders', label: '订单表 orders', type: 'core', fields: [
+      { name: 'id', dtype: 'INT', pk: true },
+      { name: 'user_id', dtype: 'INT', fk: true },
+      { name: 'total_amount', dtype: 'DECIMAL' },
+      { name: 'status', dtype: 'ENUM' },
+      { name: 'created_at', dtype: 'TIMESTAMP' }
+    ]},
+    { id: 'products', label: '商品表 products', type: 'normal', fields: [
+      { name: 'id', dtype: 'INT', pk: true },
+      { name: 'name', dtype: 'VARCHAR(200)' },
+      { name: 'price', dtype: 'DECIMAL' },
+      { name: 'stock', dtype: 'INT' },
+      { name: 'category_id', dtype: 'INT', fk: true }
+    ]},
+    { id: 'categories', label: '分类表 categories', type: 'junction', fields: [
+      { name: 'id', dtype: 'INT', pk: true },
+      { name: 'name', dtype: 'VARCHAR(100)' },
+      { name: 'parent_id', dtype: 'INT' }
+    ]},
+    { id: 'order_items', label: '订单明细 order_items', type: 'junction', fields: [
+      { name: 'id', dtype: 'INT', pk: true },
+      { name: 'order_id', dtype: 'INT', fk: true },
+      { name: 'product_id', dtype: 'INT', fk: true },
+      { name: 'quantity', dtype: 'INT' },
+      { name: 'price', dtype: 'DECIMAL' }
+    ]},
+    { id: 'payments', label: '支付记录 payments', type: 'junction', fields: [
+      { name: 'id', dtype: 'INT', pk: true },
+      { name: 'order_id', dtype: 'INT', fk: true },
+      { name: 'amount', dtype: 'DECIMAL' },
+      { name: 'method', dtype: 'ENUM' },
+      { name: 'status', dtype: 'ENUM' },
+      { name: 'paid_at', dtype: 'TIMESTAMP' }
+    ]}
+  ];
 
-    <!-- ====== orders (col1, row2) ====== -->
-    <rect x="40" y="300" width="200" height="32" rx="6" fill="#3B82F6"/>
-    <rect x="40" y="326" width="200" height="6" fill="#3B82F6"/>
-    <text x="140" y="322" text-anchor="middle" font-size="13" font-weight="700" fill="#FFFFFF">订单表 orders</text>
-    <rect x="40" y="332" width="200" height="118" rx="0" fill="#FFFFFF"/>
-    <text x="52" y="352" font-size="12" font-weight="600" fill="#3B82F6">id</text>
-    <text x="228" y="352" text-anchor="end" font-size="11" fill="#94A3B8">INT · PK</text>
-    <line x1="52" y1="358" x2="228" y2="358" stroke="#F1F5F9" stroke-width="1"/>
-    <text x="52" y="375" font-size="12" font-weight="500" fill="#8B5CF6">user_id</text>
-    <text x="228" y="375" text-anchor="end" font-size="11" fill="#94A3B8">INT · FK</text>
-    <line x1="52" y1="381" x2="228" y2="381" stroke="#F1F5F9" stroke-width="1"/>
-    <text x="52" y="398" font-size="12" fill="#1E293B">total_amount</text>
-    <text x="228" y="398" text-anchor="end" font-size="11" fill="#94A3B8">DECIMAL</text>
-    <line x1="52" y1="404" x2="228" y2="404" stroke="#F1F5F9" stroke-width="1"/>
-    <text x="52" y="421" font-size="12" fill="#1E293B">status</text>
-    <text x="228" y="421" text-anchor="end" font-size="11" fill="#94A3B8">ENUM</text>
-    <line x1="52" y1="427" x2="228" y2="427" stroke="#F1F5F9" stroke-width="1"/>
-    <text x="52" y="444" font-size="12" fill="#1E293B">created_at</text>
-    <text x="228" y="444" text-anchor="end" font-size="11" fill="#94A3B8">TIMESTAMP</text>
-    <rect x="40" y="300" width="200" height="150" rx="6" fill="none" stroke="#E2E8F0" stroke-width="1"/>
+  // 关系定义
+  // 关系类型：label 支持任意文本（1:1 / 1:N / M:N / 0..1 等）
+  var relations = [
+    { from: 'users', to: 'orders', label: '1 : N' },
+    { from: 'orders', to: 'order_items', label: '1 : N' },
+    { from: 'products', to: 'order_items', label: '1 : N' },
+    { from: 'categories', to: 'products', label: '1 : N' },
+    { from: 'orders', to: 'payments', label: '1 : N' }
+  ];
 
-    <!-- ====== products (col2, row1) ====== -->
-    <rect x="380" y="80" width="200" height="32" rx="6" fill="#10B981"/>
-    <rect x="380" y="106" width="200" height="6" fill="#10B981"/>
-    <text x="480" y="102" text-anchor="middle" font-size="13" font-weight="700" fill="#FFFFFF">商品表 products</text>
-    <rect x="380" y="112" width="200" height="118" rx="0" fill="#FFFFFF"/>
-    <text x="392" y="132" font-size="12" font-weight="600" fill="#10B981">id</text>
-    <text x="568" y="132" text-anchor="end" font-size="11" fill="#94A3B8">INT · PK</text>
-    <line x1="392" y1="138" x2="568" y2="138" stroke="#F1F5F9" stroke-width="1"/>
-    <text x="392" y="155" font-size="12" fill="#1E293B">name</text>
-    <text x="568" y="155" text-anchor="end" font-size="11" fill="#94A3B8">VARCHAR(200)</text>
-    <line x1="392" y1="161" x2="568" y2="161" stroke="#F1F5F9" stroke-width="1"/>
-    <text x="392" y="178" font-size="12" fill="#1E293B">price</text>
-    <text x="568" y="178" text-anchor="end" font-size="11" fill="#94A3B8">DECIMAL</text>
-    <line x1="392" y1="184" x2="568" y2="184" stroke="#F1F5F9" stroke-width="1"/>
-    <text x="392" y="201" font-size="12" fill="#1E293B">stock</text>
-    <text x="568" y="201" text-anchor="end" font-size="11" fill="#94A3B8">INT</text>
-    <line x1="392" y1="207" x2="568" y2="207" stroke="#F1F5F9" stroke-width="1"/>
-    <text x="392" y="224" font-size="12" font-weight="500" fill="#8B5CF6">category_id</text>
-    <text x="568" y="224" text-anchor="end" font-size="11" fill="#94A3B8">INT · FK</text>
-    <rect x="380" y="80" width="200" height="150" rx="6" fill="none" stroke="#E2E8F0" stroke-width="1"/>
+  // ========== 主题 ==========
+  var theme = {
+    title: { color: '#1a1a2e', size: 22 },
+    subtitle: { color: '#888888', size: 14 },
+    tableTypes: {
+      core:     { headerBg: '#3B82F6', headerText: '#FFFFFF', pkColor: '#3B82F6' },
+      normal:   { headerBg: '#10B981', headerText: '#FFFFFF', pkColor: '#10B981' },
+      junction: { headerBg: '#64748B', headerText: '#FFFFFF', pkColor: '#64748B' }
+    },
+    field: { text: '#1E293B', type: '#94A3B8', fk: '#8B5CF6', divider: '#F1F5F9' },
+    table: { bg: '#FFFFFF', border: '#E2E8F0' },
+    line: { color: '#94A3B8', width: 1.5, label: '#64748B' }
+  };
 
-    <!-- ====== categories (col3, row1) ====== -->
-    <rect x="720" y="80" width="200" height="32" rx="6" fill="#64748B"/>
-    <rect x="720" y="106" width="200" height="6" fill="#64748B"/>
-    <text x="820" y="102" text-anchor="middle" font-size="13" font-weight="700" fill="#FFFFFF">分类表 categories</text>
-    <rect x="720" y="112" width="200" height="72" rx="0" fill="#FFFFFF"/>
-    <text x="732" y="132" font-size="12" font-weight="600" fill="#64748B">id</text>
-    <text x="908" y="132" text-anchor="end" font-size="11" fill="#94A3B8">INT · PK</text>
-    <line x1="732" y1="138" x2="908" y2="138" stroke="#F1F5F9" stroke-width="1"/>
-    <text x="732" y="155" font-size="12" fill="#1E293B">name</text>
-    <text x="908" y="155" text-anchor="end" font-size="11" fill="#94A3B8">VARCHAR(100)</text>
-    <line x1="732" y1="161" x2="908" y2="161" stroke="#F1F5F9" stroke-width="1"/>
-    <text x="732" y="178" font-size="12" fill="#1E293B">parent_id</text>
-    <text x="908" y="178" text-anchor="end" font-size="11" fill="#94A3B8">INT</text>
-    <rect x="720" y="80" width="200" height="104" rx="6" fill="none" stroke="#E2E8F0" stroke-width="1"/>
+  // ========== 工具函数 ==========
+  function el(tag, attrs) {
+    var e = document.createElementNS(NS, tag);
+    if (attrs) for (var k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+  function measureText(str, fontSize) {
+    var w = 0;
+    for (var i = 0; i < str.length; i++) w += str.charCodeAt(i) > 127 ? fontSize : fontSize * 0.6;
+    return w;
+  }
 
-    <!-- ====== order_items (col2, row2) ====== -->
-    <rect x="380" y="300" width="200" height="32" rx="6" fill="#64748B"/>
-    <rect x="380" y="326" width="200" height="6" fill="#64748B"/>
-    <text x="480" y="322" text-anchor="middle" font-size="13" font-weight="700" fill="#FFFFFF">订单明细 order_items</text>
-    <rect x="380" y="332" width="200" height="118" rx="0" fill="#FFFFFF"/>
-    <text x="392" y="352" font-size="12" font-weight="600" fill="#64748B">id</text>
-    <text x="568" y="352" text-anchor="end" font-size="11" fill="#94A3B8">INT · PK</text>
-    <line x1="392" y1="358" x2="568" y2="358" stroke="#F1F5F9" stroke-width="1"/>
-    <text x="392" y="375" font-size="12" font-weight="500" fill="#8B5CF6">order_id</text>
-    <text x="568" y="375" text-anchor="end" font-size="11" fill="#94A3B8">INT · FK</text>
-    <line x1="392" y1="381" x2="568" y2="381" stroke="#F1F5F9" stroke-width="1"/>
-    <text x="392" y="398" font-size="12" font-weight="500" fill="#8B5CF6">product_id</text>
-    <text x="568" y="398" text-anchor="end" font-size="11" fill="#94A3B8">INT · FK</text>
-    <line x1="392" y1="404" x2="568" y2="404" stroke="#F1F5F9" stroke-width="1"/>
-    <text x="392" y="421" font-size="12" fill="#1E293B">quantity</text>
-    <text x="568" y="421" text-anchor="end" font-size="11" fill="#94A3B8">INT</text>
-    <line x1="392" y1="427" x2="568" y2="427" stroke="#F1F5F9" stroke-width="1"/>
-    <text x="392" y="444" font-size="12" fill="#1E293B">price</text>
-    <text x="568" y="444" text-anchor="end" font-size="11" fill="#94A3B8">DECIMAL</text>
-    <rect x="380" y="300" width="200" height="150" rx="6" fill="none" stroke="#E2E8F0" stroke-width="1"/>
+  // ========== 布局参数 ==========
+  var HEADER_H = 32;
+  var HEADER_BRIDGE = 6;        // 表头下方色块延伸
+  var FIELD_H = 23;
+  var FIELD_PAD_X = 12;
+  var TABLE_PAD_X = 0;
+  var TABLE_MIN_W = 180;
+  var TABLE_GAP_X = 120;        // 表之间水平间距
+  var TABLE_GAP_Y = 80;         // 表之间垂直间距
+  var TITLE_AREA_H = 56;        // 标题区高度（标题+副标题+间距）
+  var LEGEND_H = 40;            // 底部图例高度
 
-    <!-- ====== payments (col3, row2) ====== -->
-    <rect x="720" y="300" width="200" height="32" rx="6" fill="#64748B"/>
-    <rect x="720" y="326" width="200" height="6" fill="#64748B"/>
-    <text x="820" y="322" text-anchor="middle" font-size="13" font-weight="700" fill="#FFFFFF">支付记录 payments</text>
-    <rect x="720" y="332" width="200" height="140" rx="0" fill="#FFFFFF"/>
-    <text x="732" y="352" font-size="12" font-weight="600" fill="#64748B">id</text>
-    <text x="908" y="352" text-anchor="end" font-size="11" fill="#94A3B8">INT · PK</text>
-    <line x1="732" y1="358" x2="908" y2="358" stroke="#F1F5F9" stroke-width="1"/>
-    <text x="732" y="375" font-size="12" font-weight="500" fill="#8B5CF6">order_id</text>
-    <text x="908" y="375" text-anchor="end" font-size="11" fill="#94A3B8">INT · FK</text>
-    <line x1="732" y1="381" x2="908" y2="381" stroke="#F1F5F9" stroke-width="1"/>
-    <text x="732" y="398" font-size="12" fill="#1E293B">amount</text>
-    <text x="908" y="398" text-anchor="end" font-size="11" fill="#94A3B8">DECIMAL</text>
-    <line x1="732" y1="404" x2="908" y2="404" stroke="#F1F5F9" stroke-width="1"/>
-    <text x="732" y="421" font-size="12" fill="#1E293B">method</text>
-    <text x="908" y="421" text-anchor="end" font-size="11" fill="#94A3B8">ENUM</text>
-    <line x1="732" y1="427" x2="908" y2="427" stroke="#F1F5F9" stroke-width="1"/>
-    <text x="732" y="444" font-size="12" fill="#1E293B">status</text>
-    <text x="908" y="444" text-anchor="end" font-size="11" fill="#94A3B8">ENUM</text>
-    <line x1="732" y1="450" x2="908" y2="450" stroke="#F1F5F9" stroke-width="1"/>
-    <text x="732" y="467" font-size="12" fill="#1E293B">paid_at</text>
-    <text x="908" y="467" text-anchor="end" font-size="11" fill="#94A3B8">TIMESTAMP</text>
-    <rect x="720" y="300" width="200" height="172" rx="6" fill="none" stroke="#E2E8F0" stroke-width="1"/>
+  // ========== 第一遍：计算每个表的尺寸 ==========
+  var tableMap = {};
 
-    <!-- ====== 关系连线（绕开表，不穿过） ====== -->
+  // 先算统一表宽（所有表中最宽的）
+  var maxTableW = TABLE_MIN_W;
+  tables.forEach(function(t) {
+    var labelW = measureText(t.label, 13) + 24;
+    if (labelW > maxTableW) maxTableW = labelW;
+    t.fields.forEach(function(f) {
+      var fieldW = measureText(f.name, 12) + measureText(f.dtype + (f.pk ? ' · PK' : f.fk ? ' · FK' : ''), 11) + FIELD_PAD_X * 2 + 20;
+      if (fieldW > maxTableW) maxTableW = fieldW;
+    });
+  });
 
-    <!-- users → orders (垂直向下，左侧居中) -->
-    <line x1="140" y1="252" x2="140" y2="298" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arr)"/>
-    <text x="152" y="280" font-size="10" fill="#64748B">1 : N</text>
+  tables.forEach(function(t) {
+    var h = HEADER_H + HEADER_BRIDGE + t.fields.length * FIELD_H + 4;
+    tableMap[t.id] = { id: t.id, label: t.label, type: t.type, fields: t.fields, w: maxTableW, h: h };
+  });
 
-    <!-- orders → order_items (水平向右，row2 中间) -->
-    <line x1="240" y1="375" x2="378" y2="375" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arr)"/>
-    <text x="309" y="368" text-anchor="middle" font-size="10" fill="#64748B">1 : N</text>
+  // ========== 第二遍：网格布局 ==========
+  var n = tables.length;
+  var cols = Math.min(n, 3);                    // 最多 3 列
+  var rows = Math.ceil(n / cols);
 
-    <!-- products → order_items (垂直向下) -->
-    <line x1="480" y1="230" x2="480" y2="298" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arr)"/>
-    <text x="492" y="268" font-size="10" fill="#64748B">1 : N</text>
+  tables.forEach(function(t, i) {
+    var row = Math.floor(i / cols);
+    var col = i % cols;
+    var node = tableMap[t.id];
+    node.x = col * (maxTableW + TABLE_GAP_X);
+    node.y = TITLE_AREA_H + row * (node.h + TABLE_GAP_Y);
+    // 同行表使用该行最大高度对齐（简化：暂不处理，各表独立高度）
+    node.cx = node.x + node.w / 2;
+    node.cy = node.y + node.h / 2;
+  });
 
-    <!-- categories → products (水平向左) -->
-    <line x1="720" y1="150" x2="582" y2="150" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arr)"/>
-    <text x="651" y="143" text-anchor="middle" font-size="10" fill="#64748B">1 : N</text>
+  // 同行表高度对齐：找每行最大高度，调整同行表的间距
+  for (var r = 0; r < rows; r++) {
+    var maxH = 0;
+    for (var c = 0; c < cols && r * cols + c < n; c++) {
+      var tbl = tableMap[tables[r * cols + c].id];
+      if (tbl.h > maxH) maxH = tbl.h;
+    }
+    // 重新计算该行及后续行的 y
+    if (r > 0) {
+      var prevRowMaxH = 0;
+      for (var c2 = 0; c2 < cols && (r - 1) * cols + c2 < n; c2++) {
+        var pt = tableMap[tables[(r - 1) * cols + c2].id];
+        var bottomY = pt.y + pt.h;
+        if (bottomY > prevRowMaxH) prevRowMaxH = bottomY;
+      }
+      for (var c3 = 0; c3 < cols && r * cols + c3 < n; c3++) {
+        var ct = tableMap[tables[r * cols + c3].id];
+        ct.y = prevRowMaxH + TABLE_GAP_Y;
+        ct.cy = ct.y + ct.h / 2;
+      }
+    }
+  }
 
-    <!-- orders → payments (底部绕过，从 payments 底边中点垂直进入) -->
-    <path d="M240,440 L280,440 Q290,440 290,450 L290,490 Q290,500 300,500 L810,500 Q820,500 820,490 L820,474" stroke="#94A3B8" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
-    <text x="555" y="496" text-anchor="middle" font-size="10" fill="#64748B">1 : N</text>
+  // ========== 画布自适应 ==========
+  var maxX = 0, maxY = 0;
+  tables.forEach(function(t) {
+    var node = tableMap[t.id];
+    if (node.x + node.w > maxX) maxX = node.x + node.w;
+    if (node.y + node.h > maxY) maxY = node.y + node.h;
+  });
 
-    <!-- ====== 图例 ====== -->
-    <rect x="40" y="540" width="16" height="12" rx="3" fill="#3B82F6"/>
-    <text x="62" y="550" font-size="11" fill="#64748B">核心表</text>
+  var svgW = maxX + 40;
+  var svgH = maxY + LEGEND_H + 40;
 
-    <rect x="120" y="540" width="16" height="12" rx="3" fill="#10B981"/>
-    <text x="142" y="550" font-size="11" fill="#64748B">业务表</text>
+  svg.setAttribute('width', svgW);
+  svg.setAttribute('height', svgH);
+  svg.setAttribute('viewBox', '0 0 ' + svgW + ' ' + svgH);
 
-    <rect x="200" y="540" width="16" height="12" rx="3" fill="#64748B"/>
-    <text x="222" y="550" font-size="11" fill="#64748B">关联/辅助表</text>
+  // ========== SVG Defs ==========
+  var defs = el('defs');
+  var arrow = el('marker', { id: 'arrow', markerWidth: 8, markerHeight: 6, refX: 8, refY: 3, orient: 'auto' });
+  arrow.appendChild(el('path', { d: 'M0,0.5 L7,3 L0,5.5', fill: 'none', stroke: theme.line.color, 'stroke-width': 1.2, 'stroke-linecap': 'round' }));
+  defs.appendChild(arrow);
+  svg.appendChild(defs);
 
-    <text x="340" y="550" font-size="12" font-weight="500" fill="#8B5CF6">FK字段</text>
-    <text x="390" y="550" font-size="11" fill="#64748B">外键用紫色标注</text>
-  </svg>
-</div>
+  // ========== 渲染层 ==========
+  var lineGroup = el('g'); svg.appendChild(lineGroup);
+  var nodeGroup = el('g'); svg.appendChild(nodeGroup);
+
+  // ========== 标题（左上角） ==========
+  if (title) {
+    var tEl = el('text', { x: 0, y: 18, 'font-size': 16, 'font-weight': 700, fill: theme.title.color, 'font-family': "-apple-system,system-ui,'PingFang SC',sans-serif" });
+    tEl.textContent = title; nodeGroup.appendChild(tEl);
+  }
+  if (subtitle) {
+    var stEl = el('text', { x: 0, y: 36, 'font-size': 12, fill: theme.subtitle.color, 'font-family': "-apple-system,system-ui,'PingFang SC',sans-serif" });
+    stEl.textContent = subtitle; nodeGroup.appendChild(stEl);
+  }
+
+  // ========== 绘制关系连线 ==========
+  var R = 10;  // 折线圆角半径
+
+  // 判断两个表的行列关系
+  function getGridPos(t) {
+    var idx = tables.findIndex(function(tb) { return tb.id === t.id; });
+    return { row: Math.floor(idx / cols), col: idx % cols };
+  }
+
+  relations.forEach(function(rel) {
+    var fromT = tableMap[rel.from], toT = tableMap[rel.to];
+    if (!fromT || !toT) return;
+
+    var fp = getGridPos(fromT), tp = getGridPos(toT);
+    var sameRow = fp.row === tp.row;
+    var sameCol = fp.col === tp.col;
+    var dx = toT.cx - fromT.cx, dy = toT.cy - fromT.cy;
+    var x1, y1, x2, y2, d, labelX, labelY;
+
+    if (sameRow) {
+      // 同行：直线水平连接，y 取两表 cy 的平均值
+      var commonY = (fromT.cy + toT.cy) / 2;
+      if (dx > 0) { x1 = fromT.x + fromT.w; x2 = toT.x; }
+      else        { x1 = fromT.x; x2 = toT.x + toT.w; }
+      d = 'M' + x1 + ',' + commonY + ' L' + x2 + ',' + commonY;
+      // 标签在线中间上方
+      labelX = (x1 + x2) / 2;
+      labelY = commonY - 8;
+
+    } else if (sameCol) {
+      // 同列：直线垂直连接
+      if (dy > 0) { y1 = fromT.y + fromT.h; y2 = toT.y; }
+      else        { y1 = fromT.y; y2 = toT.y + toT.h; }
+      d = 'M' + fromT.cx + ',' + y1 + ' L' + toT.cx + ',' + y2;
+      // 标签在线中间右侧（垂直间距中央）
+      labelX = fromT.cx + 14;
+      labelY = (y1 + y2) / 2 + 4;
+
+    } else {
+      // 对角：L 形折线 + 圆角
+      // 策略：从 from 侧边水平出发 → 转弯垂直到达 to 顶/底部
+      if (dx > 0) {
+        x1 = fromT.x + fromT.w; y1 = fromT.cy;
+        x2 = toT.cx; y2 = dy > 0 ? toT.y : toT.y + toT.h;
+      } else {
+        x1 = fromT.x; y1 = fromT.cy;
+        x2 = toT.cx; y2 = dy > 0 ? toT.y : toT.y + toT.h;
+      }
+      var sx = x2 > x1 ? 1 : -1;
+      var sy = y2 > y1 ? 1 : -1;
+      d = 'M' + x1 + ',' + y1 +
+          ' L' + (x2 - R * sx) + ',' + y1 +
+          ' Q' + x2 + ',' + y1 + ' ' + x2 + ',' + (y1 + R * sy) +
+          ' L' + x2 + ',' + y2;
+      // 标签放在水平段中间上方（表间空白区域）
+      labelX = (x1 + x2) / 2;
+      labelY = y1 - 8;
+    }
+
+    lineGroup.appendChild(el('path', {
+      d: d, stroke: theme.line.color, 'stroke-width': theme.line.width,
+      fill: 'none', 'marker-end': 'url(#arrow)'
+    }));
+
+    // 基数标签（存储，稍后在节点层之上渲染）
+    rel._labelX = labelX;
+    rel._labelY = labelY;
+  });
+
+  // 基数标签（在连线层渲染，位于表间空白区域）
+  relations.forEach(function(rel) {
+    if (rel._labelX === undefined) return;
+    var lt = el('text', {
+      x: rel._labelX, y: rel._labelY, 'text-anchor': 'middle',
+      'font-size': 10, fill: theme.line.label,
+      'font-family': "-apple-system,system-ui,'PingFang SC',sans-serif"
+    });
+    lt.textContent = rel.label; lineGroup.appendChild(lt);
+  });
+
+  // ========== 绘制表 ==========
+  tables.forEach(function(t) {
+    var node = tableMap[t.id];
+    var x = node.x, y = node.y, w = node.w, h = node.h;
+    var ts = theme.tableTypes[node.type] || theme.tableTypes.junction;
+
+    // 外边框
+    nodeGroup.appendChild(el('rect', {
+      x: x, y: y, width: w, height: h,
+      rx: 6, fill: theme.table.bg, stroke: theme.table.border, 'stroke-width': 1
+    }));
+
+    // 表头背景
+    nodeGroup.appendChild(el('rect', {
+      x: x, y: y, width: w, height: HEADER_H,
+      rx: 6, fill: ts.headerBg
+    }));
+    // 表头下方色块延伸（填补圆角间隙）
+    nodeGroup.appendChild(el('rect', {
+      x: x, y: y + HEADER_H - 4, width: w, height: HEADER_BRIDGE + 4,
+      fill: ts.headerBg
+    }));
+
+    // 表头文字
+    var headerText = el('text', {
+      x: x + w / 2, y: y + HEADER_H / 2 + 2,
+      'text-anchor': 'middle', 'dominant-baseline': 'central',
+      'font-size': 13, 'font-weight': 700, fill: ts.headerText,
+      'font-family': "-apple-system,system-ui,'PingFang SC',sans-serif"
+    });
+    headerText.textContent = node.label; nodeGroup.appendChild(headerText);
+
+    // 字段列表
+    var fieldStartY = y + HEADER_H + HEADER_BRIDGE;
+    node.fields.forEach(function(f, fi) {
+      var fy = fieldStartY + fi * FIELD_H;
+
+      // 字段名
+      var nameColor = f.pk ? ts.pkColor : f.fk ? theme.field.fk : theme.field.text;
+      var nameWeight = (f.pk || f.fk) ? 600 : 400;
+      var nameEl = el('text', {
+        x: x + FIELD_PAD_X, y: fy + FIELD_H / 2 + 1,
+        'dominant-baseline': 'central',
+        'font-size': 12, 'font-weight': nameWeight, fill: nameColor,
+        'font-family': "-apple-system,system-ui,'PingFang SC',sans-serif"
+      });
+      nameEl.textContent = f.name; nodeGroup.appendChild(nameEl);
+
+      // 类型
+      var typeStr = f.dtype + (f.pk ? ' · PK' : f.fk ? ' · FK' : '');
+      var typeEl = el('text', {
+        x: x + w - FIELD_PAD_X, y: fy + FIELD_H / 2 + 1,
+        'text-anchor': 'end', 'dominant-baseline': 'central',
+        'font-size': 11, fill: theme.field.type,
+        'font-family': "-apple-system,system-ui,'PingFang SC',sans-serif"
+      });
+      typeEl.textContent = typeStr; nodeGroup.appendChild(typeEl);
+
+      // 分隔线（最后一行不加）
+      if (fi < node.fields.length - 1) {
+        nodeGroup.appendChild(el('line', {
+          x1: x + FIELD_PAD_X, y1: fy + FIELD_H,
+          x2: x + w - FIELD_PAD_X, y2: fy + FIELD_H,
+          stroke: theme.field.divider, 'stroke-width': 1
+        }));
+      }
+    });
+  });
+
+  // ========== 图例 ==========
+  var legendY = maxY + 24;
+  var legendItems = [
+    { color: theme.tableTypes.core.headerBg, label: '核心表' },
+    { color: theme.tableTypes.normal.headerBg, label: '业务表' },
+    { color: theme.tableTypes.junction.headerBg, label: '关联/辅助表' }
+  ];
+  var lx = 0;
+  legendItems.forEach(function(item) {
+    nodeGroup.appendChild(el('rect', { x: lx, y: legendY, width: 16, height: 12, rx: 3, fill: item.color }));
+    var lt = el('text', { x: lx + 22, y: legendY + 10, 'font-size': 11, fill: '#64748B', 'font-family': "-apple-system,system-ui,'PingFang SC',sans-serif" });
+    lt.textContent = item.label; nodeGroup.appendChild(lt);
+    lx += measureText(item.label, 11) + 42;
+  });
+  // FK 标注说明
+  var fkLabel = el('text', { x: lx, y: legendY + 10, 'font-size': 12, 'font-weight': 500, fill: theme.field.fk, 'font-family': "-apple-system,system-ui,'PingFang SC',sans-serif" });
+  fkLabel.textContent = 'FK字段'; nodeGroup.appendChild(fkLabel);
+  var fkDesc = el('text', { x: lx + measureText('FK字段', 12) + 8, y: legendY + 10, 'font-size': 11, fill: '#64748B', 'font-family': "-apple-system,system-ui,'PingFang SC',sans-serif" });
+  fkDesc.textContent = '外键用紫色标注'; nodeGroup.appendChild(fkDesc);
+
+})();
+</script>
 </body>
 </html>

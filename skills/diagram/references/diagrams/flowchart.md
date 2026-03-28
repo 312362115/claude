@@ -85,35 +85,85 @@ mmdc -i input.mmd -o output.png -b white -s 2
 
 ---
 
-## 精品模式（HTML/SVG）
+## 精品模式（HTML/SVG + JS 动态布局）
 
-用 SVG 精确控制每个节点位置和连线路径。
+使用内联 JS 动态计算节点坐标，支持任意数量的步骤和判断分支。
+
+### 数据结构
+
+```javascript
+// 标题
+var title = '订单处理流程';
+var subtitle = 'Order Processing Workflow';
+
+// 主路径步骤（按顺序排列，自顶向下渲染）
+// type: 'start' | 'process' | 'decision' | 'highlight' | 'error' | 'success' | 'datastore' | 'external' | 'end'
+// decision 节点的 no 字段指定"否"分支目标 id
+var steps = [
+  { id: 'start', label: '用户提交订单', type: 'start' },
+  { id: 's1', label: '订单参数校验', type: 'process' },
+  { id: 'd1', label: '参数合法?', type: 'decision', no: 'e1' },
+  { id: 's2', label: '库存检查', type: 'process' },
+  { id: 's3', label: '创建订单记录', type: 'highlight' },
+  { id: 'end', label: '订单完成', type: 'end' }
+];
+
+// 侧分支节点（decision 的"否"路径目标，放在主路径右侧）
+// 支持 next 数组实现子流程（多步骤链）
+var sideNodes = [
+  { id: 'e1', label: '返回参数错误', type: 'error' },
+  { id: 'e2', label: '释放锁定库存', type: 'process',
+    next: [
+      { label: '订单标记支付失败', type: 'error' },
+      { label: '发送支付失败通知', type: 'process' }
+    ]
+  }
+];
+```
+
+### 分组模式（subgraph）
+
+支持将步骤按模块/服务分组，每组用不同背景色区分，组间自动串联：
+
+```javascript
+// 分组模式：定义 groups 数组，每组含 label 和 steps
+// groups 为 null 则走简单模式（直接使用 steps）
+var groups = [
+  { label: '用户端', steps: [
+    { id: 'start', label: '用户提交订单', type: 'start' },
+    { id: 's1', label: '表单校验', type: 'process' },
+  ]},
+  { label: '后端处理', steps: [
+    { id: 's2', label: '风控检查', type: 'process' },
+    { id: 'd1', label: '通过?', type: 'decision', no: 'e1' },
+  ]},
+];
+var steps = null;  // 分组模式时设为 null
+```
+
+分组背景使用 `theme.layers` 配色（6 色循环），每组一个圆角矩形 + 左上角标签。
+
+### 布局算法
+
+- **主路径**：所有非决策矩形节点统一宽度（取最大值），自顶向下排列
+- **决策节点**：菱形，宽高根据文字动态计算
+- **侧分支**：与对应 decision 的下一步同行，x 基于**主路径矩形右边缘**（非菱形）+ 60px 间距
+- **侧子流程**：`next` 数组中的节点依次向下排列，间距 28px，所有侧节点统一宽度
+- **分组背景**：包裹组内所有节点，顶部 36px（含标签）、底部 20px、左右 32px padding
+- **组间间距**：32px
+- **间距**：步骤间 36px，含判断时 48px
+- **画布自适应**：根据节点实际位置计算，最小宽度 1000px
+- **连线**：主路径直线，决策后绿色；"否"路径折线（Q 圆角），红色；子流程连线红色 1.5px
+- **渲染顺序**：分组背景层 → 连线层 → 节点层
 
 ### 规则
 
-- 节点坐标手动计算，遵循间距规范（步骤间 36px，含判断 48px，分支 ≥60px）
-- 连线用 `<path>` 画直角折线，转角用 `Q` 贝塞尔曲线（10px 圆角）
-- 箭头用 `<marker>` 定义，统一 12×10 尺寸
-- 节点样式直接引用 CSS 变量（设计规范的色值）
+- 节点坐标由 JS 动态计算，不手动写死
+- 连线用 `<line>` 和 `<path>`（折线转角 Q 贝塞尔 10px 圆角）
+- 箭头用 `<marker>` 定义（8×6 开放 V 形）
+- 渲染顺序：连线层 → 节点层
+- 配色从 theme 对象取值，不硬编码
 - 最终通过 Playwright 截图为 PNG
-
-### SVG 节点模板
-
-```html
-<!-- Process 节点 -->
-<rect x="" y="" width="140" height="40" rx="6"
-  fill="#EFF6FF" stroke="#93C5FD" stroke-width="1.5"/>
-<text x="" y="" text-anchor="middle"
-  font-size="13" font-weight="500" fill="#1E293B">步骤名</text>
-
-<!-- Decision 节点 -->
-<polygon points="cx,cy-30 cx+40,cy cx,cy+30 cx-40,cy"
-  fill="#FFFBEB" stroke="#FCD34D" stroke-width="1.5"/>
-
-<!-- 直角折线（带圆角转角） -->
-<path d="M x1,y1 L x2,y1 Q x2+r,y1 x2+r,y1+r L x2+r,y2"
-  stroke="#94A3B8" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
-```
 
 ---
 

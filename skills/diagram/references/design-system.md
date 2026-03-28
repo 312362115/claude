@@ -180,7 +180,9 @@
 - 画布：**内容自适应**，不设固定宽高。body 不写死 width/height，由内容撑开，四周保证 24px padding
 - SVG 的 width/height/viewBox 由 JS 根据内容动态计算
 - 节点宽度 = 文字宽度 + 左右 padding（动态计算，非固定值）
-- Playwright 截图使用 `fullPage: true` 捕获实际内容区域
+- Playwright 截图使用 `browser_run_code` + `page.locator('body').screenshot()` 捕获实际内容区域（自动裁切、2x Retina 输出）
+- 模板 CSS 必须包含 `body { display: inline-block }` 确保 body 收缩包裹内容
+- SVG 画布不设最小宽度约束，完全由内容撑开
 - 字体：`-apple-system, system-ui, 'PingFang SC', sans-serif`
 - 背景：白色 `#FFFFFF`
 

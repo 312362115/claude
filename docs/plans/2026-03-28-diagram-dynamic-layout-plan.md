@@ -15,15 +15,15 @@
   - 涉及：`skills/diagram/references/design-system.md`（更新配色章节），`skills/diagram/references/themes.md`（新建）
   - 验收：theme 对象结构定义完成，default 主题覆盖所有组件颜色
 
-- [ ] 3. P0 — flowchart 动态布局
-  - 做什么：改造为 JS 动态布局，支持任意数量的步骤/判断/分支，使用公共工具库 + 树形布局算法
-  - 涉及：`skills/diagram/templates/html/flowchart.html`（重写）
-  - 验收：传入 3 步简单流程 / 8 步含 2 个判断的复杂流程 / 12 步多分支流程，均无重叠无截断
+- [x] 3. P0 — flowchart 动态布局
+  - 做什么：改造为 JS 动态布局，支持任意数量的步骤/判断/分支，使用公共工具库 + 线性布局算法
+  - 涉及：`skills/diagram/templates/html/flowchart.html`（重写），`skills/diagram/references/diagrams/flowchart.md`（更新）
+  - 验收：✅ 4 种场景验证通过（简单 4 步 / 中等 8 步 2 判断 / 复杂 12 步 3 判断 / 超级复杂 15 步 4 判断），均无重叠无截断，画布自适应
 
-- [ ] 4. P0 — sequence 动态布局
-  - 做什么：改造为 JS 动态布局，支持任意数量参与者和消息，使用公共工具库 + 时序布局算法
+- [x] 4. P0 — sequence 动态布局
+  - 做什么：改造为 JS 动态布局，支持任意数量参与者和消息，含 fragment（loop/alt/opt/par/break）
   - 涉及：`skills/diagram/templates/html/sequence.html`（重写）
-  - 验收：传入 3 参与者 5 消息 / 6 参与者 15 消息 / 含自调用和并行片段，均正常
+  - 验收：✅ 6 参与者 12 消息 + alt fragment + 自调用 + database 圆柱体，均正常
 
 - [ ] 5. P0 — er 动态布局
   - 做什么：改造为 JS 动态布局，支持任意数量表和关系，使用公共工具库 + 网格布局算法

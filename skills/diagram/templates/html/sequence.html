@@ -3,169 +3,486 @@
 <head>
 <meta charset="UTF-8">
 <style>
-  :root {
-    --c-bg: #FFFFFF; --c-surface: #F8FAFC;
-    --c-border: #E2E8F0; --c-border-light: #CBD5E1;
-    --c-text: #1E293B; --c-text-secondary: #64748B; --c-text-heading: #0F172A;
-    --c-line: #94A3B8;
-    --c-blue: #3B82F6; --c-blue-light: #EFF6FF; --c-blue-mid: #93C5FD;
-    --c-emerald: #10B981; --c-emerald-light: #ECFDF5; --c-emerald-mid: #6EE7B7; --c-emerald-dark: #065F46;
-    --c-amber: #F59E0B; --c-amber-light: #FFFBEB; --c-amber-mid: #FCD34D;
-    --c-violet: #8B5CF6; --c-violet-light: #F5F3FF; --c-violet-mid: #C4B5FD; --c-violet-dark: #5B21B6;
-    --c-rose: #F43F5E; --c-rose-light: #FFF1F2; --c-rose-mid: #FDA4AF;
-    --c-cyan: #06B6D4; --c-cyan-light: #ECFEFF;
-    --font-sans: 'PingFang SC','Inter',-apple-system,sans-serif;
-  }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
-    background: var(--c-surface);
-    font-family: var(--font-sans);
-    display: flex; justify-content: center;
-    padding: 48px 32px;
-    -webkit-font-smoothing: antialiased;
-  }
-  .diagram {
-    background: var(--c-bg);
-    border-radius: 12px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-    padding: 32px;
+    font-family: -apple-system, system-ui, 'PingFang SC', sans-serif;
+    background: #ffffff;
+    padding: 24px;
+    display: inline-block;
   }
 </style>
 </head>
 <body>
-<div class="diagram">
-  <svg width="960" height="620" viewBox="0 0 960 620" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="userSpaceOnUse">
-        <path d="M0,0 L9,4 L0,8 Z" fill="#94A3B8"/>
-      </marker>
-      <marker id="arrow-open" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="userSpaceOnUse">
-        <path d="M1,0 L9,4 L1,8" stroke="#94A3B8" stroke-width="1.5" fill="none"/>
-      </marker>
-    </defs>
+<svg id="canvas"></svg>
 
-    <!-- 标题 -->
-    <text x="24" y="24" font-size="16" font-weight="700" fill="#0F172A" font-family="PingFang SC, Inter, sans-serif">API 登录鉴权时序图</text>
-    <text x="24" y="42" font-size="12" fill="#64748B" font-family="PingFang SC, Inter, sans-serif">Login Authentication Sequence</text>
+<script>
+(function() {
+  var NS = 'http://www.w3.org/2000/svg';
+  var svg = document.getElementById('canvas');
 
-    <!--
-      参与者 X 坐标：
-      用户=80  前端=230  Gateway=400  Auth=570  MySQL=740  Redis=880
-      参与者宽度：80-100px，高度：36px
-    -->
+  // ========== 数据定义 ==========
+  var title = 'API 登录鉴权时序图';
+  var subtitle = 'Login Authentication Sequence';
 
-    <!-- ====== 参与者（顶部） ====== -->
-    <!-- 用户 -->
-    <rect x="40" y="64" width="80" height="36" rx="6" fill="#EFF6FF" stroke="#93C5FD" stroke-width="1.5"/>
-    <text x="80" y="87" text-anchor="middle" font-size="13" font-weight="600" fill="#1E293B" font-family="PingFang SC, Inter, sans-serif">用户</text>
+  // 参与者：type = 'actor' | 'service' | 'database'
+  var participants = [
+    { id: 'user', label: '用户', type: 'actor' },
+    { id: 'fe', label: '前端', type: 'service' },
+    { id: 'gw', label: 'API Gateway', type: 'service' },
+    { id: 'auth', label: 'Auth 服务', type: 'service' },
+    { id: 'mysql', label: 'MySQL', type: 'database' },
+    { id: 'redis', label: 'Redis', type: 'database' }
+  ];
 
-    <!-- 前端 -->
-    <rect x="190" y="64" width="80" height="36" rx="6" fill="#ECFDF5" stroke="#6EE7B7" stroke-width="1.5"/>
-    <text x="230" y="87" text-anchor="middle" font-size="13" font-weight="600" fill="#065F46" font-family="PingFang SC, Inter, sans-serif">前端</text>
+  // 消息列表：支持普通消息和 fragment 嵌套
+  // 普通消息 type: 'sync' | 'return' | 'self'
+  // fragment type: 'fragment', kind: 'loop'|'alt'|'opt'|'par'|'break'
+  //   - messages: 内部消息数组
+  //   - condition: 条件文本
+  //   - alt 专用: elseCondition, elseMessages
+  var messages = [
+    { from: 'user', to: 'fe',    label: '输入账号密码',          type: 'sync' },
+    { from: 'fe',   to: 'gw',    label: 'POST /login',          type: 'sync' },
+    { from: 'gw',   to: 'auth',  label: '转发请求',              type: 'sync' },
+    { from: 'auth', to: 'mysql', label: '查询用户',              type: 'sync' },
+    { from: 'mysql',to: 'auth',  label: '返回用户信息',          type: 'return' },
+    { from: 'auth', to: 'auth',  label: '验证密码 + 签发 Token', type: 'self' },
+    { type: 'fragment', kind: 'alt', condition: 'Token 有效',
+      messages: [
+        { from: 'auth', to: 'redis', label: '存储 Session',     type: 'sync' },
+        { from: 'redis',to: 'auth',  label: 'OK',               type: 'return' }
+      ],
+      elseCondition: 'Token 无效',
+      elseMessages: [
+        { from: 'auth', to: 'gw',    label: '401 Unauthorized', type: 'return' }
+      ]
+    },
+    { from: 'auth', to: 'gw',    label: '返回 Token',            type: 'return' },
+    { from: 'gw',   to: 'fe',    label: '200 OK + Token',        type: 'return' },
+    { from: 'fe',   to: 'user',  label: '登录成功',              type: 'return' }
+  ];
 
-    <!-- API Gateway -->
-    <rect x="350" y="64" width="100" height="36" rx="6" fill="#FFFBEB" stroke="#FCD34D" stroke-width="1.5"/>
-    <text x="400" y="87" text-anchor="middle" font-size="13" font-weight="600" fill="#92400E" font-family="PingFang SC, Inter, sans-serif">API Gateway</text>
+  // ========== 主题 ==========
+  var theme = {
+    title: { color: '#1a1a2e', size: 22 },
+    subtitle: { color: '#888888', size: 14 },
+    lifeline: { color: '#CBD5E1', width: 1, dash: '4 3' },
+    message: { color: '#94A3B8', width: 1.5, labelColor: '#1E293B', returnLabelColor: '#64748B' },
+    fragment: { bg: 'rgba(0,0,0,0.015)', border: '#CBD5E1', labelBg: '#64748B', labelColor: '#FFFFFF', condColor: '#64748B', dividerColor: '#CBD5E1' },
+    colors: [
+      { bg: '#EFF6FF', border: '#93C5FD', text: '#1E293B' },
+      { bg: '#ECFDF5', border: '#6EE7B7', text: '#065F46' },
+      { bg: '#FFFBEB', border: '#FCD34D', text: '#92400E' },
+      { bg: '#F5F3FF', border: '#C4B5FD', text: '#5B21B6' },
+      { bg: '#F8FAFC', border: '#CBD5E1', text: '#64748B' },
+      { bg: '#FFF1F2', border: '#FDA4AF', text: '#9F1239' }
+    ],
+    activationColors: [
+      { bg: '#DBEAFE', border: '#93C5FD' },
+      { bg: '#D1FAE5', border: '#6EE7B7' },
+      { bg: '#FEF3C7', border: '#FCD34D' },
+      { bg: '#EDE9FE', border: '#C4B5FD' },
+      { bg: '#F1F5F9', border: '#CBD5E1' },
+      { bg: '#FCE7F3', border: '#FDA4AF' }
+    ]
+  };
 
-    <!-- Auth 服务 -->
-    <rect x="530" y="64" width="80" height="36" rx="6" fill="#F5F3FF" stroke="#C4B5FD" stroke-width="1.5"/>
-    <text x="570" y="87" text-anchor="middle" font-size="13" font-weight="600" fill="#5B21B6" font-family="PingFang SC, Inter, sans-serif">Auth 服务</text>
+  // ========== 工具函数 ==========
+  function el(tag, attrs) {
+    var e = document.createElementNS(NS, tag);
+    if (attrs) for (var k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
 
-    <!-- MySQL（圆柱体：底部椭圆→矩形body→顶部椭圆盖子） -->
-    <ellipse cx="740" cy="102" rx="32" ry="8" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.5"/>
-    <rect x="708" y="72" width="64" height="30" fill="#F8FAFC"/>
-    <line x1="708" y1="72" x2="708" y2="102" stroke="#CBD5E1" stroke-width="1.5"/>
-    <line x1="772" y1="72" x2="772" y2="102" stroke="#CBD5E1" stroke-width="1.5"/>
-    <ellipse cx="740" cy="72" rx="32" ry="8" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.5"/>
-    <text x="740" y="94" text-anchor="middle" font-size="11" font-weight="600" fill="#64748B" font-family="PingFang SC, Inter, sans-serif">MySQL</text>
+  function measureText(str, fontSize) {
+    var w = 0;
+    for (var i = 0; i < str.length; i++) {
+      w += str.charCodeAt(i) > 127 ? fontSize : fontSize * 0.6;
+    }
+    return w;
+  }
 
-    <!-- Redis（圆柱体：底部椭圆→矩形body→顶部椭圆盖子） -->
-    <ellipse cx="880" cy="102" rx="32" ry="8" fill="#FFF1F2" stroke="#FDA4AF" stroke-width="1.5"/>
-    <rect x="848" y="72" width="64" height="30" fill="#FFF1F2"/>
-    <line x1="848" y1="72" x2="848" y2="102" stroke="#FDA4AF" stroke-width="1.5"/>
-    <line x1="912" y1="72" x2="912" y2="102" stroke="#FDA4AF" stroke-width="1.5"/>
-    <ellipse cx="880" cy="72" rx="32" ry="8" fill="#FFF1F2" stroke="#FDA4AF" stroke-width="1.5"/>
-    <text x="880" y="94" text-anchor="middle" font-size="11" font-weight="600" fill="#9F1239" font-family="PingFang SC, Inter, sans-serif">Redis</text>
+  // ========== 布局参数 ==========
+  var FONT_SIZE = 13;
+  var LABEL_FONT_SIZE = 11;
+  var PART_PAD_X = 16;
+  var PART_H = 36;
+  var PART_MIN_W = 60;
+  var PART_GAP = 40;
+  var MSG_GAP = 36;
+  var SELF_H = 28;
+  var SELF_W = 28;
+  var TITLE_AREA_H = 60;
+  var TOP_Y = TITLE_AREA_H + 10;
+  var ACT_W = 10;
+  var FRAG_LABEL_H = 24;        // fragment 标签区高度
+  var FRAG_PAD_TOP = 8;         // fragment 顶部到标签
+  var FRAG_PAD_BOTTOM = 20;     // fragment 底部 padding
+  var FRAG_PAD_X = 28;          // fragment 左右超出参与者的距离
+  var FRAG_DIVIDER_GAP = 20;    // alt 分隔线上下额外间距
+  var FRAG_AFTER_GAP = 16;      // fragment 结束后额外间距（避免下一条消息与边框重合）
 
-    <!-- ====== 生命线（虚线） ====== -->
-    <line x1="80" y1="100" x2="80" y2="560" stroke="#CBD5E1" stroke-width="1" stroke-dasharray="4 3"/>
-    <line x1="230" y1="100" x2="230" y2="560" stroke="#CBD5E1" stroke-width="1" stroke-dasharray="4 3"/>
-    <line x1="400" y1="100" x2="400" y2="560" stroke="#CBD5E1" stroke-width="1" stroke-dasharray="4 3"/>
-    <line x1="570" y1="100" x2="570" y2="560" stroke="#CBD5E1" stroke-width="1" stroke-dasharray="4 3"/>
-    <line x1="740" y1="108" x2="740" y2="560" stroke="#CBD5E1" stroke-width="1" stroke-dasharray="4 3"/>
-    <line x1="880" y1="108" x2="880" y2="560" stroke="#CBD5E1" stroke-width="1" stroke-dasharray="4 3"/>
+  // ========== 第一遍：计算参与者宽度和位置 ==========
+  var partMap = {};
+  var partList = [];
+  var partIdxMap = {};
 
-    <!-- ====== 激活条（起止对齐消息线） ====== -->
-    <!-- 前端激活：收到消息1(y=150) → 发出返回11(y=520) -->
-    <rect x="225" y="150" width="10" height="370" rx="2" fill="#DBEAFE" stroke="#93C5FD" stroke-width="1"/>
-    <!-- Gateway 激活：收到消息2(y=190) → 发出返回10(y=480) -->
-    <rect x="395" y="190" width="10" height="290" rx="2" fill="#FEF3C7" stroke="#FCD34D" stroke-width="1"/>
-    <!-- Auth 激活：收到消息3(y=230) → 发出返回9(y=440) -->
-    <rect x="565" y="230" width="10" height="210" rx="2" fill="#EDE9FE" stroke="#C4B5FD" stroke-width="1"/>
-    <!-- MySQL 激活：收到消息4(y=270) → 发出返回5(y=300) -->
-    <rect x="735" y="270" width="10" height="30" rx="2" fill="#F1F5F9" stroke="#CBD5E1" stroke-width="1"/>
-    <!-- Redis 激活：收到消息7(y=385) → 发出返回8(y=410) -->
-    <rect x="875" y="385" width="10" height="25" rx="2" fill="#FCE7F3" stroke="#FDA4AF" stroke-width="1"/>
+  participants.forEach(function(p, i) {
+    var textW = measureText(p.label, FONT_SIZE);
+    var w = Math.max(textW + PART_PAD_X * 2, PART_MIN_W);
+    var node = { id: p.id, label: p.label, type: p.type, w: w, h: PART_H, colorIdx: i % theme.colors.length };
+    partMap[p.id] = node;
+    partList.push(node);
+    partIdxMap[p.id] = i;
+  });
 
-    <!-- ====== 消息 ====== -->
+  // 收集所有普通消息（递归展平）用于计算间距
+  function collectMessages(items) {
+    var result = [];
+    items.forEach(function(m) {
+      if (m.type === 'fragment') {
+        result = result.concat(collectMessages(m.messages));
+        if (m.elseMessages) result = result.concat(collectMessages(m.elseMessages));
+      } else {
+        result.push(m);
+      }
+    });
+    return result;
+  }
 
-    <!-- 1. 用户→前端：输入账号密码 -->
-    <line x1="80" y1="150" x2="223" y2="150" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arrow)"/>
-    <text x="152" y="143" text-anchor="middle" font-size="11" fill="#1E293B" font-family="PingFang SC, Inter, sans-serif">1. 输入账号密码</text>
+  var allMsgs = collectMessages(messages);
+  var minMsgGap = PART_GAP;
+  allMsgs.forEach(function(m) {
+    if (m.type === 'self') return;
+    var labelW = measureText(m.label, LABEL_FONT_SIZE) + 30; // 留序号空间
+    var fi = partIdxMap[m.from], ti = partIdxMap[m.to];
+    var span = Math.abs(ti - fi);
+    if (span > 0) {
+      var needed = (labelW + 20) / span;
+      if (needed > minMsgGap) minMsgGap = needed;
+    }
+  });
 
-    <!-- 2. 前端→Gateway：POST /login -->
-    <line x1="237" y1="190" x2="393" y2="190" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arrow)"/>
-    <text x="315" y="183" text-anchor="middle" font-size="11" fill="#1E293B" font-family="PingFang SC, Inter, sans-serif">2. POST /login</text>
+  // 参与者等距排列
+  partList.forEach(function(p, i) {
+    if (i === 0) { p.cx = p.w / 2; }
+    else {
+      var prev = partList[i - 1];
+      p.cx = prev.cx + prev.w / 2 + minMsgGap + p.w / 2;
+    }
+    p.x = p.cx - p.w / 2;
+    partMap[p.id] = p;
+  });
 
-    <!-- 3. Gateway→Auth：转发请求 -->
-    <line x1="407" y1="230" x2="563" y2="230" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arrow)"/>
-    <text x="485" y="223" text-anchor="middle" font-size="11" fill="#1E293B" font-family="PingFang SC, Inter, sans-serif">3. 转发请求</text>
+  // ========== 第二遍：递归计算消息 y 坐标 + fragment 边界 ==========
+  var lifelineStart = TOP_Y + PART_H;
+  var msgY = lifelineStart + 40;
+  var globalIdx = 1;
+  var flatMessages = [];  // 展平的普通消息（含 _y）
+  var fragmentRects = []; // fragment 矩形信息
 
-    <!-- 4. Auth→MySQL：查询用户 -->
-    <line x1="577" y1="270" x2="733" y2="270" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arrow)"/>
-    <text x="655" y="263" text-anchor="middle" font-size="11" fill="#1E293B" font-family="PingFang SC, Inter, sans-serif">4. 查询用户</text>
+  // 找 fragment 内所有参与者的 min/max cx
+  function findFragmentBounds(items) {
+    var minCx = Infinity, maxCx = -Infinity;
+    items.forEach(function(m) {
+      if (m.type === 'fragment') {
+        var sub = findFragmentBounds(m.messages);
+        if (sub.min < minCx) minCx = sub.min;
+        if (sub.max > maxCx) maxCx = sub.max;
+        if (m.elseMessages) {
+          var sub2 = findFragmentBounds(m.elseMessages);
+          if (sub2.min < minCx) minCx = sub2.min;
+          if (sub2.max > maxCx) maxCx = sub2.max;
+        }
+      } else {
+        var fp = partMap[m.from], tp = partMap[m.to];
+        var leftCx = Math.min(fp.cx, tp.cx);
+        var rightCx = Math.max(fp.cx, tp.cx);
+        if (leftCx < minCx) minCx = leftCx;
+        if (rightCx > maxCx) maxCx = rightCx;
+      }
+    });
+    return { min: minCx, max: maxCx };
+  }
 
-    <!-- 5. MySQL→Auth：返回用户信息（虚线返回） -->
-    <line x1="733" y1="300" x2="577" y2="300" stroke="#94A3B8" stroke-width="1.5" stroke-dasharray="6 3" marker-end="url(#arrow-open)"/>
-    <text x="655" y="293" text-anchor="middle" font-size="11" fill="#64748B" font-family="PingFang SC, Inter, sans-serif">5. 返回用户信息</text>
+  function processItems(items) {
+    items.forEach(function(item) {
+      if (item.type === 'fragment') {
+        // Fragment 开始
+        var startY = msgY;
+        msgY += FRAG_LABEL_H + FRAG_PAD_TOP;
 
-    <!-- 6. Auth→Auth：验证密码 + 签发 Token（自调用，圆角转角） -->
-    <path d="M577,340 L597,340 Q605,340 605,348 L605,352 Q605,360 597,360 L577,360" stroke="#94A3B8" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
-    <text x="613" y="346" font-size="11" fill="#1E293B" font-family="PingFang SC, Inter, sans-serif">6. 验证密码 + 签发 Token</text>
+        // 处理主消息
+        processItems(item.messages);
 
-    <!-- 7. Auth→Redis：存储 Session -->
-    <line x1="577" y1="385" x2="873" y2="385" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arrow)"/>
-    <text x="725" y="378" text-anchor="middle" font-size="11" fill="#1E293B" font-family="PingFang SC, Inter, sans-serif">7. 存储 Session</text>
+        var dividerY = null;
+        // Alt 分隔
+        if (item.kind === 'alt' && item.elseMessages) {
+          msgY += FRAG_DIVIDER_GAP / 2;
+          dividerY = msgY;
+          msgY += FRAG_DIVIDER_GAP + 16;  // 分隔线 + else 条件文本 + 间距
+          processItems(item.elseMessages);
+        }
 
-    <!-- 8. Redis→Auth：OK（虚线返回） -->
-    <line x1="873" y1="410" x2="577" y2="410" stroke="#94A3B8" stroke-width="1.5" stroke-dasharray="6 3" marker-end="url(#arrow-open)"/>
-    <text x="725" y="403" text-anchor="middle" font-size="11" fill="#64748B" font-family="PingFang SC, Inter, sans-serif">8. OK</text>
+        msgY += FRAG_PAD_BOTTOM;
+        var endY = msgY;
+        msgY += FRAG_AFTER_GAP;  // fragment 后额外间距
 
-    <!-- 9. Auth→Gateway：返回 Token（虚线返回） -->
-    <line x1="563" y1="440" x2="407" y2="440" stroke="#94A3B8" stroke-width="1.5" stroke-dasharray="6 3" marker-end="url(#arrow-open)"/>
-    <text x="485" y="433" text-anchor="middle" font-size="11" fill="#64748B" font-family="PingFang SC, Inter, sans-serif">9. 返回 Token</text>
+        // 计算 x 范围
+        var bounds = findFragmentBounds(item.messages);
+        if (item.elseMessages) {
+          var bounds2 = findFragmentBounds(item.elseMessages);
+          if (bounds2.min < bounds.min) bounds.min = bounds2.min;
+          if (bounds2.max > bounds.max) bounds.max = bounds2.max;
+        }
 
-    <!-- 10. Gateway→前端：200 OK（虚线返回） -->
-    <line x1="393" y1="480" x2="237" y2="480" stroke="#94A3B8" stroke-width="1.5" stroke-dasharray="6 3" marker-end="url(#arrow-open)"/>
-    <text x="315" y="473" text-anchor="middle" font-size="11" fill="#64748B" font-family="PingFang SC, Inter, sans-serif">10. 200 OK + Token</text>
+        // 找最左和最右参与者的框边缘
+        var leftP = null, rightP = null;
+        partList.forEach(function(p) {
+          if (p.cx === bounds.min) leftP = p;
+          if (p.cx === bounds.max) rightP = p;
+        });
 
-    <!-- 11. 前端→用户：登录成功（虚线返回） -->
-    <line x1="223" y1="520" x2="80" y2="520" stroke="#94A3B8" stroke-width="1.5" stroke-dasharray="6 3" marker-end="url(#arrow-open)"/>
-    <text x="152" y="513" text-anchor="middle" font-size="11" fill="#64748B" font-family="PingFang SC, Inter, sans-serif">11. 登录成功</text>
+        fragmentRects.push({
+          kind: item.kind,
+          condition: item.condition || '',
+          elseCondition: item.elseCondition || '',
+          startY: startY,
+          endY: endY,
+          left: (leftP ? leftP.cx - leftP.w / 2 : bounds.min) - FRAG_PAD_X,
+          right: (rightP ? rightP.cx + rightP.w / 2 : bounds.max) + FRAG_PAD_X,
+          dividerY: dividerY
+        });
 
-    <!-- ====== 参与者（底部复制） ====== -->
-    <rect x="40" y="568" width="80" height="36" rx="6" fill="#EFF6FF" stroke="#93C5FD" stroke-width="1.5"/>
-    <text x="80" y="591" text-anchor="middle" font-size="13" font-weight="600" fill="#1E293B" font-family="PingFang SC, Inter, sans-serif">用户</text>
+      } else {
+        // 普通消息
+        item._y = msgY;
+        item._idx = globalIdx++;
+        flatMessages.push(item);
+        msgY += (item.type === 'self') ? SELF_H + MSG_GAP : MSG_GAP;
+      }
+    });
+  }
 
-    <rect x="190" y="568" width="80" height="36" rx="6" fill="#ECFDF5" stroke="#6EE7B7" stroke-width="1.5"/>
-    <text x="230" y="591" text-anchor="middle" font-size="13" font-weight="600" fill="#065F46" font-family="PingFang SC, Inter, sans-serif">前端</text>
+  processItems(messages);
 
-    <rect x="350" y="568" width="100" height="36" rx="6" fill="#FFFBEB" stroke="#FCD34D" stroke-width="1.5"/>
-    <text x="400" y="591" text-anchor="middle" font-size="13" font-weight="600" fill="#92400E" font-family="PingFang SC, Inter, sans-serif">API Gateway</text>
+  var lifelineEnd = msgY + 20;
+  var bottomPartY = lifelineEnd + 10;
 
-    <rect x="530" y="568" width="80" height="36" rx="6" fill="#F5F3FF" stroke="#C4B5FD" stroke-width="1.5"/>
-    <text x="570" y="591" text-anchor="middle" font-size="13" font-weight="600" fill="#5B21B6" font-family="PingFang SC, Inter, sans-serif">Auth 服务</text>
-  </svg>
-</div>
+  // ========== 第三遍：计算激活条 ==========
+  var activations = {};
+  participants.forEach(function(p) { activations[p.id] = { startY: Infinity, endY: 0 }; });
+
+  flatMessages.forEach(function(m) {
+    var fromAct = activations[m.from], toAct = activations[m.to];
+    if (m._y < fromAct.startY) fromAct.startY = m._y;
+    if (m._y > fromAct.endY) fromAct.endY = m._y;
+    if (m._y < toAct.startY) toAct.startY = m._y;
+    if (m.type === 'self') {
+      if (m._y + SELF_H > toAct.endY) toAct.endY = m._y + SELF_H;
+    } else {
+      if (m._y > toAct.endY) toAct.endY = m._y;
+    }
+  });
+
+  // ========== 画布自适应 ==========
+  var lastP = partList[partList.length - 1];
+  // 考虑 fragment 和 self-call 标签可能向右扩展
+  var maxRight = lastP.cx + lastP.w / 2;
+  fragmentRects.forEach(function(f) { if (f.right > maxRight) maxRight = f.right; });
+  flatMessages.forEach(function(m) {
+    if (m.type === 'self') {
+      var sx = partMap[m.from].cx + ACT_W / 2 + SELF_W + 14 + measureText(m._idx + '. ' + m.label, LABEL_FONT_SIZE);
+      if (sx > maxRight) maxRight = sx;
+    }
+  });
+
+  var svgW = maxRight + 40;
+  var svgH = bottomPartY + PART_H + 40;
+
+  svg.setAttribute('width', svgW);
+  svg.setAttribute('height', svgH);
+  svg.setAttribute('viewBox', '0 0 ' + svgW + ' ' + svgH);
+
+  // ========== SVG Defs ==========
+  var defs = el('defs');
+  var arrow = el('marker', { id: 'arrow', markerWidth: 8, markerHeight: 6, refX: 8, refY: 3, orient: 'auto' });
+  arrow.appendChild(el('path', { d: 'M0,0.5 L7,3 L0,5.5', fill: 'none', stroke: theme.message.color, 'stroke-width': 1.2, 'stroke-linecap': 'round' }));
+  defs.appendChild(arrow);
+  var arrowOpen = el('marker', { id: 'arrow-open', markerWidth: 8, markerHeight: 6, refX: 8, refY: 3, orient: 'auto' });
+  arrowOpen.appendChild(el('path', { d: 'M0,0.5 L7,3 L0,5.5', fill: 'none', stroke: theme.message.color, 'stroke-width': 1.2, 'stroke-linecap': 'round' }));
+  defs.appendChild(arrowOpen);
+  svg.appendChild(defs);
+
+  // ========== 渲染层 ==========
+  var bgGroup = el('g'); svg.appendChild(bgGroup);
+  var fragGroup = el('g'); svg.appendChild(fragGroup);
+  var lineGroup = el('g'); svg.appendChild(lineGroup);
+  var nodeGroup = el('g'); svg.appendChild(nodeGroup);
+
+  // ========== 标题（左上角） ==========
+  if (title) {
+    var tEl = el('text', { x: 0, y: 18, 'font-size': 16, 'font-weight': 700, fill: theme.title.color, 'font-family': "-apple-system,system-ui,'PingFang SC',sans-serif" });
+    tEl.textContent = title; nodeGroup.appendChild(tEl);
+  }
+  if (subtitle) {
+    var stEl = el('text', { x: 0, y: 36, 'font-size': 12, fill: theme.subtitle.color, 'font-family': "-apple-system,system-ui,'PingFang SC',sans-serif" });
+    stEl.textContent = subtitle; nodeGroup.appendChild(stEl);
+  }
+
+  // ========== 绘制生命线 ==========
+  partList.forEach(function(p) {
+    bgGroup.appendChild(el('line', {
+      x1: p.cx, y1: lifelineStart, x2: p.cx, y2: lifelineEnd,
+      stroke: theme.lifeline.color, 'stroke-width': theme.lifeline.width, 'stroke-dasharray': theme.lifeline.dash
+    }));
+  });
+
+  // ========== 绘制激活条 ==========
+  partList.forEach(function(p) {
+    var act = activations[p.id];
+    if (act.startY < Infinity && act.endY > 0) {
+      var ac = theme.activationColors[p.colorIdx];
+      bgGroup.appendChild(el('rect', {
+        x: p.cx - ACT_W / 2, y: act.startY - 4, width: ACT_W, height: act.endY - act.startY + 8,
+        rx: 2, fill: ac.bg, stroke: ac.border, 'stroke-width': 1
+      }));
+    }
+  });
+
+  // ========== 绘制 fragment 矩形 ==========
+  fragmentRects.forEach(function(f) {
+    var fx = f.left, fy = f.startY, fw = f.right - f.left, fh = f.endY - f.startY;
+
+    // 背景矩形
+    fragGroup.appendChild(el('rect', {
+      x: fx, y: fy, width: fw, height: fh,
+      rx: 4, fill: theme.fragment.bg, stroke: theme.fragment.border, 'stroke-width': 1
+    }));
+
+    // 标签（左上角五边形背景）
+    var kindText = f.kind.toUpperCase();
+    var kindW = measureText(kindText, 10) + 14;
+    var kindH = 18;
+    var labelPath = 'M' + fx + ',' + fy +
+                    ' L' + (fx + kindW) + ',' + fy +
+                    ' L' + (fx + kindW + 6) + ',' + (fy + kindH / 2) +
+                    ' L' + (fx + kindW) + ',' + (fy + kindH) +
+                    ' L' + fx + ',' + (fy + kindH) + ' Z';
+    fragGroup.appendChild(el('path', {
+      d: labelPath, fill: theme.fragment.labelBg
+    }));
+    var kindLabel = el('text', {
+      x: fx + kindW / 2, y: fy + kindH / 2 + 1,
+      'text-anchor': 'middle', 'dominant-baseline': 'central',
+      'font-size': 10, 'font-weight': 700, fill: theme.fragment.labelColor,
+      'font-family': "-apple-system,system-ui,'PingFang SC',sans-serif"
+    });
+    kindLabel.textContent = kindText; fragGroup.appendChild(kindLabel);
+
+    // 条件文本（标签右侧）
+    if (f.condition) {
+      var condLabel = el('text', {
+        x: fx + kindW + 14, y: fy + kindH / 2 + 1,
+        'dominant-baseline': 'central',
+        'font-size': 11, fill: theme.fragment.condColor, 'font-style': 'italic',
+        'font-family': "-apple-system,system-ui,'PingFang SC',sans-serif"
+      });
+      condLabel.textContent = '[' + f.condition + ']'; fragGroup.appendChild(condLabel);
+    }
+
+    // Alt 分隔线
+    if (f.dividerY !== null) {
+      fragGroup.appendChild(el('line', {
+        x1: fx, y1: f.dividerY, x2: fx + fw, y2: f.dividerY,
+        stroke: theme.fragment.dividerColor, 'stroke-width': 1, 'stroke-dasharray': '6 3'
+      }));
+      // else 条件文本
+      if (f.elseCondition) {
+        var elseLabel = el('text', {
+          x: fx + 14, y: f.dividerY + 14,
+          'font-size': 11, fill: theme.fragment.condColor, 'font-style': 'italic',
+          'font-family': "-apple-system,system-ui,'PingFang SC',sans-serif"
+        });
+        elseLabel.textContent = '[' + f.elseCondition + ']'; fragGroup.appendChild(elseLabel);
+      }
+    }
+  });
+
+  // ========== 绘制消息 ==========
+  flatMessages.forEach(function(m) {
+    var fromP = partMap[m.from], toP = partMap[m.to];
+    var y = m._y;
+    var labelText = m._idx + '. ' + m.label;
+
+    if (m.type === 'self') {
+      var sx = fromP.cx + ACT_W / 2;
+      var d = 'M' + sx + ',' + y +
+              ' L' + (sx + SELF_W) + ',' + y +
+              ' Q' + (sx + SELF_W + 8) + ',' + y + ' ' + (sx + SELF_W + 8) + ',' + (y + 8) +
+              ' L' + (sx + SELF_W + 8) + ',' + (y + SELF_H - 8) +
+              ' Q' + (sx + SELF_W + 8) + ',' + (y + SELF_H) + ' ' + (sx + SELF_W) + ',' + (y + SELF_H) +
+              ' L' + sx + ',' + (y + SELF_H);
+      lineGroup.appendChild(el('path', {
+        d: d, stroke: theme.message.color, 'stroke-width': theme.message.width,
+        fill: 'none', 'marker-end': 'url(#arrow)'
+      }));
+      var lt = el('text', {
+        x: sx + SELF_W + 14, y: y + SELF_H / 2 + 1,
+        'font-size': LABEL_FONT_SIZE, fill: theme.message.labelColor,
+        'font-family': "-apple-system,system-ui,'PingFang SC',sans-serif"
+      });
+      lt.textContent = labelText; lineGroup.appendChild(lt);
+
+    } else {
+      var leftToRight = fromP.cx < toP.cx;
+      var x1 = fromP.cx + (leftToRight ? ACT_W / 2 : -ACT_W / 2);
+      var x2 = toP.cx + (leftToRight ? -ACT_W / 2 : ACT_W / 2);
+      var isReturn = m.type === 'return';
+
+      var lineAttrs = {
+        x1: x1, y1: y, x2: x2, y2: y,
+        stroke: theme.message.color, 'stroke-width': theme.message.width,
+        'marker-end': isReturn ? 'url(#arrow-open)' : 'url(#arrow)'
+      };
+      if (isReturn) lineAttrs['stroke-dasharray'] = '6 3';
+      lineGroup.appendChild(el('line', lineAttrs));
+
+      var labelX = (x1 + x2) / 2;
+      var labelColor = isReturn ? theme.message.returnLabelColor : theme.message.labelColor;
+      var lt = el('text', {
+        x: labelX, y: y - 7, 'text-anchor': 'middle',
+        'font-size': LABEL_FONT_SIZE, fill: labelColor,
+        'font-family': "-apple-system,system-ui,'PingFang SC',sans-serif"
+      });
+      lt.textContent = labelText; lineGroup.appendChild(lt);
+    }
+  });
+
+  // ========== 绘制参与者 ==========
+  function drawParticipant(p, y) {
+    var color = theme.colors[p.colorIdx];
+    if (p.type === 'database') {
+      var cx = p.cx, rx = p.w / 2, ry = 8;
+      var bodyTop = y + ry, bodyBottom = y + p.h - ry;
+      nodeGroup.appendChild(el('ellipse', { cx: cx, cy: bodyBottom, rx: rx, ry: ry, fill: color.bg, stroke: color.border, 'stroke-width': 1.5 }));
+      nodeGroup.appendChild(el('rect', { x: cx - rx, y: bodyTop, width: rx * 2, height: bodyBottom - bodyTop, fill: color.bg }));
+      nodeGroup.appendChild(el('line', { x1: cx - rx, y1: bodyTop, x2: cx - rx, y2: bodyBottom, stroke: color.border, 'stroke-width': 1.5 }));
+      nodeGroup.appendChild(el('line', { x1: cx + rx, y1: bodyTop, x2: cx + rx, y2: bodyBottom, stroke: color.border, 'stroke-width': 1.5 }));
+      nodeGroup.appendChild(el('ellipse', { cx: cx, cy: bodyTop, rx: rx, ry: ry, fill: color.bg, stroke: color.border, 'stroke-width': 1.5 }));
+      var t = el('text', { x: cx, y: y + p.h / 2 + 4, 'text-anchor': 'middle', 'dominant-baseline': 'central', 'font-size': 11, 'font-weight': 600, fill: color.text, 'font-family': "-apple-system,system-ui,'PingFang SC',sans-serif" });
+      t.textContent = p.label; nodeGroup.appendChild(t);
+    } else {
+      nodeGroup.appendChild(el('rect', { x: p.x, y: y, width: p.w, height: p.h, rx: 6, fill: color.bg, stroke: color.border, 'stroke-width': 1.5 }));
+      var t = el('text', { x: p.cx, y: y + p.h / 2 + 1, 'text-anchor': 'middle', 'dominant-baseline': 'central', 'font-size': FONT_SIZE, 'font-weight': 600, fill: color.text, 'font-family': "-apple-system,system-ui,'PingFang SC',sans-serif" });
+      t.textContent = p.label; nodeGroup.appendChild(t);
+    }
+  }
+
+  partList.forEach(function(p) { drawParticipant(p, TOP_Y); });
+  partList.forEach(function(p) { drawParticipant(p, bottomPartY); });
+
+})();
+</script>
 </body>
 </html>
