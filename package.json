@@ -1,0 +1,28 @@
+{
+  "name": "max",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/312362115/claude.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/312362115/claude/issues"
+  },
+  "homepage": "https://github.com/312362115/claude#readme",
+  "dependencies": {
+    "dagre": "^0.8.5",
+    "elkjs": "^0.11.1"
+  }
+}

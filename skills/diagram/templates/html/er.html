@@ -11,6 +11,7 @@
     display: inline-block;
   }
 </style>
+<script src="lib/elk.bundled.js"></script>
 </head>
 <body>
 <svg id="canvas"></svg>
@@ -26,8 +27,6 @@
 
   // 表定义：type = 'core'（蓝色高亮）| 'normal'（蓝色浅）| 'junction'（灰色）
   // 字段：pk=主键（表头色标注）, fk=外键（紫色标注）
-  // 重要：表的排列顺序决定网格位置，相关表应放在相邻位置
-  // 当前 3 列网格：Row 0 = [0,1,2], Row 1 = [3,4,5]
   var tables = [
     { id: 'users', label: '用户表 users', type: 'core', fields: [
       { name: 'id', dtype: 'INT', pk: true },
@@ -116,9 +115,7 @@
   var FIELD_PAD_X = 12;
   var TABLE_PAD_X = 0;
   var TABLE_MIN_W = 180;
-  var TABLE_GAP_X = 120;        // 表之间水平间距
-  var TABLE_GAP_Y = 80;         // 表之间垂直间距
-  var TITLE_AREA_H = 56;        // 标题区高度（标题+副标题+间距）
+  var TITLE_H = 56;             // 标题区高度（标题+副标题+间距）
   var LEGEND_H = 40;            // 底部图例高度
 
   // ========== 第一遍：计算每个表的尺寸 ==========
@@ -140,109 +137,45 @@
     tableMap[t.id] = { id: t.id, label: t.label, type: t.type, fields: t.fields, w: maxTableW, h: h };
   });
 
-  // ========== 第二遍：Sugiyama 分层布局（自动优化排列） ==========
-  // 与 dagre/Mermaid/D2 相同的算法思路：分层 → 重心排序 → 居中放置
+  // ========== ELKjs 布局 ==========
+  var elk = new ELK();
 
-  // 1. 构建邻接表（无向）
-  var adj = {};
-  tables.forEach(function(t) { adj[t.id] = []; });
-  relations.forEach(function(r) {
-    if (adj[r.from] && adj[r.from].indexOf(r.to) === -1) adj[r.from].push(r.to);
-    if (adj[r.to] && adj[r.to].indexOf(r.from) === -1) adj[r.to].push(r.from);
-  });
+  var elkGraph = {
+    id: 'root',
+    layoutOptions: {
+      'elk.algorithm': 'layered',
+      'elk.direction': 'DOWN',
+      'elk.spacing.nodeNode': '80',
+      'elk.layered.spacing.nodeNodeBetweenLayers': '60',
+      'elk.spacing.edgeNode': '20',
+      'elk.spacing.edgeEdge': '15',
+      'elk.layered.crossingMinimization.strategy': 'LAYER_SWEEP'
+    },
+    children: [],
+    edges: []
+  };
 
-  // 2. BFS 分层：从关系最多的表开始
-  var rootId = tables[0].id, maxDeg = 0;
-  tables.forEach(function(t) { if (adj[t.id].length > maxDeg) { maxDeg = adj[t.id].length; rootId = t.id; } });
-
-  var layerOf = {};  // id → layer index
-  var layerNodes = [];  // [[id, id], [id, id, id], ...]
-  var visited = {};
-  var queue = [rootId];
-  visited[rootId] = true;
-  while (queue.length > 0) {
-    layerNodes.push(queue.slice());
-    queue.forEach(function(id) { layerOf[id] = layerNodes.length - 1; });
-    var next = [];
-    queue.forEach(function(id) {
-      adj[id].forEach(function(nb) {
-        if (!visited[nb]) { visited[nb] = true; next.push(nb); }
-      });
-    });
-    queue = next;
-  }
-  // 补充孤立表
+  // 添加节点
   tables.forEach(function(t) {
-    if (!visited[t.id]) { layerNodes.push([t.id]); layerOf[t.id] = layerNodes.length - 1; visited[t.id] = true; }
+    var n = tableMap[t.id];
+    elkGraph.children.push({ id: t.id, width: n.w, height: n.h });
   });
 
-  // 层宽限制：每层最多 maxPerRow 个，超出的拆到新行
-  var maxPerRow = Math.max(3, Math.ceil(Math.sqrt(tables.length)));
-  var splitLayers = [];
-  layerNodes.forEach(function(layer) {
-    for (var i = 0; i < layer.length; i += maxPerRow) {
-      var chunk = layer.slice(i, i + maxPerRow);
-      splitLayers.push(chunk);
-    }
-  });
-  // 更新 layerOf
-  splitLayers.forEach(function(layer, li) {
-    layer.forEach(function(id) { layerOf[id] = li; });
-  });
-  layerNodes = splitLayers;
-
-  // 3. 重心法排序（4 轮交替正反扫描，减少交叉）
-  // 给每层节点初始位置
-  layerNodes.forEach(function(layer, li) {
-    layer.forEach(function(id, i) { tableMap[id]._pos = i; });
+  // 添加边
+  relations.forEach(function(r, i) {
+    elkGraph.edges.push({ id: 'e' + i, sources: [r.from], targets: [r.to] });
   });
 
-  for (var pass = 0; pass < 4; pass++) {
-    var forward = pass % 2 === 0;
-    var startL = forward ? 1 : layerNodes.length - 2;
-    var endL = forward ? layerNodes.length : -1;
-    var stepL = forward ? 1 : -1;
+  // 执行布局（异步）
+  elk.layout(elkGraph).then(function(result) {
 
-    for (var li = startL; li !== endL; li += stepL) {
-      var refLayer = forward ? li - 1 : li + 1;
-      if (refLayer < 0 || refLayer >= layerNodes.length) continue;
-
-      layerNodes[li].forEach(function(id) {
-        // 计算在参考层中邻居的平均位置
-        var neighbors = adj[id].filter(function(nb) { return layerOf[nb] === refLayer; });
-        if (neighbors.length > 0) {
-          var sum = 0;
-          neighbors.forEach(function(nb) { sum += tableMap[nb]._pos; });
-          tableMap[id]._bary = sum / neighbors.length;
-        } else {
-          tableMap[id]._bary = tableMap[id]._pos;
-        }
-      });
-      // 按重心排序
-      layerNodes[li].sort(function(a, b) { return tableMap[a]._bary - tableMap[b]._bary; });
-      // 更新位置
-      layerNodes[li].forEach(function(id, i) { tableMap[id]._pos = i; });
-    }
-  }
-
-  // 4. 坐标分配：每层水平居中，层间垂直排列
-  var curY = TITLE_AREA_H;
-  layerNodes.forEach(function(layer, li) {
-    var layerMaxH = 0;
-    layer.forEach(function(id) { if (tableMap[id].h > layerMaxH) layerMaxH = tableMap[id].h; });
-
-    // 水平排列
-    layer.forEach(function(id, col) {
-      var node = tableMap[id];
-      node.x = col * (maxTableW + TABLE_GAP_X);
-      node.y = curY;
-      node.cx = node.x + node.w / 2;
-      node.cy = node.y + node.h / 2;
-      node.row = li;
-      node.col = col;
-    });
-
-    curY += layerMaxH + TABLE_GAP_Y;
+  // 读取布局结果（ELK 返回左上角坐标）
+  result.children.forEach(function(child) {
+    var n = tableMap[child.id];
+    n.x = child.x;
+    n.y = child.y + TITLE_H;
+    n.cx = n.x + n.w / 2;
+    n.cy = n.y + n.h / 2;
   });
 
   // ========== 画布自适应 ==========
@@ -282,83 +215,57 @@
     stEl.textContent = subtitle; nodeGroup.appendChild(stEl);
   }
 
-  // ========== 绘制关系连线 ==========
-  var relLabels = [];
+  // ========== 绘制关系连线（使用 ELK 计算的边路由） ==========
+  (result.edges || []).forEach(function(edge, ei) {
+    var rel = relations[ei];
+    if (!rel) return;
 
-  // 为同一边缘的多条连线分配不同偏移，避免重叠
-  var edgeSlots = {};  // 'tableId-edge' → count
-  function getEdgeOffset(tableId, edge) {
-    var key = tableId + '-' + edge;
-    if (!edgeSlots[key]) edgeSlots[key] = 0;
-    var slot = edgeSlots[key]++;
-    return (slot - 0) * 16;  // 每条线偏移 16px
-  }
+    var sec = edge.sections && edge.sections[0];
+    if (!sec) return;
 
-  relations.forEach(function(rel) {
-    var fromT = tableMap[rel.from], toT = tableMap[rel.to];
-    if (!fromT || !toT) return;
-
-    var sameRow = fromT.row === toT.row;
-    var sameCol = fromT.col === toT.col;
-    var adjH = sameRow && Math.abs(fromT.col - toT.col) === 1;
-    var adjV = sameCol && Math.abs(fromT.row - toT.row) === 1;
-    var dx = toT.cx - fromT.cx, dy = toT.cy - fromT.cy;
-    var x1, y1, x2, y2, d, labelX, labelY;
-
-    if (adjH) {
-      // 同行相邻：直线水平
-      var off = getEdgeOffset(rel.from, dx > 0 ? 'r' : 'l');
-      var commonY = Math.min(fromT.cy, toT.cy) + off;
-      x1 = dx > 0 ? fromT.x + fromT.w : fromT.x;
-      x2 = dx > 0 ? toT.x : toT.x + toT.w;
-      d = 'M' + x1 + ',' + commonY + ' L' + x2 + ',' + commonY;
-      labelX = (x1 + x2) / 2;
-      labelY = commonY - 8;
-
-    } else if (adjV) {
-      // 同列相邻：直线垂直
-      var off = getEdgeOffset(rel.from, dy > 0 ? 'b' : 't');
-      var cx = Math.min(fromT.cx, toT.cx) + off;
-      y1 = dy > 0 ? fromT.y + fromT.h : fromT.y;
-      y2 = dy > 0 ? toT.y : toT.y + toT.h;
-      d = 'M' + cx + ',' + y1 + ' L' + cx + ',' + y2;
-      labelX = cx + 14;
-      labelY = (y1 + y2) / 2 + 4;
-
-    } else {
-      // 非相邻：贝塞尔曲线（自然分离，不会重叠）
-      // 选择最近的边
-      var absX = Math.abs(dx), absY = Math.abs(dy);
-      if (absX > absY) {
-        // 主要水平方向：从侧边出发
-        x1 = dx > 0 ? fromT.x + fromT.w : fromT.x;
-        y1 = fromT.cy + getEdgeOffset(rel.from, dx > 0 ? 'r' : 'l');
-        x2 = dx > 0 ? toT.x : toT.x + toT.w;
-        y2 = toT.cy + getEdgeOffset(rel.to, dx > 0 ? 'l' : 'r');
-      } else {
-        // 主要垂直方向：从顶/底出发
-        x1 = fromT.cx + getEdgeOffset(rel.from, dy > 0 ? 'b' : 't');
-        y1 = dy > 0 ? fromT.y + fromT.h : fromT.y;
-        x2 = toT.cx + getEdgeOffset(rel.to, dy > 0 ? 't' : 'b');
-        y2 = dy > 0 ? toT.y : toT.y + toT.h;
-      }
-      // 贝塞尔曲线：控制点在中间
-      var mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
-      if (absX > absY) {
-        d = 'M' + x1 + ',' + y1 + ' C' + mx + ',' + y1 + ' ' + mx + ',' + y2 + ' ' + x2 + ',' + y2;
-      } else {
-        d = 'M' + x1 + ',' + y1 + ' C' + x1 + ',' + my + ' ' + x2 + ',' + my + ' ' + x2 + ',' + y2;
-      }
-      labelX = mx;
-      labelY = my - 8;
+    // 构建路径
+    var d = 'M' + sec.startPoint.x + ',' + (sec.startPoint.y + TITLE_H);
+    if (sec.bendPoints) {
+      sec.bendPoints.forEach(function(bp) {
+        d += ' L' + bp.x + ',' + (bp.y + TITLE_H);
+      });
     }
+    d += ' L' + sec.endPoint.x + ',' + (sec.endPoint.y + TITLE_H);
 
     lineGroup.appendChild(el('path', {
       d: d, stroke: theme.line.color, 'stroke-width': theme.line.width,
       fill: 'none', 'marker-end': 'url(#arrow)'
     }));
 
-    relLabels.push({ x: labelX, y: labelY, text: rel.label });
+    // 计算边路径中点位置，用于放置标签
+    var allPts = [sec.startPoint];
+    if (sec.bendPoints) {
+      sec.bendPoints.forEach(function(bp) { allPts.push(bp); });
+    }
+    allPts.push(sec.endPoint);
+
+    var midIdx = Math.floor(allPts.length / 2);
+    var labelX, labelY;
+    if (allPts.length % 2 === 1) {
+      labelX = allPts[midIdx].x;
+      labelY = allPts[midIdx].y + TITLE_H;
+    } else {
+      labelX = (allPts[midIdx - 1].x + allPts[midIdx].x) / 2;
+      labelY = (allPts[midIdx - 1].y + allPts[midIdx].y) / 2 + TITLE_H;
+    }
+
+    // 绘制关系标签（白底 + 文字，放在 labelLayer 上层）
+    var lw = measureText(rel.label, 10) + 10;
+    labelLayer.appendChild(el('rect', {
+      x: labelX - lw / 2, y: labelY - 8, width: lw, height: 14,
+      rx: 3, fill: '#ffffff'
+    }));
+    var lt = el('text', {
+      x: labelX, y: labelY, 'text-anchor': 'middle',
+      'font-size': 10, fill: theme.line.label,
+      'font-family': "-apple-system,system-ui,'PingFang SC',sans-serif"
+    });
+    lt.textContent = rel.label; labelLayer.appendChild(lt);
   });
 
   // ========== 绘制表 ==========
@@ -450,21 +357,7 @@
   var fkDesc = el('text', { x: lx + measureText('FK字段', 12) + 8, y: legendY + 10, 'font-size': 11, fill: '#64748B', 'font-family': "-apple-system,system-ui,'PingFang SC',sans-serif" });
   fkDesc.textContent = '外键用紫色标注'; nodeGroup.appendChild(fkDesc);
 
-  // ========== 基数标签（最顶层，不被遮挡） ==========
-  relLabels.forEach(function(lb) {
-    var lw = measureText(lb.text, 10) + 10;
-    labelLayer.appendChild(el('rect', {
-      x: lb.x - lw / 2, y: lb.y - 8, width: lw, height: 14,
-      rx: 3, fill: '#ffffff'
-    }));
-    var lt = el('text', {
-      x: lb.x, y: lb.y, 'text-anchor': 'middle',
-      'font-size': 10, fill: theme.line.label,
-      'font-family': "-apple-system,system-ui,'PingFang SC',sans-serif"
-    });
-    lt.textContent = lb.text; labelLayer.appendChild(lt);
-  });
-
+  }); // end elk.layout().then()
 })();
 </script>
 </body>
