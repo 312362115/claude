@@ -15,35 +15,39 @@
   - 涉及：`skills/diagram/references/design-system.md`（更新配色章节），`skills/diagram/references/themes.md`（新建）
   - 验收：theme 对象结构定义完成，default 主题覆盖所有组件颜色
 
-- [x] 3. P0 — flowchart 动态布局
-  - 做什么：改造为 JS 动态布局，支持任意数量的步骤/判断/分支，使用公共工具库 + 线性布局算法
-  - 涉及：`skills/diagram/templates/html/flowchart.html`（重写），`skills/diagram/references/diagrams/flowchart.md`（更新）
-  - 验收：✅ 4 种场景验证通过（简单 4 步 / 中等 8 步 2 判断 / 复杂 12 步 3 判断 / 超级复杂 15 步 4 判断），均无重叠无截断，画布自适应
+- [ ] 3. P0 — flowchart 动态布局
+  - 做什么：ELKjs compound graph 布局，支持分组/侧分支/判断
+  - 涉及：`skills/diagram/templates/html/flowchart.html`（重写）
+  - 验收：❌ ELK compound graph 分组顺序错乱（用户端/订单服务/通知服务位置颠倒）
+  - 问题：ELK 没有保持组间的顺序约束，需要添加层级约束或组间边
+  - 注：无分组模式（flat steps）+ ELK 应该能正常工作，待验证
 
 - [x] 4. P0 — sequence 动态布局
   - 做什么：改造为 JS 动态布局，支持任意数量参与者和消息，含 fragment（loop/alt/opt/par/break）
   - 涉及：`skills/diagram/templates/html/sequence.html`（重写）
   - 验收：✅ 6 参与者 12 消息 + alt fragment + 自调用 + database 圆柱体，均正常
 
-- [ ] 5. P0 — er 动态布局
-  - 做什么：改造为 JS 动态布局，支持任意数量表和关系，使用公共工具库 + 网格布局算法
+- [x] 5. P0 — er 动态布局
+  - 做什么：ELKjs layered 布局，支持任意数量表和关系
   - 涉及：`skills/diagram/templates/html/er.html`（重写）
-  - 验收：传入 3 表 / 6 表 / 10 表含多对多关系，均无重叠，连线不穿越表
+  - 验收：✅ L2 通过（6 表 5 关系），L1/L3/L4 待验证
 
-- [ ] 6. P1 — class 动态布局
-  - 做什么：改造为 JS 动态布局，支持任意数量类/枚举/接口和关系
+- [x] 6. P1 — class 动态布局
+  - 做什么：ELKjs layered 布局，支持类/枚举/接口和多种关系类型
   - 涉及：`skills/diagram/templates/html/class.html`（重写）
-  - 验收：传入 4 类 / 9 类含枚举 / 15 类复杂继承关系，均正常
+  - 验收：✅ L2 通过（6 类 3 枚举 8 关系）
 
 - [ ] 7. P1 — architecture 动态布局
-  - 做什么：改造为 JS 动态布局，支持任意层数和每层任意节点数，自动换行
+  - 做什么：ELKjs partitioning 布局，支持预定义层级
   - 涉及：`skills/diagram/templates/html/architecture.html`（重写）
-  - 验收：传入 4 层每层 3 节点 / 7 层含多行 / 层名和节点名长短不一，均正常
+  - 验收：❌ ELK partitioning 层级顺序错乱，需要修正 ELK 参数配置
+  - 问题：ELK 的 partition 索引没有正确约束层的上下顺序
 
 - [ ] 8. P1 — swimlane 动态布局
-  - 做什么：改造为 JS 动态布局，支持任意泳道数量和流程步骤
+  - 做什么：ELKjs compound nodes 布局，泳道为父节点
   - 涉及：`skills/diagram/templates/html/swimlane.html`（重写）
-  - 验收：传入 3 泳道 / 5 泳道含跨泳道判断 / 复杂审批流程，均正常
+  - 验收：❌ 泳道缺失（用户/后端泳道消失），compound nodes 配置有问题
+  - 问题：ELK hierarchyHandling + compound layout 参数需要调整
 
 - [ ] 9. P2 — state 动态布局
   - 做什么：改造为 JS 动态布局，支持任意状态数和转换关系
