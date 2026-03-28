@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #ffffff;
+    font-family: -apple-system, system-ui, 'PingFang SC', sans-serif;
+    padding: 24px;
+    -webkit-font-smoothing: antialiased;
+  }
+</style>
+</head>
+<body>
+<svg viewBox="0 0 1080 1080" width="1080" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block;">
+  <defs>
+    <!-- 实线箭头（关联） -->
+    <marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M0,0 L10,4 L0,8" fill="none" stroke="#94A3B8" stroke-width="1.5"/>
+    </marker>
+    <!-- 组合菱形（填充） -->
+    <marker id="diamond" markerWidth="14" markerHeight="10" refX="0" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M0,5 L7,0 L14,5 L7,10 Z" fill="#94A3B8" stroke="#94A3B8" stroke-width="1"/>
+    </marker>
+    <!-- 虚线箭头（依赖） -->
+    <marker id="darrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M0,0 L8,3 L0,6" fill="none" stroke="#B0B8C4" stroke-width="1.2"/>
+    </marker>
+  </defs>
+
+  <!-- 标题 -->
+  <text x="24" y="32" font-size="22" font-weight="700" fill="#1a1a2e" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">电商平台类图</text>
+  <text x="24" y="52" font-size="12" fill="#64748B" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">E-Commerce Platform — UML Class Diagram</text>
+
+  <!-- ═══════════════════════════════════════════════════
+       连接线层（先绘制，在节点之下）
+       ═══════════════════════════════════════════════════ -->
+
+  <!-- User "1" ──> "*" Order（下单）: User 右侧中点 → Order 左侧中点 -->
+  <line x1="240" y1="200" x2="418" y2="200" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="245" y="194" font-size="10" fill="#64748B" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">1</text>
+  <text x="400" y="194" font-size="10" fill="#64748B" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">N</text>
+  <text x="330" y="194" text-anchor="middle" font-size="10" fill="#94A3B8" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">下单</text>
+
+  <!-- Order "1" *── "1:N" OrderItem（包含 — 组合）: Order 底部 → OrderItem 顶部 -->
+  <line x1="520" y1="350" x2="520" y2="398" stroke="#94A3B8" stroke-width="1.5" marker-start="url(#diamond)"/>
+  <text x="525" y="370" font-size="10" fill="#64748B" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">1</text>
+  <text x="525" y="394" font-size="10" fill="#64748B" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">1:N</text>
+  <text x="535" y="382" font-size="10" fill="#94A3B8" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">包含</text>
+
+  <!-- OrderItem "*" ──> "1" Product（关联商品）: OrderItem 底部 → Product 顶部 -->
+  <path d="M460,600 L460,630 Q460,640 440,640 L340,640 Q320,640 320,650 L320,698" stroke="#94A3B8" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
+  <text x="465" y="614" font-size="10" fill="#64748B" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">N</text>
+  <text x="325" y="694" font-size="10" fill="#64748B" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">1</text>
+  <text x="390" y="636" font-size="10" fill="#94A3B8" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">关联商品</text>
+
+  <!-- Product "*" ──> "1" Category（所属分类）: Product 右侧 → Category 左侧 -->
+  <line x1="390" y1="810" x2="628" y2="810" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="396" y="804" font-size="10" fill="#64748B" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">N</text>
+  <text x="612" y="804" font-size="10" fill="#64748B" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">1</text>
+  <text x="510" y="804" text-anchor="middle" font-size="10" fill="#94A3B8" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">所属分类</text>
+
+  <!-- Category "0:1" ──> "*" Category（父子分类，自引用）: 右侧弯回 -->
+  <path d="M830,770 L860,770 Q875,770 875,790 L875,850 Q875,865 860,865 L830,865" stroke="#94A3B8" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
+  <text x="840" y="764" font-size="10" fill="#64748B" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">0:1</text>
+  <text x="840" y="860" font-size="10" fill="#64748B" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">N</text>
+  <text x="880" y="820" font-size="10" fill="#94A3B8" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">父子</text>
+
+  <!-- Order "1" ──> "0:1" Payment（支付信息）: Order 右侧 → Payment 左侧 -->
+  <line x1="620" y1="200" x2="798" y2="200" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="626" y="194" font-size="10" fill="#64748B" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">1</text>
+  <text x="778" y="194" font-size="10" fill="#64748B" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">0:1</text>
+  <text x="710" y="194" text-anchor="middle" font-size="10" fill="#94A3B8" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">支付信息</text>
+
+  <!-- User ..> UserRole（依赖） -->
+  <line x1="140" y1="330" x2="140" y2="378" stroke="#B0B8C4" stroke-width="1" stroke-dasharray="5,3" marker-end="url(#darrow)"/>
+
+  <!-- Order ..> OrderStatus（依赖） -->
+  <path d="M500,600 L500,660 Q500,680 500,698" stroke="#B0B8C4" stroke-width="1" stroke-dasharray="5,3" fill="none" marker-end="url(#darrow)"/>
+
+  <!-- Payment ..> PaymentMethod（依赖） -->
+  <line x1="900" y1="350" x2="900" y2="398" stroke="#B0B8C4" stroke-width="1" stroke-dasharray="5,3" marker-end="url(#darrow)"/>
+
+
+  <!-- ═══════════════════════════════════════════════════
+       节点层（在连线之上）
+       ═══════════════════════════════════════════════════ -->
+
+  <!-- ====== User (x=40, y=70, w=200, h=260) ====== -->
+  <g>
+    <!-- 外框 -->
+    <rect x="40" y="70" width="200" height="260" rx="8" fill="#ffffff" stroke="rgba(102,126,234,0.3)" stroke-width="1"/>
+    <!-- Header -->
+    <rect x="40" y="70" width="200" height="34" rx="8" fill="#667eea"/>
+    <rect x="40" y="96" width="200" height="8" fill="#667eea"/>
+    <text x="140" y="93" text-anchor="middle" font-size="14" font-weight="700" fill="#FFFFFF" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">User</text>
+    <!-- Fields 背景 -->
+    <rect x="41" y="104" width="198" height="130" fill="#f8f9fc"/>
+    <!-- Fields -->
+    <text x="52" y="122" font-size="11" fill="#555" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">- id : Long</text>
+    <text x="52" y="142" font-size="11" fill="#555" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">- username : String</text>
+    <text x="52" y="162" font-size="11" fill="#555" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">- email : String</text>
+    <text x="52" y="182" font-size="11" fill="#555" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">- phone : String</text>
+    <text x="52" y="202" font-size="11" fill="#555" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">- passwordHash : String</text>
+    <text x="52" y="222" font-size="11" fill="#555" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">- role : UserRole</text>
+    <!-- 分割线 -->
+    <line x1="40" y1="234" x2="240" y2="234" stroke="rgba(102,126,234,0.2)" stroke-width="1"/>
+    <!-- Methods -->
+    <text x="52" y="252" font-size="11" fill="#333" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">+ register() : bool</text>
+    <text x="52" y="272" font-size="11" fill="#333" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">+ login(pwd) : Token</text>
+    <text x="52" y="292" font-size="11" fill="#333" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">+ updateProfile() : bool</text>
+    <text x="52" y="312" font-size="11" fill="#333" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">+ getOrders() : List</text>
+  </g>
+
+  <!-- ====== Order (x=420, y=70, w=200, h=280) ====== -->
+  <g>
+    <rect x="420" y="70" width="200" height="280" rx="8" fill="#ffffff" stroke="rgba(102,126,234,0.3)" stroke-width="1"/>
+    <rect x="420" y="70" width="200" height="34" rx="8" fill="#667eea"/>
+    <rect x="420" y="96" width="200" height="8" fill="#667eea"/>
+    <text x="520" y="93" text-anchor="middle" font-size="14" font-weight="700" fill="#FFFFFF" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">Order</text>
+    <rect x="421" y="104" width="198" height="130" fill="#f8f9fc"/>
+    <text x="432" y="122" font-size="11" fill="#555" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">- id : Long</text>
+    <text x="432" y="142" font-size="11" fill="#555" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">- orderNo : String</text>
+    <text x="432" y="162" font-size="11" fill="#555" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">- status : OrderStatus</text>
+    <text x="432" y="182" font-size="11" fill="#555" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">- totalAmount : Decimal</text>
+    <text x="432" y="202" font-size="11" fill="#555" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">- payAmount : Decimal</text>
+    <text x="432" y="222" font-size="11" fill="#555" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">- createdAt : DateTime</text>
+    <line x1="420" y1="234" x2="620" y2="234" stroke="rgba(102,126,234,0.2)" stroke-width="1"/>
+    <text x="432" y="252" font-size="11" fill="#333" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">+ create(items) : Order</text>
+    <text x="432" y="272" font-size="11" fill="#333" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">+ cancel() : bool</text>
+    <text x="432" y="292" font-size="11" fill="#333" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">+ pay(payment) : bool</text>
+    <text x="432" y="312" font-size="11" fill="#333" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">+ ship(trackNo) : bool</text>
+    <text x="432" y="332" font-size="11" fill="#333" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">+ calcTotal() : Decimal</text>
+  </g>
+
+  <!-- ====== Payment (x=800, y=70, w=200, h=280) ====== -->
+  <g>
+    <rect x="800" y="70" width="200" height="280" rx="8" fill="#ffffff" stroke="rgba(102,126,234,0.3)" stroke-width="1"/>
+    <rect x="800" y="70" width="200" height="34" rx="8" fill="#667eea"/>
+    <rect x="800" y="96" width="200" height="8" fill="#667eea"/>
+    <text x="900" y="93" text-anchor="middle" font-size="14" font-weight="700" fill="#FFFFFF" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">Payment</text>
+    <rect x="801" y="104" width="198" height="130" fill="#f8f9fc"/>
+    <text x="812" y="122" font-size="11" fill="#555" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">- id : Long</text>
+    <text x="812" y="142" font-size="11" fill="#555" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">- paymentNo : String</text>
+    <text x="812" y="162" font-size="11" fill="#555" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">- method : PayMethod</text>
+    <text x="812" y="182" font-size="11" fill="#555" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">- status : PayStatus</text>
+    <text x="812" y="202" font-size="11" fill="#555" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">- amount : Decimal</text>
+    <line x1="800" y1="234" x2="1000" y2="234" stroke="rgba(102,126,234,0.2)" stroke-width="1"/>
+    <text x="812" y="252" font-size="11" fill="#333" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">+ execute() : bool</text>
+    <text x="812" y="272" font-size="11" fill="#333" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">+ refund(amt) : bool</text>
+  </g>
+
+  <!-- ====== OrderItem (x=420, y=400, w=200, h=200) ====== -->
+  <g>
+    <rect x="420" y="400" width="200" height="200" rx="8" fill="#ffffff" stroke="rgba(102,126,234,0.3)" stroke-width="1"/>
+    <rect x="420" y="400" width="200" height="34" rx="8" fill="#667eea"/>
+    <rect x="420" y="426" width="200" height="8" fill="#667eea"/>
+    <text x="520" y="423" text-anchor="middle" font-size="14" font-weight="700" fill="#FFFFFF" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">OrderItem</text>
+    <rect x="421" y="434" width="198" height="86" fill="#f8f9fc"/>
+    <text x="432" y="452" font-size="11" fill="#555" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">- id : Long</text>
+    <text x="432" y="472" font-size="11" fill="#555" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">- quantity : Integer</text>
+    <text x="432" y="492" font-size="11" fill="#555" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">- unitPrice : Decimal</text>
+    <text x="432" y="512" font-size="11" fill="#555" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">- subtotal : Decimal</text>
+    <line x1="420" y1="520" x2="620" y2="520" stroke="rgba(102,126,234,0.2)" stroke-width="1"/>
+    <text x="432" y="540" font-size="11" fill="#333" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">+ getSubtotal() : Decimal</text>
+    <text x="432" y="560" font-size="11" fill="#333" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">+ updateQty(qty) : void</text>
+  </g>
+
+  <!-- ====== Product (x=190, y=700, w=200, h=220) ====== -->
+  <g>
+    <rect x="190" y="700" width="200" height="220" rx="8" fill="#ffffff" stroke="rgba(102,126,234,0.3)" stroke-width="1"/>
+    <rect x="190" y="700" width="200" height="34" rx="8" fill="#667eea"/>
+    <rect x="190" y="726" width="200" height="8" fill="#667eea"/>
+    <text x="290" y="723" text-anchor="middle" font-size="14" font-weight="700" fill="#FFFFFF" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">Product</text>
+    <rect x="191" y="734" width="198" height="106" fill="#f8f9fc"/>
+    <text x="202" y="752" font-size="11" fill="#555" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">- id : Long</text>
+    <text x="202" y="772" font-size="11" fill="#555" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">- name : String</text>
+    <text x="202" y="792" font-size="11" fill="#555" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">- price : Decimal</text>
+    <text x="202" y="812" font-size="11" fill="#555" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">- stock : Integer</text>
+    <text x="202" y="832" font-size="11" fill="#555" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">- status : ProdStatus</text>
+    <line x1="190" y1="840" x2="390" y2="840" stroke="rgba(102,126,234,0.2)" stroke-width="1"/>
+    <text x="202" y="860" font-size="11" fill="#333" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">+ updateStock(d) : bool</text>
+    <text x="202" y="880" font-size="11" fill="#333" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">+ isAvailable() : bool</text>
+    <text x="202" y="900" font-size="11" fill="#333" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">+ getCategory() : Cat</text>
+  </g>
+
+  <!-- ====== Category (x=630, y=700, w=200, h=200) ====== -->
+  <g>
+    <rect x="630" y="700" width="200" height="200" rx="8" fill="#ffffff" stroke="rgba(102,126,234,0.3)" stroke-width="1"/>
+    <rect x="630" y="700" width="200" height="34" rx="8" fill="#667eea"/>
+    <rect x="630" y="726" width="200" height="8" fill="#667eea"/>
+    <text x="730" y="723" text-anchor="middle" font-size="14" font-weight="700" fill="#FFFFFF" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">Category</text>
+    <rect x="631" y="734" width="198" height="86" fill="#f8f9fc"/>
+    <text x="642" y="752" font-size="11" fill="#555" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">- id : Long</text>
+    <text x="642" y="772" font-size="11" fill="#555" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">- name : String</text>
+    <text x="642" y="792" font-size="11" fill="#555" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">- sortOrder : Integer</text>
+    <text x="642" y="812" font-size="11" fill="#555" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">- parent : Category</text>
+    <line x1="630" y1="820" x2="830" y2="820" stroke="rgba(102,126,234,0.2)" stroke-width="1"/>
+    <text x="642" y="840" font-size="11" fill="#333" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">+ getProducts() : List</text>
+    <text x="642" y="860" font-size="11" fill="#333" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">+ getChildren() : List</text>
+  </g>
+
+  <!-- ====== Enum: UserRole (x=40, y=380, w=160, h=110) ====== -->
+  <g>
+    <rect x="40" y="380" width="160" height="110" rx="8" fill="#ffffff" stroke="rgba(250,130,49,0.3)" stroke-width="1"/>
+    <rect x="40" y="380" width="160" height="28" rx="8" fill="#fa8231"/>
+    <rect x="40" y="402" width="160" height="6" fill="#fa8231"/>
+    <text x="120" y="400" text-anchor="middle" font-size="12" font-weight="700" fill="#FFFFFF" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">UserRole</text>
+    <text x="192" y="389" text-anchor="end" font-size="8" fill="rgba(255,255,255,0.6)" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">enum</text>
+    <text x="52" y="428" font-size="11" fill="#666" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">CUSTOMER</text>
+    <text x="52" y="448" font-size="11" fill="#666" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">ADMIN</text>
+    <text x="52" y="468" font-size="11" fill="#666" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">MERCHANT</text>
+  </g>
+
+  <!-- ====== Enum: OrderStatus (x=420, y=700, w=160, h=150) ====== -->
+  <g>
+    <rect x="420" y="700" width="160" height="150" rx="8" fill="#ffffff" stroke="rgba(250,130,49,0.3)" stroke-width="1"/>
+    <rect x="420" y="700" width="160" height="28" rx="8" fill="#fa8231"/>
+    <rect x="420" y="722" width="160" height="6" fill="#fa8231"/>
+    <text x="500" y="720" text-anchor="middle" font-size="12" font-weight="700" fill="#FFFFFF" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">OrderStatus</text>
+    <text x="572" y="709" text-anchor="end" font-size="8" fill="rgba(255,255,255,0.6)" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">enum</text>
+    <text x="432" y="748" font-size="11" fill="#666" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">PENDING</text>
+    <text x="432" y="768" font-size="11" fill="#666" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">PAID</text>
+    <text x="432" y="788" font-size="11" fill="#666" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">SHIPPING</text>
+    <text x="432" y="808" font-size="11" fill="#666" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">DELIVERED</text>
+    <text x="432" y="828" font-size="11" fill="#666" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">CANCELLED</text>
+  </g>
+
+  <!-- ====== Enum: PaymentMethod (x=815, y=400, w=170, h=130) ====== -->
+  <g>
+    <rect x="815" y="400" width="170" height="130" rx="8" fill="#ffffff" stroke="rgba(250,130,49,0.3)" stroke-width="1"/>
+    <rect x="815" y="400" width="170" height="28" rx="8" fill="#fa8231"/>
+    <rect x="815" y="422" width="170" height="6" fill="#fa8231"/>
+    <text x="900" y="420" text-anchor="middle" font-size="12" font-weight="700" fill="#FFFFFF" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">PaymentMethod</text>
+    <text x="978" y="409" text-anchor="end" font-size="8" fill="rgba(255,255,255,0.6)" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">enum</text>
+    <text x="827" y="448" font-size="11" fill="#666" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">ALIPAY</text>
+    <text x="827" y="468" font-size="11" fill="#666" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">WECHAT_PAY</text>
+    <text x="827" y="488" font-size="11" fill="#666" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">CREDIT_CARD</text>
+  </g>
+
+  <!-- ====== 图例 ====== -->
+  <g transform="translate(40, 960)">
+    <rect x="0" y="0" width="14" height="14" rx="3" fill="#667eea"/>
+    <text x="20" y="12" font-size="11" fill="#64748B" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">类</text>
+
+    <rect x="60" y="0" width="14" height="14" rx="3" fill="#fa8231"/>
+    <text x="80" y="12" font-size="11" fill="#64748B" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">枚举</text>
+
+    <line x1="130" y1="7" x2="160" y2="7" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <text x="166" y="12" font-size="11" fill="#64748B" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">关联</text>
+
+    <line x1="220" y1="7" x2="234" y2="7" stroke="#94A3B8" stroke-width="1.5" marker-start="url(#diamond)"/>
+    <line x1="234" y1="7" x2="250" y2="7" stroke="#94A3B8" stroke-width="1.5"/>
+    <text x="256" y="12" font-size="11" fill="#64748B" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">组合</text>
+
+    <line x1="310" y1="7" x2="340" y2="7" stroke="#B0B8C4" stroke-width="1" stroke-dasharray="5,3" marker-end="url(#darrow)"/>
+    <text x="346" y="12" font-size="11" fill="#64748B" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">依赖</text>
+  </g>
+</svg>
+</body>
+</html>

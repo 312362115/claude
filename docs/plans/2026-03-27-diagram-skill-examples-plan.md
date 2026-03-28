@@ -47,12 +47,12 @@
   - 涉及：`skills/diagram/references/diagrams/`（新增 7 个文件）
   - 验收：SKILL.md 引用的 26 个 spec 全部存在
 
-- [ ] 8. 补充 scatter 散点图模板
+- [x] 8. 补充 scatter 散点图模板
   - 做什么：创建散点图 ECharts 示例模板
   - 涉及：`skills/diagram/templates/echarts/scatter.html`（新建）
-  - 验收：scatter spec 有可用模板
+  - 验收：scatter spec 有可用模板 ✅
 
-- [ ] 9. 清理 diagram-examples 旧目录
+- [x] 9. 清理 diagram-examples 旧目录
   - 做什么：确认所有内容已迁移后，删除 `diagram-examples/` 目录
   - 涉及：`~/.claude/diagram-examples/`（删除）
-  - 验收：旧目录不存在，所有引用指向 `templates/`
+  - 验收：旧目录不存在，所有引用指向 `templates/` ✅

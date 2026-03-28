@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1200, height=800">
+<title>用户增长趋势</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 1200px; height: 800px;
+    font-family: -apple-system, system-ui, 'PingFang SC', sans-serif;
+    background: #ffffff;
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .title { font-size: 22px; font-weight: 700; color: #1a1a2e; margin-top: 28px; }
+  .subtitle { font-size: 14px; color: #888; margin-top: 6px; }
+  .legend { display: flex; gap: 32px; margin-top: 18px; }
+  .legend-item { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #555; }
+  .legend-line { width: 24px; height: 3px; border-radius: 2px; }
+  .chart-wrap { margin-top: 16px; }
+</style>
+</head>
+<body>
+  <div class="title">用户增长趋势</div>
+  <div class="subtitle">2024年度数据</div>
+  <div class="legend">
+    <div class="legend-item">
+      <div class="legend-line" style="background: #667eea"></div>日活用户
+    </div>
+    <div class="legend-item">
+      <div class="legend-line" style="background: #f5576c"></div>月活用户
+    </div>
+    <div class="legend-item">
+      <div class="legend-line" style="background: #43e97b"></div>新增用户
+    </div>
+  </div>
+
+  <div class="chart-wrap">
+    <!--
+      图表区域: x=80..1040 (w=960), y=10..530 (h=520)
+      X轴: 12个月, 间距 960/11 ≈ 87.3
+      Y轴: 0~1200, py = 530 - val/1200*520
+      X坐标: 80, 167, 254, 341, 429, 516, 603, 690, 777, 864, 952, 1040
+    -->
+    <svg width="1100" height="620" viewBox="0 0 1100 620">
+      <defs>
+        <!-- 面积渐变 -->
+        <linearGradient id="grad-blue" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="rgba(102,126,234,0.3)"/>
+          <stop offset="100%" stop-color="rgba(102,126,234,0.02)"/>
+        </linearGradient>
+        <linearGradient id="grad-red" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="rgba(245,87,108,0.25)"/>
+          <stop offset="100%" stop-color="rgba(245,87,108,0.02)"/>
+        </linearGradient>
+        <linearGradient id="grad-green" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="rgba(67,233,123,0.25)"/>
+          <stop offset="100%" stop-color="rgba(67,233,123,0.02)"/>
+        </linearGradient>
+      </defs>
+
+      <!-- 背景 -->
+      <rect x="80" y="10" width="960" height="520" fill="#fafbfe" stroke="#eef0f5"/>
+
+      <!-- Y 轴网格线 + 标签: 0,200,400,600,800,1000,1200 -->
+      <line x1="80" y1="530" x2="1040" y2="530" stroke="#f0f0f5" stroke-dasharray="4,3"/>
+      <text x="70" y="535" text-anchor="end" font-size="13" fill="#888">0</text>
+
+      <line x1="80" y1="443" x2="1040" y2="443" stroke="#f0f0f5" stroke-dasharray="4,3"/>
+      <text x="70" y="448" text-anchor="end" font-size="13" fill="#888">200</text>
+
+      <line x1="80" y1="357" x2="1040" y2="357" stroke="#f0f0f5" stroke-dasharray="4,3"/>
+      <text x="70" y="362" text-anchor="end" font-size="13" fill="#888">400</text>
+
+      <line x1="80" y1="270" x2="1040" y2="270" stroke="#f0f0f5" stroke-dasharray="4,3"/>
+      <text x="70" y="275" text-anchor="end" font-size="13" fill="#888">600</text>
+
+      <line x1="80" y1="183" x2="1040" y2="183" stroke="#f0f0f5" stroke-dasharray="4,3"/>
+      <text x="70" y="188" text-anchor="end" font-size="13" fill="#888">800</text>
+
+      <line x1="80" y1="97" x2="1040" y2="97" stroke="#f0f0f5" stroke-dasharray="4,3"/>
+      <text x="70" y="102" text-anchor="end" font-size="13" fill="#888">1000</text>
+
+      <line x1="80" y1="10" x2="1040" y2="10" stroke="#f0f0f5" stroke-dasharray="4,3"/>
+      <text x="70" y="15" text-anchor="end" font-size="13" fill="#888">1200</text>
+
+      <!-- Y 轴标题 -->
+      <text x="18" y="270" text-anchor="middle" font-size="13" fill="#888" transform="rotate(-90,18,270)">用户数（万）</text>
+
+      <!-- 坐标轴线 -->
+      <line x1="80" y1="530" x2="1040" y2="530" stroke="#ddd" stroke-width="1"/>
+      <line x1="80" y1="10" x2="80" y2="530" stroke="#ddd" stroke-width="1"/>
+
+      <!-- X 轴标签 -->
+      <text x="80" y="555" text-anchor="middle" font-size="13" fill="#666">1月</text>
+      <text x="167" y="555" text-anchor="middle" font-size="13" fill="#666">2月</text>
+      <text x="254" y="555" text-anchor="middle" font-size="13" fill="#666">3月</text>
+      <text x="341" y="555" text-anchor="middle" font-size="13" fill="#666">4月</text>
+      <text x="429" y="555" text-anchor="middle" font-size="13" fill="#666">5月</text>
+      <text x="516" y="555" text-anchor="middle" font-size="13" fill="#666">6月</text>
+      <text x="603" y="555" text-anchor="middle" font-size="13" fill="#666">7月</text>
+      <text x="690" y="555" text-anchor="middle" font-size="13" fill="#666">8月</text>
+      <text x="777" y="555" text-anchor="middle" font-size="13" fill="#666">9月</text>
+      <text x="864" y="555" text-anchor="middle" font-size="13" fill="#666">10月</text>
+      <text x="952" y="555" text-anchor="middle" font-size="13" fill="#666">11月</text>
+      <text x="1040" y="555" text-anchor="middle" font-size="13" fill="#666">12月</text>
+
+      <!-- === 月活用户 (底层，数值大) === -->
+      <!-- 面积填充 -->
+      <polygon fill="url(#grad-red)" points="
+        80,322 167,305 254,287 341,266 429,240 516,218
+        603,188 690,162 777,131 864,105 952,75 1040,45
+        1040,530 80,530
+      "/>
+      <!-- 折线 -->
+      <polyline fill="none" stroke="rgba(245,87,108,0.7)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" points="
+        80,322 167,305 254,287 341,266 429,240 516,218
+        603,188 690,162 777,131 864,105 952,75 1040,45
+      "/>
+      <!-- 数据点 -->
+      <circle cx="80" cy="322" r="5" fill="rgba(245,87,108,0.7)" stroke="#fff" stroke-width="2"/>
+      <circle cx="167" cy="305" r="5" fill="rgba(245,87,108,0.7)" stroke="#fff" stroke-width="2"/>
+      <circle cx="254" cy="287" r="5" fill="rgba(245,87,108,0.7)" stroke="#fff" stroke-width="2"/>
+      <circle cx="341" cy="266" r="5" fill="rgba(245,87,108,0.7)" stroke="#fff" stroke-width="2"/>
+      <circle cx="429" cy="240" r="5" fill="rgba(245,87,108,0.7)" stroke="#fff" stroke-width="2"/>
+      <circle cx="516" cy="218" r="5" fill="rgba(245,87,108,0.7)" stroke="#fff" stroke-width="2"/>
+      <circle cx="603" cy="188" r="5" fill="rgba(245,87,108,0.7)" stroke="#fff" stroke-width="2"/>
+      <circle cx="690" cy="162" r="5" fill="rgba(245,87,108,0.7)" stroke="#fff" stroke-width="2"/>
+      <circle cx="777" cy="131" r="5" fill="rgba(245,87,108,0.7)" stroke="#fff" stroke-width="2"/>
+      <circle cx="864" cy="105" r="5" fill="rgba(245,87,108,0.7)" stroke="#fff" stroke-width="2"/>
+      <circle cx="952" cy="75" r="5" fill="rgba(245,87,108,0.7)" stroke="#fff" stroke-width="2"/>
+      <circle cx="1040" cy="45" r="5" fill="rgba(245,87,108,0.7)" stroke="#fff" stroke-width="2"/>
+
+      <!-- === 日活用户 (中间层) === -->
+      <!-- 面积填充 -->
+      <polygon fill="url(#grad-blue)" points="
+        80,478 167,472 254,466 341,460 429,453 516,446
+        603,439 690,431 777,424 864,417 952,410 1040,399
+        1040,530 80,530
+      "/>
+      <!-- 折线 -->
+      <polyline fill="none" stroke="rgba(102,126,234,0.7)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" points="
+        80,478 167,472 254,466 341,460 429,453 516,446
+        603,439 690,431 777,424 864,417 952,410 1040,399
+      "/>
+      <!-- 数据点 -->
+      <circle cx="80" cy="478" r="5" fill="rgba(102,126,234,0.7)" stroke="#fff" stroke-width="2"/>
+      <circle cx="167" cy="472" r="5" fill="rgba(102,126,234,0.7)" stroke="#fff" stroke-width="2"/>
+      <circle cx="254" cy="466" r="5" fill="rgba(102,126,234,0.7)" stroke="#fff" stroke-width="2"/>
+      <circle cx="341" cy="460" r="5" fill="rgba(102,126,234,0.7)" stroke="#fff" stroke-width="2"/>
+      <circle cx="429" cy="453" r="5" fill="rgba(102,126,234,0.7)" stroke="#fff" stroke-width="2"/>
+      <circle cx="516" cy="446" r="5" fill="rgba(102,126,234,0.7)" stroke="#fff" stroke-width="2"/>
+      <circle cx="603" cy="439" r="5" fill="rgba(102,126,234,0.7)" stroke="#fff" stroke-width="2"/>
+      <circle cx="690" cy="431" r="5" fill="rgba(102,126,234,0.7)" stroke="#fff" stroke-width="2"/>
+      <circle cx="777" cy="424" r="5" fill="rgba(102,126,234,0.7)" stroke="#fff" stroke-width="2"/>
+      <circle cx="864" cy="417" r="5" fill="rgba(102,126,234,0.7)" stroke="#fff" stroke-width="2"/>
+      <circle cx="952" cy="410" r="5" fill="rgba(102,126,234,0.7)" stroke="#fff" stroke-width="2"/>
+      <circle cx="1040" cy="399" r="5" fill="rgba(102,126,234,0.7)" stroke="#fff" stroke-width="2"/>
+
+      <!-- === 新增用户 (顶层，数值小) === -->
+      <!-- 面积填充 -->
+      <polygon fill="url(#grad-green)" points="
+        80,515 167,512 254,514 341,506 429,504 516,508
+        603,501 690,499 777,502 864,496 952,493 1040,490
+        1040,530 80,530
+      "/>
+      <!-- 折线 -->
+      <polyline fill="none" stroke="rgba(67,233,123,0.7)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" points="
+        80,515 167,512 254,514 341,506 429,504 516,508
+        603,501 690,499 777,502 864,496 952,493 1040,490
+      "/>
+      <!-- 数据点 -->
+      <circle cx="80" cy="515" r="5" fill="rgba(67,233,123,0.7)" stroke="#fff" stroke-width="2"/>
+      <circle cx="167" cy="512" r="5" fill="rgba(67,233,123,0.7)" stroke="#fff" stroke-width="2"/>
+      <circle cx="254" cy="514" r="5" fill="rgba(67,233,123,0.7)" stroke="#fff" stroke-width="2"/>
+      <circle cx="341" cy="506" r="5" fill="rgba(67,233,123,0.7)" stroke="#fff" stroke-width="2"/>
+      <circle cx="429" cy="504" r="5" fill="rgba(67,233,123,0.7)" stroke="#fff" stroke-width="2"/>
+      <circle cx="516" cy="508" r="5" fill="rgba(67,233,123,0.7)" stroke="#fff" stroke-width="2"/>
+      <circle cx="603" cy="501" r="5" fill="rgba(67,233,123,0.7)" stroke="#fff" stroke-width="2"/>
+      <circle cx="690" cy="499" r="5" fill="rgba(67,233,123,0.7)" stroke="#fff" stroke-width="2"/>
+      <circle cx="777" cy="502" r="5" fill="rgba(67,233,123,0.7)" stroke="#fff" stroke-width="2"/>
+      <circle cx="864" cy="496" r="5" fill="rgba(67,233,123,0.7)" stroke="#fff" stroke-width="2"/>
+      <circle cx="952" cy="493" r="5" fill="rgba(67,233,123,0.7)" stroke="#fff" stroke-width="2"/>
+      <circle cx="1040" cy="490" r="5" fill="rgba(67,233,123,0.7)" stroke="#fff" stroke-width="2"/>
+    </svg>
+  </div>
+</body>
+</html>

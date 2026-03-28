@@ -1,6 +1,6 @@
 # 热力图规范（Heatmap）
 
-> 工具：ECharts · Playwright 截图
+> 工具：HTML/SVG · Playwright 截图
 
 ---
 
@@ -44,11 +44,11 @@
 
 ## 模板
 
-`templates/echarts/heatmap.html`
+`templates/html/heatmap.html`
 
 ---
 
 ## 生成方式
 
-1. 生成 HTML 文件（引用 ECharts CDN）
+1. 生成 HTML 文件（纯 HTML+CSS+SVG，无外部依赖）
 2. Playwright 截图为 PNG（1200×800）

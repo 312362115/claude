@@ -1,6 +1,6 @@
 # 散点图规范（Scatter Chart）
 
-> 工具：ECharts · Playwright 截图
+> 工具：HTML/SVG · Playwright 截图
 
 ---
 
@@ -44,7 +44,14 @@
 
 ---
 
+## 模板
+
+- 模板文件：`skills/diagram/templates/html/scatter.html`
+- 气泡图示例：三系列分布对比，symbolSize 映射第三维数值
+
+---
+
 ## 生成方式
 
-1. 生成 HTML 文件（引用 ECharts CDN）
+1. 生成 HTML 文件（纯 HTML+CSS+SVG，无外部依赖）
 2. Playwright 截图为 PNG（1200×800）

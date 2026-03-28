@@ -14,7 +14,7 @@
   }
 
   .arch {
-    width: 860px;
+    width: 1040px;
     background: #fff;
     border-radius: 12px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.06);
@@ -98,7 +98,7 @@
     gap: 8px;
   }
 
-  /* 组件卡片 */
+  /* 组件卡片 — min-width 保证每行最多 5 个，超出自动换行 */
   .comp {
     padding: 8px 16px;
     border-radius: 6px;
@@ -106,6 +106,8 @@
     font-weight: 500;
     color: #fff;
     letter-spacing: 0.3px;
+    min-width: 148px;
+    text-align: center;
   }
 
   /* 每层组件配色 — 设计规范层级色 */

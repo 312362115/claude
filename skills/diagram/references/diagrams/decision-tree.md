@@ -1,6 +1,6 @@
 # 决策树规范（Decision Tree）
 
-> 工具：D2 · 流向：纵向（TB）
+> 工具：HTML/SVG · Playwright 截图
 
 ---
 
@@ -33,12 +33,11 @@
 
 ## 模板
 
-`templates/d2/decision-tree.d2`
+`templates/html/decision-tree.html`
 
 ---
 
-## 生成命令
+## 生成方式
 
-```bash
-d2 --theme 0 --pad 40 input.d2 output.png
-```
+1. 生成 HTML 文件（纯 HTML+CSS+SVG，无外部依赖）
+2. Playwright 截图为 PNG

@@ -1,6 +1,6 @@
 # 甘特图规范（Gantt Chart）
 
-> 工具：Mermaid（`gantt`）
+> 工具：HTML/SVG · Playwright 截图
 
 ---
 
@@ -43,12 +43,11 @@
 
 ## 模板
 
-`templates/mermaid/gantt.mmd`
+`templates/html/gantt.html`
 
 ---
 
-## 生成命令
+## 生成方式
 
-```bash
-mmdc -i input.mmd -o output.png -b white -s 2
-```
+1. 生成 HTML 文件（纯 HTML+CSS+SVG，无外部依赖）
+2. Playwright 截图为 PNG

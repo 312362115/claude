@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1200, height=800">
+<title>2024年各季度营收对比</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 1200px; height: 800px;
+    font-family: -apple-system, system-ui, 'PingFang SC', sans-serif;
+    background: #ffffff;
+    display: flex; flex-direction: column; align-items: center;
+  }
+
+  /* 标题 */
+  .title { font-size: 22px; font-weight: 700; color: #1a1a2e; margin-top: 28px; }
+  .subtitle { font-size: 14px; color: #888; margin-top: 6px; }
+
+  /* 图例 */
+  .legend {
+    display: flex; gap: 32px; margin-top: 20px;
+  }
+  .legend-item {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 14px; color: #555;
+  }
+  .legend-dot {
+    width: 20px; height: 12px; border-radius: 3px;
+  }
+
+  /* 图表区域 */
+  .chart-area {
+    position: relative;
+    width: 1040px; height: 560px;
+    margin-top: 20px;
+    background: #f8f9fc;
+    border: 1px solid #eef0f5;
+    border-radius: 4px;
+  }
+
+  /* Y 轴标签 */
+  .y-labels {
+    position: absolute; left: -60px; top: 0; bottom: 40px;
+    display: flex; flex-direction: column-reverse; justify-content: space-between;
+  }
+  .y-label {
+    font-size: 13px; color: #888; text-align: right; width: 50px;
+    transform: translateY(50%);
+  }
+  .y-title {
+    position: absolute; left: -58px; top: -8px;
+    font-size: 13px; color: #888;
+  }
+
+  /* 网格线 */
+  .grid-lines {
+    position: absolute; left: 0; right: 0; top: 0; bottom: 40px;
+  }
+  .grid-line {
+    position: absolute; left: 0; right: 0;
+    border-top: 1px dashed #e2e5ef;
+  }
+
+  /* X 轴标签 */
+  .x-labels {
+    position: absolute; bottom: 10px; left: 0; right: 0;
+    display: flex; justify-content: space-around;
+  }
+  .x-label {
+    font-size: 15px; color: #555; font-weight: 700;
+    text-align: center; width: 200px;
+  }
+
+  /* 柱状图组 */
+  .bar-groups {
+    position: absolute; left: 0; right: 0; top: 0; bottom: 40px;
+    display: flex; justify-content: space-around; align-items: flex-end;
+  }
+  .bar-group {
+    display: flex; gap: 8px; align-items: flex-end;
+    height: 100%;
+  }
+  .bar-wrapper {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: flex-end;
+    height: 100%;
+  }
+  .bar-value {
+    font-size: 13px; font-weight: 700; margin-bottom: 4px;
+  }
+  .bar {
+    width: 36px; border-radius: 6px 6px 0 0;
+    transition: opacity 0.2s;
+  }
+  .bar:hover { opacity: 0.85; }
+
+  /* 渐变柱体 */
+  .bar-hw { background: linear-gradient(to bottom, #667eea, #764ba2); }
+  .bar-hw + .bar-value, .bar-wrapper:nth-child(1) .bar-value { color: #667eea; }
+  .bar-cloud { background: linear-gradient(to bottom, #f093fb, #f5576c); }
+  .bar-wrapper:nth-child(2) .bar-value { color: #f5576c; }
+  .bar-saas { background: linear-gradient(to bottom, #4facfe, #00f2fe); }
+  .bar-wrapper:nth-child(3) .bar-value { color: #4facfe; }
+</style>
+</head>
+<body>
+  <div class="title">2024年各季度营收对比</div>
+  <div class="subtitle">单位：万元</div>
+
+  <div class="legend">
+    <div class="legend-item">
+      <div class="legend-dot" style="background: linear-gradient(135deg, #667eea, #764ba2)"></div>
+      智能硬件
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background: linear-gradient(135deg, #f093fb, #f5576c)"></div>
+      云服务
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background: linear-gradient(135deg, #4facfe, #00f2fe)"></div>
+      SaaS 平台
+    </div>
+  </div>
+
+  <div class="chart-area">
+    <div class="y-title">营收（万元）</div>
+
+    <!-- Y 轴标签：0 ~ 8000 -->
+    <div class="y-labels">
+      <div class="y-label">0</div>
+      <div class="y-label">2,000</div>
+      <div class="y-label">4,000</div>
+      <div class="y-label">6,000</div>
+      <div class="y-label">8,000</div>
+    </div>
+
+    <!-- 网格线 -->
+    <div class="grid-lines">
+      <div class="grid-line" style="bottom: 0%"></div>
+      <div class="grid-line" style="bottom: 25%"></div>
+      <div class="grid-line" style="bottom: 50%"></div>
+      <div class="grid-line" style="bottom: 75%"></div>
+      <div class="grid-line" style="bottom: 100%"></div>
+    </div>
+
+    <!-- 柱状图 -->
+    <div class="bar-groups">
+      <!-- Q1: 4200 / 3100 / 2800 -->
+      <div class="bar-group">
+        <div class="bar-wrapper">
+          <div class="bar-value" style="color:#667eea">4,200</div>
+          <div class="bar bar-hw" style="height: 52.5%"></div>
+        </div>
+        <div class="bar-wrapper">
+          <div class="bar-value" style="color:#f5576c">3,100</div>
+          <div class="bar bar-cloud" style="height: 38.75%"></div>
+        </div>
+        <div class="bar-wrapper">
+          <div class="bar-value" style="color:#4facfe">2,800</div>
+          <div class="bar bar-saas" style="height: 35%"></div>
+        </div>
+      </div>
+
+      <!-- Q2: 5800 / 4200 / 3600 -->
+      <div class="bar-group">
+        <div class="bar-wrapper">
+          <div class="bar-value" style="color:#667eea">5,800</div>
+          <div class="bar bar-hw" style="height: 72.5%"></div>
+        </div>
+        <div class="bar-wrapper">
+          <div class="bar-value" style="color:#f5576c">4,200</div>
+          <div class="bar bar-cloud" style="height: 52.5%"></div>
+        </div>
+        <div class="bar-wrapper">
+          <div class="bar-value" style="color:#4facfe">3,600</div>
+          <div class="bar bar-saas" style="height: 45%"></div>
+        </div>
+      </div>
+
+      <!-- Q3: 6100 / 5500 / 4900 -->
+      <div class="bar-group">
+        <div class="bar-wrapper">
+          <div class="bar-value" style="color:#667eea">6,100</div>
+          <div class="bar bar-hw" style="height: 76.25%"></div>
+        </div>
+        <div class="bar-wrapper">
+          <div class="bar-value" style="color:#f5576c">5,500</div>
+          <div class="bar bar-cloud" style="height: 68.75%"></div>
+        </div>
+        <div class="bar-wrapper">
+          <div class="bar-value" style="color:#4facfe">4,900</div>
+          <div class="bar bar-saas" style="height: 61.25%"></div>
+        </div>
+      </div>
+
+      <!-- Q4: 7500 / 6800 / 5200 -->
+      <div class="bar-group">
+        <div class="bar-wrapper">
+          <div class="bar-value" style="color:#667eea">7,500</div>
+          <div class="bar bar-hw" style="height: 93.75%"></div>
+        </div>
+        <div class="bar-wrapper">
+          <div class="bar-value" style="color:#f5576c">6,800</div>
+          <div class="bar bar-cloud" style="height: 85%"></div>
+        </div>
+        <div class="bar-wrapper">
+          <div class="bar-value" style="color:#4facfe">5,200</div>
+          <div class="bar bar-saas" style="height: 65%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- X 轴标签 -->
+    <div class="x-labels">
+      <div class="x-label">Q1</div>
+      <div class="x-label">Q2</div>
+      <div class="x-label">Q3</div>
+      <div class="x-label">Q4</div>
+    </div>
+  </div>
+</body>
+</html>

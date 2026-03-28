@@ -4,7 +4,7 @@ description: >
   专业图表生成技能：根据需求自动选择合适的图表类型和工具，生成符合设计规范的 PNG 图表。
   覆盖结构图（流程图、泳道图、时序图、架构图、状态图、ER图、类图、思维导图、甘特图等）
   和统计图（柱状图、折线图、饼图、雷达图、热力图、桑基图等）。
-  四层工具体系：D2（结构图主力）+ Mermaid（D2不支持的结构图）+ ECharts（统计图）+ HTML/SVG（特殊图）。
+  统一工具：HTML/SVG（全部图表类型）。纯 HTML+CSS+SVG 实现，内联 JS 仅做布局计算，无外部依赖。
   所有图表遵循统一的设计规范（配色/字体/组件/间距），风格现代简洁。
   触发词：画图、画一个、生成图表、流程图、架构图、时序图、柱状图、对比图、关系图。
   即使用户没有说"画图"，只要需求中涉及可视化展示（流程、架构、数据对比、关系），都应触发此技能。
@@ -28,32 +28,32 @@ description: >
 
 | 要展示什么 | 图表类型 | 工具 | 专属规范 |
 |-----------|---------|------|---------|
-| 工作流程、决策逻辑 | 流程图 | D2 | `references/diagrams/flowchart.md` |
+| 工作流程、决策逻辑 | 流程图 | HTML/SVG | `references/diagrams/flowchart.md` |
 | 多角色协作流程 | 泳道图 | HTML/SVG | `references/diagrams/swimlane.md` |
-| API 调用、消息交互 | 时序图 | D2 | `references/diagrams/sequence.md` |
-| 系统分层、技术栈 | 架构图 | HTML/CSS | `references/diagrams/architecture.md` |
-| 状态迁移 | 状态图 | D2 | `references/diagrams/state.md` |
-| 数据库表结构 | ER 图 | D2 | `references/diagrams/er.md` |
-| 面向对象设计 | 类图 | D2 / Mermaid | `references/diagrams/class.md` |
-| 网络拓扑 | 网络图 | D2 | `references/diagrams/network.md` |
-| 选型决策 | 决策树 | D2 | `references/diagrams/decision-tree.md` |
-| 数据管道 | 数据流图 | D2 | `references/diagrams/dataflow.md` |
-| C4 系统视图 | C4 图 | Mermaid | `references/diagrams/c4.md` |
-| 知识结构 | 思维导图 | Mermaid | `references/diagrams/mindmap.md` |
-| 项目排期 | 甘特图 | Mermaid | `references/diagrams/gantt.md` |
-| 发展历程 | 时间线 | Mermaid | `references/diagrams/timeline.md` |
+| API 调用、消息交互 | 时序图 | HTML/SVG | `references/diagrams/sequence.md` |
+| 系统分层、技术栈 | 架构图 | HTML/SVG | `references/diagrams/architecture.md` |
+| 状态迁移 | 状态图 | HTML/SVG | `references/diagrams/state.md` |
+| 数据库表结构 | ER 图 | HTML/SVG | `references/diagrams/er.md` |
+| 面向对象设计 | 类图 | HTML/SVG | `references/diagrams/class.md` |
+| 网络拓扑 | 网络图 | HTML/SVG | `references/diagrams/network.md` |
+| 选型决策 | 决策树 | HTML/SVG | `references/diagrams/decision-tree.md` |
+| 数据管道 | 数据流图 | HTML/SVG | `references/diagrams/dataflow.md` |
+| C4 系统视图 | C4 图 | HTML/SVG | `references/diagrams/c4.md` |
+| 知识结构 | 思维导图 | HTML/SVG | `references/diagrams/mindmap.md` |
+| 项目排期 | 甘特图 | HTML/SVG | `references/diagrams/gantt.md` |
+| 发展历程 | 时间线 | HTML/SVG | `references/diagrams/timeline.md` |
 | 组织架构 | 组织结构图 | HTML/SVG | `references/diagrams/orgchart.md` |
 | 优劣势分析 | SWOT 图 | HTML/SVG | `references/diagrams/swot.md` |
 | 根因分析 | 鱼骨图 | HTML/SVG | `references/diagrams/fishbone.md` |
 | 集合关系 | 文氏图 | HTML/SVG | `references/diagrams/venn.md` |
 | 用户体验 | 旅程图 | HTML/SVG | `references/diagrams/journey.md` |
-| 离散对比 | 柱状图 | ECharts | `references/diagrams/bar-chart.md` |
-| 趋势变化 | 折线图 | ECharts | `references/diagrams/line-chart.md` |
-| 占比构成 | 饼图 | ECharts | `references/diagrams/pie-chart.md` |
-| 多维评估 | 雷达图 | ECharts | `references/diagrams/radar-chart.md` |
-| 矩阵数据 | 热力图 | ECharts | `references/diagrams/heatmap.md` |
-| 流量路径 | 桑基图 | ECharts | `references/diagrams/sankey.md` |
-| 分布关系 | 散点图 | ECharts | `references/diagrams/scatter.md` |
+| 离散对比 | 柱状图 | HTML/SVG | `references/diagrams/bar-chart.md` |
+| 趋势变化 | 折线图 | HTML/SVG | `references/diagrams/line-chart.md` |
+| 占比构成 | 饼图 | HTML/SVG | `references/diagrams/pie-chart.md` |
+| 多维评估 | 雷达图 | HTML/SVG | `references/diagrams/radar-chart.md` |
+| 矩阵数据 | 热力图 | HTML/SVG | `references/diagrams/heatmap.md` |
+| 流量路径 | 桑基图 | HTML/SVG | `references/diagrams/sankey.md` |
+| 分布关系 | 散点图 | HTML/SVG | `references/diagrams/scatter.md` |
 
 确定图表类型后，**读取对应的专属规范文件**，按规范生成图表。
 
@@ -83,11 +83,7 @@ description: >
 ```
 1. 读取专属规范 → 了解该图表的规则和模板
 2. 基于模板生成源文件（.d2 / .mmd / .html）
-3. 渲染为 PNG：
-   - D2:     d2 --theme 0 --pad 40 input.d2 output.png
-   - Mermaid: mmdc -i input.mmd -o output.png
-   - HTML:   Playwright 截图 → output.png
-   - ECharts: HTML + Playwright 截图 → output.png
+3. 渲染为 PNG：Playwright 截图（fullPage 模式）→ output.png
 4. 输出到指定目录
 ```
 
@@ -114,8 +110,6 @@ description: >
 
 | 工具 | 安装方式 | 用途 |
 |------|---------|------|
-| D2 | `brew install d2` | 结构图主力 |
-| Mermaid CLI | `npm install -g @mermaid-js/mermaid-cli` | D2 不支持的结构图 |
-| Playwright | MCP 插件（已集成） | HTML/ECharts → PNG 截图 |
+| Playwright | MCP 插件（已集成） | HTML/SVG → PNG 截图（fullPage 模式） |
 
 首次使用时检测依赖是否已安装，未安装则提示安装命令。

@@ -1,6 +1,6 @@
 # 类图规范（Class Diagram）
 
-> 工具：D2（`shape: class`） · 仅快速模式
+> 工具：HTML/SVG · Playwright 截图
 
 ---
 
@@ -41,12 +41,11 @@
 
 ## 模板
 
-`templates/mermaid/class.mmd`
+`templates/html/class.html`
 
 ---
 
-## 生成命令
+## 生成方式
 
-```bash
-d2 --theme 0 --pad 40 input.d2 output.png
-```
+1. 生成 HTML 文件（纯 HTML+CSS+SVG，无外部依赖）
+2. Playwright 截图为 PNG

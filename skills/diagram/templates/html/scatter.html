@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1200, height=800">
+<title>产品用户活跃度与留存率分布</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 1200px; height: 800px;
+    font-family: -apple-system, system-ui, 'PingFang SC', sans-serif;
+    background: #ffffff;
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .title { font-size: 22px; font-weight: 700; color: #1a1a2e; margin-top: 28px; }
+  .subtitle { font-size: 14px; color: #888; margin-top: 6px; }
+  .legend {
+    display: flex; gap: 28px; margin-top: 18px;
+  }
+  .legend-item {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 14px; color: #555;
+  }
+  .legend-dot {
+    width: 14px; height: 14px; border-radius: 50%;
+  }
+  .chart-wrap {
+    margin-top: 16px;
+  }
+</style>
+</head>
+<body>
+  <div class="title">产品用户活跃度与留存率分布</div>
+  <div class="subtitle">x: 日均活跃时长(min) · y: 30日留存率(%) · 气泡大小: 用户规模</div>
+  <div class="legend">
+    <div class="legend-item">
+      <div class="legend-dot" style="background: rgba(102,126,234,0.5)"></div>社交类
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background: rgba(245,87,108,0.5)"></div>工具类
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background: rgba(67,233,123,0.5)"></div>游戏类
+    </div>
+  </div>
+
+  <div class="chart-wrap">
+    <svg width="1080" height="620" viewBox="0 0 1080 620">
+      <defs>
+        <!-- 图表区域: x=80 y=10 w=960 h=520, x轴0~120, y轴0~100 -->
+        <!-- 坐标转换: px = 80 + val/120*960, py = 530 - val/100*520 -->
+      </defs>
+
+      <!-- 背景网格 -->
+      <rect x="80" y="10" width="960" height="520" fill="#f8f9fc" stroke="#eef0f5"/>
+
+      <!-- Y 轴网格线 + 标签 -->
+      <line x1="80" y1="530" x2="1040" y2="530" stroke="#e8e8ef" stroke-dasharray="4,3"/>
+      <text x="70" y="535" text-anchor="end" font-size="12" fill="#666">0</text>
+
+      <line x1="80" y1="426" x2="1040" y2="426" stroke="#e8e8ef" stroke-dasharray="4,3"/>
+      <text x="70" y="431" text-anchor="end" font-size="12" fill="#666">20</text>
+
+      <line x1="80" y1="322" x2="1040" y2="322" stroke="#e8e8ef" stroke-dasharray="4,3"/>
+      <text x="70" y="327" text-anchor="end" font-size="12" fill="#666">40</text>
+
+      <line x1="80" y1="218" x2="1040" y2="218" stroke="#e8e8ef" stroke-dasharray="4,3"/>
+      <text x="70" y="223" text-anchor="end" font-size="12" fill="#666">60</text>
+
+      <line x1="80" y1="114" x2="1040" y2="114" stroke="#e8e8ef" stroke-dasharray="4,3"/>
+      <text x="70" y="119" text-anchor="end" font-size="12" fill="#666">80</text>
+
+      <line x1="80" y1="10" x2="1040" y2="10" stroke="#e8e8ef" stroke-dasharray="4,3"/>
+      <text x="70" y="15" text-anchor="end" font-size="12" fill="#666">100</text>
+
+      <!-- X 轴网格线 + 标签 -->
+      <line x1="240" y1="10" x2="240" y2="530" stroke="#e8e8ef" stroke-dasharray="4,3"/>
+      <text x="240" y="555" text-anchor="middle" font-size="12" fill="#666">20</text>
+
+      <line x1="400" y1="10" x2="400" y2="530" stroke="#e8e8ef" stroke-dasharray="4,3"/>
+      <text x="400" y="555" text-anchor="middle" font-size="12" fill="#666">40</text>
+
+      <line x1="560" y1="10" x2="560" y2="530" stroke="#e8e8ef" stroke-dasharray="4,3"/>
+      <text x="560" y="555" text-anchor="middle" font-size="12" fill="#666">60</text>
+
+      <line x1="720" y1="10" x2="720" y2="530" stroke="#e8e8ef" stroke-dasharray="4,3"/>
+      <text x="720" y="555" text-anchor="middle" font-size="12" fill="#666">80</text>
+
+      <line x1="880" y1="10" x2="880" y2="530" stroke="#e8e8ef" stroke-dasharray="4,3"/>
+      <text x="880" y="555" text-anchor="middle" font-size="12" fill="#666">100</text>
+
+      <line x1="1040" y1="10" x2="1040" y2="530" stroke="#e8e8ef" stroke-dasharray="4,3"/>
+      <text x="1040" y="555" text-anchor="middle" font-size="12" fill="#666">120</text>
+
+      <text x="80" y="555" text-anchor="middle" font-size="12" fill="#666">0</text>
+
+      <!-- 坐标轴线 -->
+      <line x1="80" y1="530" x2="1040" y2="530" stroke="#c0c3d0" stroke-width="1"/>
+      <line x1="80" y1="10" x2="80" y2="530" stroke="#c0c3d0" stroke-width="1"/>
+
+      <!-- 轴标题 -->
+      <text x="560" y="590" text-anchor="middle" font-size="14" font-weight="bold" fill="#555">日均活跃时长 (min)</text>
+      <text x="20" y="270" text-anchor="middle" font-size="14" font-weight="bold" fill="#555" transform="rotate(-90, 20, 270)">30日留存率 (%)</text>
+
+      <!-- 社交类: [x, y, size] → cx=80+x/120*960, cy=530-y/100*520, r=sqrt(size)*2.5 -->
+      <circle cx="760" cy="156" r="27" fill="rgba(102,126,234,0.35)" stroke="rgba(102,126,234,0.5)" stroke-width="1"/>  <!-- 85,72,120 -->
+      <circle cx="560" cy="228" r="22" fill="rgba(102,126,234,0.35)" stroke="rgba(102,126,234,0.5)" stroke-width="1"/>  <!-- 60,58,80 -->
+      <circle cx="840" cy="114" r="35" fill="rgba(102,126,234,0.35)" stroke="rgba(102,126,234,0.5)" stroke-width="1"/>  <!-- 95,80,200 -->
+      <circle cx="440" cy="312" r="18" fill="rgba(102,126,234,0.35)" stroke="rgba(102,126,234,0.5)" stroke-width="1"/>  <!-- 45,42,50 -->
+      <circle cx="640" cy="192" r="31" fill="rgba(102,126,234,0.35)" stroke="rgba(102,126,234,0.5)" stroke-width="1"/>  <!-- 70,65,150 -->
+      <circle cx="880" cy="124" r="24" fill="rgba(102,126,234,0.35)" stroke="rgba(102,126,234,0.5)" stroke-width="1"/>  <!-- 100,78,90 -->
+      <circle cx="520" cy="270" r="19" fill="rgba(102,126,234,0.35)" stroke="rgba(102,126,234,0.5)" stroke-width="1"/>  <!-- 55,50,60 -->
+      <circle cx="720" cy="166" r="33" fill="rgba(102,126,234,0.35)" stroke="rgba(102,126,234,0.5)" stroke-width="1"/>  <!-- 80,70,170 -->
+      <circle cx="400" cy="348" r="14" fill="rgba(102,126,234,0.35)" stroke="rgba(102,126,234,0.5)" stroke-width="1"/>  <!-- 40,35,30 -->
+
+      <!-- 工具类 -->
+      <circle cx="200" cy="218" r="43" fill="rgba(245,87,108,0.35)" stroke="rgba(245,87,108,0.5)" stroke-width="1"/>  <!-- 15,60,300 -->
+      <circle cx="280" cy="244" r="34" fill="rgba(245,87,108,0.35)" stroke="rgba(245,87,108,0.5)" stroke-width="1"/>  <!-- 25,55,180 -->
+      <circle cx="160" cy="166" r="40" fill="rgba(245,87,108,0.35)" stroke="rgba(245,87,108,0.5)" stroke-width="1"/>  <!-- 10,70,250 -->
+      <circle cx="320" cy="280" r="25" fill="rgba(245,87,108,0.35)" stroke="rgba(245,87,108,0.5)" stroke-width="1"/>  <!-- 30,48,100 -->
+      <circle cx="240" cy="208" r="37" fill="rgba(245,87,108,0.35)" stroke="rgba(245,87,108,0.5)" stroke-width="1"/>  <!-- 20,62,220 -->
+      <circle cx="144" cy="140" r="31" fill="rgba(245,87,108,0.35)" stroke="rgba(245,87,108,0.5)" stroke-width="1"/>  <!-- 8,75,150 -->
+      <circle cx="360" cy="322" r="21" fill="rgba(245,87,108,0.35)" stroke="rgba(245,87,108,0.5)" stroke-width="1"/>  <!-- 35,40,70 -->
+      <circle cx="176" cy="192" r="42" fill="rgba(245,87,108,0.35)" stroke="rgba(245,87,108,0.5)" stroke-width="1"/>  <!-- 12,65,280 -->
+      <circle cx="224" cy="228" r="29" fill="rgba(245,87,108,0.35)" stroke="rgba(245,87,108,0.5)" stroke-width="1"/>  <!-- 18,58,130 -->
+
+      <!-- 游戏类 -->
+      <circle cx="800" cy="374" r="56" fill="rgba(67,233,123,0.35)" stroke="rgba(67,233,123,0.5)" stroke-width="1"/>  <!-- 90,30,500 -->
+      <circle cx="960" cy="400" r="47" fill="rgba(67,233,123,0.35)" stroke="rgba(67,233,123,0.5)" stroke-width="1"/>  <!-- 110,25,350 -->
+      <circle cx="680" cy="332" r="35" fill="rgba(67,233,123,0.35)" stroke="rgba(67,233,123,0.5)" stroke-width="1"/>  <!-- 75,38,200 -->
+      <circle cx="920" cy="426" r="31" fill="rgba(67,233,123,0.35)" stroke="rgba(67,233,123,0.5)" stroke-width="1"/>  <!-- 105,20,150 -->
+      <circle cx="600" cy="296" r="25" fill="rgba(67,233,123,0.35)" stroke="rgba(67,233,123,0.5)" stroke-width="1"/>  <!-- 65,45,100 -->
+      <circle cx="840" cy="384" r="50" fill="rgba(67,233,123,0.35)" stroke="rgba(67,233,123,0.5)" stroke-width="1"/>  <!-- 95,28,400 -->
+      <circle cx="480" cy="270" r="22" fill="rgba(67,233,123,0.35)" stroke="rgba(67,233,123,0.5)" stroke-width="1"/>  <!-- 50,50,80 -->
+      <circle cx="720" cy="348" r="43" fill="rgba(67,233,123,0.35)" stroke="rgba(67,233,123,0.5)" stroke-width="1"/>  <!-- 80,35,300 -->
+      <circle cx="1000" cy="436" r="40" fill="rgba(67,233,123,0.35)" stroke="rgba(67,233,123,0.5)" stroke-width="1"/>  <!-- 115,18,250 -->
+    </svg>
+  </div>
+</body>
+</html>
