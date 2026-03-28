@@ -24,6 +24,7 @@
   var title = '电商平台类图';
   var subtitle = 'E-Commerce Platform — UML Class Diagram';
 
+  // type: 'class' | 'interface' | 'abstract' | 'enum'
   var classes = [
     { id: 'User', label: 'User', type: 'class',
       fields: [
@@ -54,7 +55,6 @@
         { vis: '+', name: 'create(items)', dtype: 'Order' },
         { vis: '+', name: 'cancel()', dtype: 'bool' },
         { vis: '+', name: 'pay(payment)', dtype: 'bool' },
-        { vis: '+', name: 'ship(trackNo)', dtype: 'bool' },
         { vis: '+', name: 'calcTotal()', dtype: 'Decimal' }
       ]
     },
@@ -62,8 +62,7 @@
       fields: [
         { vis: '-', name: 'id', dtype: 'Long' },
         { vis: '-', name: 'paymentNo', dtype: 'String' },
-        { vis: '-', name: 'method', dtype: 'PaymentMethod' },
-        { vis: '-', name: 'status', dtype: 'PayStatus' },
+        { vis: '-', name: 'method', dtype: 'PayMethod' },
         { vis: '-', name: 'amount', dtype: 'Decimal' }
       ],
       methods: [
@@ -79,8 +78,7 @@
         { vis: '-', name: 'subtotal', dtype: 'Decimal' }
       ],
       methods: [
-        { vis: '+', name: 'getSubtotal()', dtype: 'Decimal' },
-        { vis: '+', name: 'updateQty(qty)', dtype: 'void' }
+        { vis: '+', name: 'getSubtotal()', dtype: 'Decimal' }
       ]
     },
     { id: 'Product', label: 'Product', type: 'class',
@@ -88,20 +86,17 @@
         { vis: '-', name: 'id', dtype: 'Long' },
         { vis: '-', name: 'name', dtype: 'String' },
         { vis: '-', name: 'price', dtype: 'Decimal' },
-        { vis: '-', name: 'stock', dtype: 'Integer' },
-        { vis: '-', name: 'status', dtype: 'ProdStatus' }
+        { vis: '-', name: 'stock', dtype: 'Integer' }
       ],
       methods: [
         { vis: '+', name: 'updateStock(d)', dtype: 'bool' },
-        { vis: '+', name: 'isAvailable()', dtype: 'bool' },
-        { vis: '+', name: 'getCategory()', dtype: 'Category' }
+        { vis: '+', name: 'isAvailable()', dtype: 'bool' }
       ]
     },
     { id: 'Category', label: 'Category', type: 'class',
       fields: [
         { vis: '-', name: 'id', dtype: 'Long' },
         { vis: '-', name: 'name', dtype: 'String' },
-        { vis: '-', name: 'sortOrder', dtype: 'Integer' },
         { vis: '-', name: 'parent', dtype: 'Category' }
       ],
       methods: [
@@ -115,33 +110,38 @@
     { id: 'OrderStatus', label: 'OrderStatus', type: 'enum',
       values: ['PENDING', 'PAID', 'SHIPPING', 'DELIVERED', 'CANCELLED']
     },
-    { id: 'PaymentMethod', label: 'PaymentMethod', type: 'enum',
+    { id: 'PayMethod', label: 'PayMethod', type: 'enum',
       values: ['ALIPAY', 'WECHAT_PAY', 'CREDIT_CARD']
     }
   ];
 
+  // type: 'association' | 'composition' | 'dependency' | 'inheritance' | 'realization'
   var relations = [
     { from: 'User', to: 'Order', type: 'association', label: '下单', fromCard: '1', toCard: 'N' },
     { from: 'Order', to: 'OrderItem', type: 'composition', label: '包含', fromCard: '1', toCard: '1:N' },
-    { from: 'OrderItem', to: 'Product', type: 'association', label: '关联商品', fromCard: 'N', toCard: '1' },
-    { from: 'Product', to: 'Category', type: 'association', label: '所属分类', fromCard: 'N', toCard: '1' },
-    { from: 'Category', to: 'Category', type: 'association', label: '父子', fromCard: '0:1', toCard: 'N' },
-    { from: 'Order', to: 'Payment', type: 'association', label: '支付信息', fromCard: '1', toCard: '0:1' },
+    { from: 'OrderItem', to: 'Product', type: 'association', label: '关联', fromCard: 'N', toCard: '1' },
+    { from: 'Product', to: 'Category', type: 'association', label: '分类', fromCard: 'N', toCard: '1' },
+    { from: 'Order', to: 'Payment', type: 'association', label: '支付', fromCard: '1', toCard: '0:1' },
     { from: 'User', to: 'UserRole', type: 'dependency' },
     { from: 'Order', to: 'OrderStatus', type: 'dependency' },
-    { from: 'Payment', to: 'PaymentMethod', type: 'dependency' }
+    { from: 'Payment', to: 'PayMethod', type: 'dependency' }
   ];
 
-  // ========== 主题色（P1 #3） ==========
-  var typeColors = {
-    'class':     { header: '#3B82F6', border: 'rgba(59,130,246,0.3)' },
-    'interface': { header: '#10B981', border: 'rgba(16,185,129,0.3)' },
-    'abstract':  { header: '#8B5CF6', border: 'rgba(139,92,246,0.3)' },
-    'enum':      { header: '#F59E0B', border: 'rgba(245,158,11,0.3)' }
+  // ========== 主题 ==========
+  var theme = {
+    title: { color: '#1a1a2e', size: 16 },
+    subtitle: { color: '#888888', size: 12 },
+    typeColors: {
+      'class':     { header: '#3B82F6', border: 'rgba(59,130,246,0.3)' },
+      'interface': { header: '#10B981', border: 'rgba(16,185,129,0.3)' },
+      'abstract':  { header: '#8B5CF6', border: 'rgba(139,92,246,0.3)' },
+      'enum':      { header: '#F59E0B', border: 'rgba(245,158,11,0.3)' }
+    },
+    field: { bg: '#F8FAFC', text: '#1E293B', type: '#94A3B8', divider: 'rgba(59,130,246,0.15)' },
+    enumVal: '#64748B',
+    line: { color: '#94A3B8', width: 1.5, label: '#64748B' },
+    depLine: { color: '#B0B8C4', width: 1 }
   };
-
-  var lineColor = '#94A3B8';
-  var dashColor = '#B0B8C4';
 
   // ========== 工具函数 ==========
   function el(tag, attrs) {
@@ -149,548 +149,438 @@
     if (attrs) for (var k in attrs) e.setAttribute(k, attrs[k]);
     return e;
   }
-  function measureText(str, fontSize) {
+  function mt(str, fs) {
     var w = 0;
-    for (var i = 0; i < str.length; i++) w += str.charCodeAt(i) > 127 ? fontSize : fontSize * 0.6;
+    for (var i = 0; i < str.length; i++) w += str.charCodeAt(i) > 127 ? fs : fs * 0.62;
     return w;
   }
 
   // ========== 布局参数 ==========
+  var MONO = "'SF Mono', SFMono-Regular, Menlo, monospace";
+  var SANS = "-apple-system, system-ui, 'PingFang SC', sans-serif";
   var HEADER_H = 34;
   var HEADER_BRIDGE = 8;
   var FIELD_H = 20;
-  var FIELD_PAD_X = 12;
-  var DIVIDER_H = 1;
-  var SECTION_PAD = 6;
-  var CLASS_MIN_W = 200;
-  var CLASS_GAP_X = 100;
-  var CLASS_GAP_Y = 60;
-  var TITLE_AREA_H = 50;
-  var LEGEND_H = 50;
-  var MONO = "'SF Mono',SFMono-Regular,Menlo,monospace";
-  var SANS = "-apple-system,system-ui,'PingFang SC',sans-serif";
+  var FIELD_PAD = 12;
+  var METHOD_H = 20;
+  var ENUM_VAL_H = 20;
+  var BOX_MIN_W = 160;
+  var GAP_X = 80;
+  var GAP_Y = 60;
+  var R = 10;                   // 折线圆角半径
+  var TITLE_H = 52;
 
-  // ========== 计算每个类的尺寸 ==========
+  // ========== 第一遍：计算每个类框的尺寸 ==========
   var classMap = {};
 
   classes.forEach(function(c) {
-    var tc = typeColors[c.type] || typeColors['class'];
-    var node = { id: c.id, label: c.label, type: c.type, color: tc, fields: c.fields || [], methods: c.methods || [], values: c.values || [] };
+    var node = { id: c.id, label: c.label, type: c.type };
 
     // 计算宽度
-    var minW = CLASS_MIN_W;
-    var labelW = measureText(c.label, 14) + 40;
-    if (c.type === 'interface' || c.type === 'abstract') labelW += measureText('\u00AB' + c.type + '\u00BB', 9) + 10;
-    if (labelW > minW) minW = labelW;
+    var maxW = mt(c.label, 14) + 40;
+    if (c.type === 'interface' || c.type === 'abstract') maxW = Math.max(maxW, mt('<<' + c.type + '>>', 10) + 40);
 
     if (c.type === 'enum') {
-      (c.values || []).forEach(function(v) {
-        var fw = measureText(v, 11) + FIELD_PAD_X * 2;
-        if (fw > minW) minW = fw;
-      });
+      (c.values || []).forEach(function(v) { var w = mt(v, 11) + FIELD_PAD * 2; if (w > maxW) maxW = w; });
+      node.values = c.values || [];
+      node.h = HEADER_H + HEADER_BRIDGE + node.values.length * ENUM_VAL_H + 8;
     } else {
-      (c.fields || []).forEach(function(f) {
-        var line = f.vis + ' ' + f.name + ' : ' + f.dtype;
-        var fw = measureText(line, 11) + FIELD_PAD_X * 2;
-        if (fw > minW) minW = fw;
+      node.fields = c.fields || [];
+      node.methods = c.methods || [];
+      node.fields.forEach(function(f) {
+        var w = mt(f.vis + ' ' + f.name + ' : ' + f.dtype, 11) + FIELD_PAD * 2;
+        if (w > maxW) maxW = w;
       });
-      (c.methods || []).forEach(function(m) {
-        var line = m.vis + ' ' + m.name + ' : ' + m.dtype;
-        var fw = measureText(line, 11) + FIELD_PAD_X * 2;
-        if (fw > minW) minW = fw;
+      node.methods.forEach(function(m) {
+        var w = mt(m.vis + ' ' + m.name + ' : ' + m.dtype, 11) + FIELD_PAD * 2;
+        if (w > maxW) maxW = w;
       });
+      var fieldsH = node.fields.length * FIELD_H;
+      var methodsH = node.methods.length * METHOD_H;
+      node.h = HEADER_H + HEADER_BRIDGE + fieldsH + (node.methods.length > 0 ? 1 + methodsH : 0) + 8;
     }
-    node.w = minW;
-
-    // 计算高度
-    var h = HEADER_H + HEADER_BRIDGE;
-    if (c.type === 'enum') {
-      h += SECTION_PAD + (c.values || []).length * FIELD_H + SECTION_PAD;
-    } else {
-      var nFields = (c.fields || []).length;
-      var nMethods = (c.methods || []).length;
-      h += SECTION_PAD + nFields * FIELD_H + SECTION_PAD;
-      if (nMethods > 0) {
-        h += DIVIDER_H + SECTION_PAD + nMethods * FIELD_H + SECTION_PAD;
-      }
-    }
-    node.h = h;
-
+    node.w = Math.max(maxW, BOX_MIN_W);
     classMap[c.id] = node;
   });
 
-  // ========== 统一同列宽度 ==========
-  var n = classes.length;
-  var cols = Math.min(n, 3);
-  var rows = Math.ceil(n / cols);
+  // ========== 第二遍：Sugiyama 分层布局 ==========
+  // 继承/实现关系决定层级（父在上），其他关系为同层或邻层
 
-  // 找每列最大宽度
-  var colMaxW = [];
-  for (var ci = 0; ci < cols; ci++) colMaxW[ci] = 0;
-  classes.forEach(function(c, i) {
-    var col = i % cols;
-    var node = classMap[c.id];
-    if (node.w > colMaxW[col]) colMaxW[col] = node.w;
-  });
-  // 应用列宽
-  classes.forEach(function(c, i) {
-    var col = i % cols;
-    classMap[c.id].w = colMaxW[col];
+  // 构建有向边（继承/实现方向：子→父）和无向边（其他）
+  var hierarchyDown = {};  // parent → [children]（用于分层）
+  var adj = {};
+  classes.forEach(function(c) { adj[c.id] = []; hierarchyDown[c.id] = []; });
+
+  relations.forEach(function(r) {
+    if (r.type === 'inheritance' || r.type === 'realization') {
+      // from(子) → to(父)，分层时父在上
+      if (hierarchyDown[r.to]) hierarchyDown[r.to].push(r.from);
+    }
+    if (adj[r.from] && adj[r.from].indexOf(r.to) === -1) adj[r.from].push(r.to);
+    if (adj[r.to] && adj[r.to].indexOf(r.from) === -1) adj[r.to].push(r.from);
   });
 
-  // ========== 网格布局 ==========
-  // 找每行最大高度
-  var rowMaxH = [];
-  for (var ri = 0; ri < rows; ri++) rowMaxH[ri] = 0;
-  classes.forEach(function(c, i) {
-    var row = Math.floor(i / cols);
-    var node = classMap[c.id];
-    if (node.h > rowMaxH[row]) rowMaxH[row] = node.h;
+  // ===== 标准 Sugiyama 分层布局（所有节点和边统一处理，无特殊逻辑） =====
+
+  // 1. 构建有向邻接表（from → to）
+  var outEdges = {};  // id → [target ids]
+  var inEdges = {};   // id → [source ids]
+  var allAdj = {};    // 无向
+  classes.forEach(function(c) { outEdges[c.id] = []; inEdges[c.id] = []; allAdj[c.id] = []; });
+  relations.forEach(function(r) {
+    if (outEdges[r.from]) outEdges[r.from].push(r.to);
+    if (inEdges[r.to]) inEdges[r.to].push(r.from);
+    if (allAdj[r.from] && allAdj[r.from].indexOf(r.to) === -1) allAdj[r.from].push(r.to);
+    if (allAdj[r.to] && allAdj[r.to].indexOf(r.from) === -1) allAdj[r.to].push(r.from);
   });
 
-  // 计算列 X 偏移
-  var colX = [0];
-  for (var ci2 = 1; ci2 < cols; ci2++) {
-    colX[ci2] = colX[ci2 - 1] + colMaxW[ci2 - 1] + CLASS_GAP_X;
+  // 2. 拓扑分层（最长路径法 — 和 dagre 相同）
+  //    从没有入边的节点开始，层号 = max(所有前驱层号) + 1
+  var layerOf = {};
+  var assigned = {};
+  function assignLayer(id) {
+    if (assigned[id]) return layerOf[id];
+    assigned[id] = true;
+    var maxPre = -1;
+    (inEdges[id] || []).forEach(function(pre) {
+      var pl = assignLayer(pre);
+      if (pl > maxPre) maxPre = pl;
+    });
+    layerOf[id] = maxPre + 1;
+    return layerOf[id];
+  }
+  classes.forEach(function(c) { assignLayer(c.id); });
+
+  // 收集每层节点
+  var numLayers = 0;
+  classes.forEach(function(c) { if (layerOf[c.id] >= numLayers) numLayers = layerOf[c.id] + 1; });
+  var allLayers = [];
+  for (var i = 0; i < numLayers; i++) allLayers.push([]);
+  classes.forEach(function(c) { allLayers[layerOf[c.id]].push(c.id); });
+
+  // 3. 重心法排序（4 轮交替扫描）
+  allLayers.forEach(function(layer) {
+    layer.forEach(function(id, i) { classMap[id]._pos = i; });
+  });
+  for (var pass = 0; pass < 4; pass++) {
+    var fwd = pass % 2 === 0;
+    for (var li = fwd ? 1 : allLayers.length - 2; fwd ? li < allLayers.length : li >= 0; li += fwd ? 1 : -1) {
+      var ref = fwd ? li - 1 : li + 1;
+      if (ref < 0 || ref >= allLayers.length) continue;
+      allLayers[li].forEach(function(id) {
+        var nbs = (allAdj[id] || []).filter(function(nb) { return layerOf[nb] === ref; });
+        if (nbs.length > 0) {
+          var sum = 0; nbs.forEach(function(nb) { sum += classMap[nb]._pos; });
+          classMap[id]._bary = sum / nbs.length;
+        } else { classMap[id]._bary = classMap[id]._pos; }
+      });
+      allLayers[li].sort(function(a, b) { return classMap[a]._bary - classMap[b]._bary; });
+      allLayers[li].forEach(function(id, i) { classMap[id]._pos = i; });
+    }
   }
 
-  // 计算行 Y 偏移
-  var rowY = [TITLE_AREA_H];
-  for (var ri2 = 1; ri2 < rows; ri2++) {
-    rowY[ri2] = rowY[ri2 - 1] + rowMaxH[ri2 - 1] + CLASS_GAP_Y;
-  }
+  // 4. 坐标分配：每层水平居中
+  var globalMaxW = BOX_MIN_W;
+  classes.forEach(function(c) { if (classMap[c.id].w > globalMaxW) globalMaxW = classMap[c.id].w; });
 
-  // 分配位置
-  classes.forEach(function(c, i) {
-    var row = Math.floor(i / cols);
-    var col = i % cols;
-    var node = classMap[c.id];
-    node.x = colX[col];
-    node.y = rowY[row];
-    node.row = row;
-    node.col = col;
-    node.cx = node.x + node.w / 2;
-    node.cy = node.y + node.h / 2;
+  var maxLayerW = 0;
+  allLayers.forEach(function(l) {
+    var w = l.length * globalMaxW + (l.length - 1) * GAP_X;
+    if (w > maxLayerW) maxLayerW = w;
+  });
+
+  var curY = TITLE_H;
+  allLayers.forEach(function(layer, li) {
+    var layerMaxH = 0;
+    layer.forEach(function(id) { if (classMap[id].h > layerMaxH) layerMaxH = classMap[id].h; });
+    var layerTotalW = layer.length * globalMaxW + (layer.length - 1) * GAP_X;
+    var offsetX = (maxLayerW - layerTotalW) / 2;
+
+    layer.forEach(function(id, col) {
+      var node = classMap[id];
+      node.w = globalMaxW;
+      node.x = offsetX + col * (globalMaxW + GAP_X);
+      node.y = curY;
+      node.cx = node.x + node.w / 2;
+      node.cy = node.y + node.h / 2;
+      node.row = li;
+      node.col = col;
+    });
+    curY += layerMaxH + GAP_Y;
   });
 
   // ========== 画布自适应 ==========
   var maxX = 0, maxY = 0;
   classes.forEach(function(c) {
-    var node = classMap[c.id];
-    if (node.x + node.w > maxX) maxX = node.x + node.w;
-    if (node.y + node.h > maxY) maxY = node.y + node.h;
+    var n = classMap[c.id];
+    if (n.x + n.w > maxX) maxX = n.x + n.w;
+    if (n.y + n.h > maxY) maxY = n.y + n.h;
   });
+  var svgW = maxX + 40;
+  var svgH = maxY + 60;  // 图例空间
 
-  var svgW = maxX + 60;
-  var svgH = maxY + LEGEND_H + 40;
   svg.setAttribute('width', svgW);
   svg.setAttribute('height', svgH);
   svg.setAttribute('viewBox', '0 0 ' + svgW + ' ' + svgH);
 
   // ========== SVG Defs ==========
   var defs = el('defs');
-
-  // 开放箭头（association）
-  var mOpen = el('marker', { id: 'arrow-open', markerWidth: 10, markerHeight: 8, refX: 9, refY: 4, orient: 'auto', markerUnits: 'userSpaceOnUse' });
-  mOpen.appendChild(el('path', { d: 'M0,0.5 L9,4 L0,7.5', fill: 'none', stroke: lineColor, 'stroke-width': 1.5, 'stroke-linecap': 'round' }));
-  defs.appendChild(mOpen);
-
-  // 填充菱形（composition start）
-  var mDiamond = el('marker', { id: 'diamond-filled', markerWidth: 14, markerHeight: 10, refX: 0, refY: 5, orient: 'auto', markerUnits: 'userSpaceOnUse' });
-  mDiamond.appendChild(el('path', { d: 'M0,5 L7,0 L14,5 L7,10 Z', fill: lineColor, stroke: lineColor, 'stroke-width': 1 }));
-  defs.appendChild(mDiamond);
-
-  // 虚线开放箭头（dependency）
-  var mDash = el('marker', { id: 'arrow-dash', markerWidth: 8, markerHeight: 6, refX: 7, refY: 3, orient: 'auto', markerUnits: 'userSpaceOnUse' });
-  mDash.appendChild(el('path', { d: 'M0,0.5 L7,3 L0,5.5', fill: 'none', stroke: dashColor, 'stroke-width': 1.2, 'stroke-linecap': 'round' }));
-  defs.appendChild(mDash);
-
-  // 三角箭头（inheritance）
-  var mTriSolid = el('marker', { id: 'triangle-solid', markerWidth: 12, markerHeight: 10, refX: 11, refY: 5, orient: 'auto', markerUnits: 'userSpaceOnUse' });
-  mTriSolid.appendChild(el('path', { d: 'M0,0 L12,5 L0,10 Z', fill: '#FFFFFF', stroke: lineColor, 'stroke-width': 1.5 }));
-  defs.appendChild(mTriSolid);
-
-  // 三角箭头（realization - 虚线）
-  var mTriDash = el('marker', { id: 'triangle-dash', markerWidth: 12, markerHeight: 10, refX: 11, refY: 5, orient: 'auto', markerUnits: 'userSpaceOnUse' });
-  mTriDash.appendChild(el('path', { d: 'M0,0 L12,5 L0,10 Z', fill: '#FFFFFF', stroke: dashColor, 'stroke-width': 1.5 }));
-  defs.appendChild(mTriDash);
-
+  // 开放箭头（关联）
+  var arr = el('marker', { id: 'arrow', markerWidth: 8, markerHeight: 6, refX: 8, refY: 3, orient: 'auto' });
+  arr.appendChild(el('path', { d: 'M0,0.5 L7,3 L0,5.5', fill: 'none', stroke: theme.line.color, 'stroke-width': 1.2, 'stroke-linecap': 'round' }));
+  defs.appendChild(arr);
+  // 组合菱形
+  var dia = el('marker', { id: 'diamond', markerWidth: 12, markerHeight: 8, refX: 0, refY: 4, orient: 'auto' });
+  dia.appendChild(el('path', { d: 'M0,4 L6,0 L12,4 L6,8 Z', fill: theme.line.color, stroke: theme.line.color, 'stroke-width': 0.5 }));
+  defs.appendChild(dia);
+  // 三角箭头（继承）
+  var tri = el('marker', { id: 'triangle', markerWidth: 10, markerHeight: 8, refX: 10, refY: 4, orient: 'auto' });
+  tri.appendChild(el('path', { d: 'M0,0 L10,4 L0,8 Z', fill: '#FFFFFF', stroke: theme.line.color, 'stroke-width': 1 }));
+  defs.appendChild(tri);
+  // 虚线箭头（依赖）
+  var darr = el('marker', { id: 'darrow', markerWidth: 8, markerHeight: 6, refX: 8, refY: 3, orient: 'auto' });
+  darr.appendChild(el('path', { d: 'M0,0.5 L7,3 L0,5.5', fill: 'none', stroke: theme.depLine.color, 'stroke-width': 1, 'stroke-linecap': 'round' }));
+  defs.appendChild(darr);
   svg.appendChild(defs);
 
   // ========== 渲染层 ==========
   var lineGroup = el('g'); svg.appendChild(lineGroup);
   var nodeGroup = el('g'); svg.appendChild(nodeGroup);
+  var labelLayer = el('g'); svg.appendChild(labelLayer);
 
-  // ========== 标题（P1 #6：16px title, 12px subtitle） ==========
-  if (title) {
-    var tEl = el('text', { x: 0, y: 18, 'font-size': 16, 'font-weight': 700, fill: '#1a1a2e', 'font-family': SANS });
-    tEl.textContent = title; nodeGroup.appendChild(tEl);
-  }
-  if (subtitle) {
-    var stEl = el('text', { x: 0, y: 36, 'font-size': 12, fill: '#888888', 'font-family': SANS });
-    stEl.textContent = subtitle; nodeGroup.appendChild(stEl);
-  }
+  // ========== 标题 ==========
+  var tEl = el('text', { x: 0, y: 18, 'font-size': 16, 'font-weight': 700, fill: theme.title.color, 'font-family': SANS });
+  tEl.textContent = title; nodeGroup.appendChild(tEl);
+  var stEl = el('text', { x: 0, y: 36, 'font-size': 12, fill: theme.subtitle.color, 'font-family': SANS });
+  stEl.textContent = subtitle; nodeGroup.appendChild(stEl);
 
-  // ========== 绘制关系连线 ==========
-  var R = 10;
+  // ========== 绘制连线（可见性图 + 正交最短路径） ==========
+  var M = 15;  // 节点扩展 margin
 
-  function getLineAttrs(relType) {
-    switch (relType) {
-      case 'association':
-        return { stroke: lineColor, sw: 1.5, dash: '', markerStart: '', markerEnd: 'url(#arrow-open)' };
-      case 'composition':
-        return { stroke: lineColor, sw: 1.5, dash: '', markerStart: 'url(#diamond-filled)', markerEnd: '' };
-      case 'dependency':
-        return { stroke: dashColor, sw: 1, dash: '5,3', markerStart: '', markerEnd: 'url(#arrow-dash)' };
-      case 'inheritance':
-        return { stroke: lineColor, sw: 1.5, dash: '', markerStart: '', markerEnd: 'url(#triangle-solid)' };
-      case 'realization':
-        return { stroke: dashColor, sw: 1.5, dash: '6,3', markerStart: '', markerEnd: 'url(#triangle-dash)' };
-      default:
-        return { stroke: lineColor, sw: 1.5, dash: '', markerStart: '', markerEnd: 'url(#arrow-open)' };
-    }
-  }
-
-  // P0 #1: 计算依赖线路由所需的全局底部 Y（所有行最底部 + 间距）
-  var allBottomY = 0;
+  // 1. 收集所有节点的扩展矩形（障碍物）
+  var obstacles = [];
   classes.forEach(function(c) {
-    var node = classMap[c.id];
-    var bot = node.y + node.h;
-    if (bot > allBottomY) allBottomY = bot;
+    var n = classMap[c.id];
+    obstacles.push({ x: n.x - M, y: n.y - M, w: n.w + M * 2, h: n.h + M * 2, id: c.id });
   });
-  var routeBaseY = allBottomY + 30; // 路由通道起点，在所有类框下方
-  var depRouteIndex = 0; // 用于错开多条依赖线
 
-  relations.forEach(function(rel) {
-    var fromN = classMap[rel.from], toN = classMap[rel.to];
+  // 2. 端口分配：统计每个节点每条边的连线数，均匀分布端口
+  var portCounts = {};  // 'id-side' → total count
+  var portUsed = {};    // 'id-side' → next index
+  classes.forEach(function(c) {
+    ['t', 'b', 'l', 'r'].forEach(function(s) { portCounts[c.id + '-' + s] = 0; portUsed[c.id + '-' + s] = 0; });
+  });
+
+  // 预扫描确定每个端口的连线数
+  relations.forEach(function(r) {
+    var fromN = classMap[r.from], toN = classMap[r.to];
+    if (!fromN || !toN) return;
+    var dy = toN.cy - fromN.cy, dx = toN.cx - fromN.cx;
+    var fromSide, toSide;
+    if (fromN.row === toN.row) { fromSide = dx > 0 ? 'r' : 'l'; toSide = dx > 0 ? 'l' : 'r'; }
+    else { fromSide = dy > 0 ? 'b' : 't'; toSide = dy > 0 ? 't' : 'b'; }
+    portCounts[r.from + '-' + fromSide]++;
+    portCounts[r.to + '-' + toSide]++;
+    r._fromSide = fromSide;
+    r._toSide = toSide;
+  });
+
+  function getPort(nodeId, side) {
+    var n = classMap[nodeId];
+    var total = portCounts[nodeId + '-' + side];
+    var idx = portUsed[nodeId + '-' + side]++;
+    var frac = (idx + 1) / (total + 1);  // 均匀分布
+
+    if (side === 't') return { x: n.x + n.w * frac, y: n.y };
+    if (side === 'b') return { x: n.x + n.w * frac, y: n.y + n.h };
+    if (side === 'l') return { x: n.x, y: n.y + n.h * frac };
+    if (side === 'r') return { x: n.x + n.w, y: n.y + n.h * frac };
+  }
+
+  // 3. 线段是否穿过任何障碍物（排除起止节点）
+  function segHitsObstacle(ax, ay, bx, by, skipIds) {
+    for (var i = 0; i < obstacles.length; i++) {
+      var o = obstacles[i];
+      if (skipIds.indexOf(o.id) >= 0) continue;
+      // 线段与矩形的交叉检测（正交线段简化版）
+      if (Math.abs(ax - bx) < 1) {
+        // 垂直线段
+        var minY = Math.min(ay, by), maxY = Math.max(ay, by);
+        if (ax > o.x && ax < o.x + o.w && maxY > o.y && minY < o.y + o.h) return true;
+      } else {
+        // 水平线段
+        var minX = Math.min(ax, bx), maxX = Math.max(ax, bx);
+        if (ay > o.y && ay < o.y + o.h && maxX > o.x && minX < o.x + o.w) return true;
+      }
+    }
+    return false;
+  }
+
+  // 4. 为每条关系构建路径
+  relations.forEach(function(r) {
+    var fromN = classMap[r.from], toN = classMap[r.to];
     if (!fromN || !toN) return;
 
-    var attrs = getLineAttrs(rel.type);
-    var x1, y1, x2, y2, d, labelX, labelY, fromCardX, fromCardY, toCardX, toCardY;
+    var isDep = r.type === 'dependency';
+    var isComp = r.type === 'composition';
+    var isInh = r.type === 'inheritance' || r.type === 'realization';
+    var isDash = isDep || r.type === 'realization';
+    var lineColor = isDep ? theme.depLine.color : theme.line.color;
+    var lineW = isDep ? theme.depLine.width : theme.line.width;
+    var markerEnd = isComp ? '' : isInh ? 'url(#triangle)' : isDep ? 'url(#darrow)' : 'url(#arrow)';
+    var markerStart = isComp ? 'url(#diamond)' : '';
 
-    // 自引用
-    if (rel.from === rel.to) {
-      var selfX = fromN.x + fromN.w;
-      var selfY1 = fromN.y + fromN.h * 0.3;
-      var selfY2 = fromN.y + fromN.h * 0.7;
-      var selfOut = 40;
-      d = 'M' + selfX + ',' + selfY1 +
-          ' L' + (selfX + selfOut) + ',' + selfY1 +
-          ' Q' + (selfX + selfOut + R) + ',' + selfY1 + ' ' + (selfX + selfOut + R) + ',' + (selfY1 + R) +
-          ' L' + (selfX + selfOut + R) + ',' + (selfY2 - R) +
-          ' Q' + (selfX + selfOut + R) + ',' + selfY2 + ' ' + (selfX + selfOut) + ',' + selfY2 +
-          ' L' + selfX + ',' + selfY2;
+    var sp = getPort(r.from, r._fromSide);
+    var ep = getPort(r.to, r._toSide);
+    var d;
 
-      labelX = selfX + selfOut + R + 6;
-      labelY = (selfY1 + selfY2) / 2 + 4;
-      fromCardX = selfX + 4; fromCardY = selfY1 - 6;
-      toCardX = selfX + 4; toCardY = selfY2 - 6;
-
-      var pathAttrs = { d: d, stroke: attrs.stroke, 'stroke-width': attrs.sw, fill: 'none' };
-      if (attrs.dash) pathAttrs['stroke-dasharray'] = attrs.dash;
-      if (attrs.markerEnd) pathAttrs['marker-end'] = attrs.markerEnd;
-      if (attrs.markerStart) pathAttrs['marker-start'] = attrs.markerStart;
-      lineGroup.appendChild(el('path', pathAttrs));
-
-      // 标签
-      if (rel.label) {
-        var lbl = el('text', { x: labelX, y: labelY, 'font-size': 10, fill: lineColor, 'font-family': SANS });
-        lbl.textContent = rel.label; lineGroup.appendChild(lbl);
+    // 尝试直连
+    if (Math.abs(sp.x - ep.x) < 2 || Math.abs(sp.y - ep.y) < 2) {
+      if (!segHitsObstacle(sp.x, sp.y, ep.x, ep.y, [r.from, r.to])) {
+        d = 'M' + sp.x + ',' + sp.y + ' L' + ep.x + ',' + ep.y;
       }
-      if (rel.fromCard) {
-        var fc = el('text', { x: fromCardX, y: fromCardY, 'font-size': 10, fill: '#64748B', 'font-family': SANS });
-        fc.textContent = rel.fromCard; lineGroup.appendChild(fc);
-      }
-      if (rel.toCard) {
-        var tc = el('text', { x: toCardX, y: toCardY, 'font-size': 10, fill: '#64748B', 'font-family': SANS });
-        tc.textContent = rel.toCard; lineGroup.appendChild(tc);
-      }
-      return;
     }
 
-    var dx = toN.cx - fromN.cx;
-    var dy = toN.cy - fromN.cy;
-    var sameRow = fromN.row === toN.row;
-    var sameCol = fromN.col === toN.col;
-
-    // P0 #1: 依赖线特殊路由 — 绕过类框
-    if (rel.type === 'dependency') {
-      if (sameCol) {
-        // 同列依赖：直接垂直连接
-        if (dy > 0) { y1 = fromN.y + fromN.h; y2 = toN.y; }
-        else        { y1 = fromN.y; y2 = toN.y + toN.h; }
-        d = 'M' + fromN.cx + ',' + y1 + ' L' + fromN.cx + ',' + y2;
-        labelX = fromN.cx + 14;
-        labelY = (y1 + y2) / 2 + 4;
+    // 直连失败或不同轴：3 段正交路由
+    if (!d) {
+      var isVert = r._fromSide === 't' || r._fromSide === 'b';
+      if (isVert) {
+        // 垂直出发：先 V → 水平通道 → V 进入
+        var channelY = (sp.y + ep.y) / 2;
+        // 检查通道是否穿过障碍，如果穿，微调 Y
+        var tries = [channelY, sp.y + (ep.y - sp.y) * 0.3, sp.y + (ep.y - sp.y) * 0.7];
+        for (var t = 0; t < tries.length; t++) {
+          channelY = tries[t];
+          if (!segHitsObstacle(sp.x, channelY, ep.x, channelY, [r.from, r.to])) break;
+        }
+        var sx = ep.x > sp.x ? 1 : -1;
+        var sy1 = channelY > sp.y ? 1 : -1;
+        var sy2 = ep.y > channelY ? 1 : -1;
+        d = 'M' + sp.x + ',' + sp.y +
+            ' L' + sp.x + ',' + (channelY - R * sy1) +
+            ' Q' + sp.x + ',' + channelY + ' ' + (sp.x + R * sx) + ',' + channelY +
+            ' L' + (ep.x - R * sx) + ',' + channelY +
+            ' Q' + ep.x + ',' + channelY + ' ' + ep.x + ',' + (channelY + R * sy2) +
+            ' L' + ep.x + ',' + ep.y;
       } else {
-        // 不同列依赖：从源底部出发 → 下到路由通道 → 水平到目标列 → 上到目标顶部
-        var routeY = routeBaseY + depRouteIndex * 16;
-        depRouteIndex++;
-        var srcX = fromN.cx;
-        var srcY = fromN.y + fromN.h;
-        var tgtX = toN.cx;
-        var tgtY = toN.y + toN.h; // 连接到目标底部
-
-        // 路径：源底部 → 下到路由通道 → 水平到目标列 → 上到目标底部
-        var hDir = tgtX > srcX ? 1 : -1;
-        d = 'M' + srcX + ',' + srcY +
-            ' L' + srcX + ',' + (routeY - R) +
-            ' Q' + srcX + ',' + routeY + ' ' + (srcX + R * hDir) + ',' + routeY +
-            ' L' + (tgtX - R * hDir) + ',' + routeY +
-            ' Q' + tgtX + ',' + routeY + ' ' + tgtX + ',' + (routeY - R) +
-            ' L' + tgtX + ',' + tgtY;
-        labelX = (srcX + tgtX) / 2;
-        labelY = routeY - 6;
+        // 水平出发：先 H → 垂直通道 → H 进入
+        var channelX = (sp.x + ep.x) / 2;
+        var tries2 = [channelX, sp.x + (ep.x - sp.x) * 0.3, sp.x + (ep.x - sp.x) * 0.7];
+        for (var t2 = 0; t2 < tries2.length; t2++) {
+          channelX = tries2[t2];
+          if (!segHitsObstacle(channelX, sp.y, channelX, ep.y, [r.from, r.to])) break;
+        }
+        var sy = ep.y > sp.y ? 1 : -1;
+        var sx1 = channelX > sp.x ? 1 : -1;
+        var sx2 = ep.x > channelX ? 1 : -1;
+        d = 'M' + sp.x + ',' + sp.y +
+            ' L' + (channelX - R * sx1) + ',' + sp.y +
+            ' Q' + channelX + ',' + sp.y + ' ' + channelX + ',' + (sp.y + R * sy) +
+            ' L' + channelX + ',' + (ep.y - R * sy) +
+            ' Q' + channelX + ',' + ep.y + ' ' + (channelX + R * sx2) + ',' + ep.y +
+            ' L' + ep.x + ',' + ep.y;
       }
-
-      var depPathAttrs = { d: d, stroke: attrs.stroke, 'stroke-width': attrs.sw, fill: 'none' };
-      if (attrs.dash) depPathAttrs['stroke-dasharray'] = attrs.dash;
-      if (attrs.markerEnd) depPathAttrs['marker-end'] = attrs.markerEnd;
-      lineGroup.appendChild(el('path', depPathAttrs));
-
-      if (rel.label) {
-        var drl = el('text', { x: labelX, y: labelY, 'text-anchor': 'middle', 'font-size': 10, fill: dashColor, 'font-family': SANS });
-        drl.textContent = rel.label; lineGroup.appendChild(drl);
-      }
-      return;
     }
 
-    if (sameRow) {
-      // P0 #2: 水平连接 — 增大标签与端点的偏移
-      var commonY = (fromN.cy + toN.cy) / 2;
-      if (dx > 0) { x1 = fromN.x + fromN.w; x2 = toN.x; }
-      else        { x1 = fromN.x; x2 = toN.x + toN.w; }
-      d = 'M' + x1 + ',' + commonY + ' L' + x2 + ',' + commonY;
-      labelX = (x1 + x2) / 2;
-      labelY = commonY - 10;
-      // 基数标签离端点更远，避免重叠
-      fromCardX = (dx > 0 ? x1 + 8 : x1 - 8);
-      fromCardY = commonY - 10;
-      toCardX = (dx > 0 ? x2 - 28 : x2 + 8);
-      toCardY = commonY - 10;
-
-    } else if (sameCol) {
-      // 垂直连接
-      if (dy > 0) { y1 = fromN.y + fromN.h; y2 = toN.y; }
-      else        { y1 = fromN.y; y2 = toN.y + toN.h; }
-      d = 'M' + fromN.cx + ',' + y1 + ' L' + toN.cx + ',' + y2;
-      labelX = fromN.cx + 14;
-      labelY = (y1 + y2) / 2 + 4;
-      fromCardX = fromN.cx + 6;
-      fromCardY = (dy > 0 ? y1 + 14 : y1 - 6);
-      toCardX = toN.cx + 6;
-      toCardY = (dy > 0 ? y2 - 8 : y2 + 14);
-
-    } else {
-      // 对角 L 形折线 + Q 圆角
-      if (dx > 0) {
-        x1 = fromN.x + fromN.w; y1 = fromN.cy;
-        x2 = toN.cx; y2 = dy > 0 ? toN.y : toN.y + toN.h;
-      } else {
-        x1 = fromN.x; y1 = fromN.cy;
-        x2 = toN.cx; y2 = dy > 0 ? toN.y : toN.y + toN.h;
-      }
-      var sx = x2 > x1 ? 1 : -1;
-      var sy = y2 > y1 ? 1 : -1;
-      d = 'M' + x1 + ',' + y1 +
-          ' L' + (x2 - R * sx) + ',' + y1 +
-          ' Q' + x2 + ',' + y1 + ' ' + x2 + ',' + (y1 + R * sy) +
-          ' L' + x2 + ',' + y2;
-      labelX = (x1 + x2) / 2;
-      labelY = y1 - 8;
-      fromCardX = (dx > 0 ? x1 + 4 : x1 - 20);
-      fromCardY = y1 - 8;
-      toCardX = x2 + 6;
-      toCardY = (dy > 0 ? y2 - 8 : y2 + 14);
-    }
-
-    var pathAttrs = { d: d, stroke: attrs.stroke, 'stroke-width': attrs.sw, fill: 'none' };
-    if (attrs.dash) pathAttrs['stroke-dasharray'] = attrs.dash;
-    if (attrs.markerEnd) pathAttrs['marker-end'] = attrs.markerEnd;
-    if (attrs.markerStart) pathAttrs['marker-start'] = attrs.markerStart;
+    var pathAttrs = { d: d, stroke: lineColor, 'stroke-width': lineW, fill: 'none' };
+    if (markerEnd) pathAttrs['marker-end'] = markerEnd;
+    if (markerStart) pathAttrs['marker-start'] = markerStart;
+    if (isDash) pathAttrs['stroke-dasharray'] = '5,3';
     lineGroup.appendChild(el('path', pathAttrs));
-
-    // 关系标签
-    if (rel.label) {
-      var rl = el('text', { x: labelX, y: labelY, 'text-anchor': 'middle', 'font-size': 10, fill: lineColor, 'font-family': SANS });
-      rl.textContent = rel.label; lineGroup.appendChild(rl);
-    }
-    // 基数标签
-    if (rel.fromCard) {
-      var fcl = el('text', { x: fromCardX, y: fromCardY, 'font-size': 10, fill: '#64748B', 'font-family': SANS });
-      fcl.textContent = rel.fromCard; lineGroup.appendChild(fcl);
-    }
-    if (rel.toCard) {
-      var tcl = el('text', { x: toCardX, y: toCardY, 'font-size': 10, fill: '#64748B', 'font-family': SANS });
-      tcl.textContent = rel.toCard; lineGroup.appendChild(tcl);
-    }
   });
 
   // ========== 绘制类框 ==========
   classes.forEach(function(c) {
-    var node = classMap[c.id];
-    var x = node.x, y = node.y, w = node.w, h = node.h;
-    var tc = node.color;
+    var n = classMap[c.id];
+    var x = n.x, y = n.y, w = n.w, h = n.h;
+    var tc = theme.typeColors[n.type] || theme.typeColors['class'];
 
-    // 外边框
-    nodeGroup.appendChild(el('rect', {
-      x: x, y: y, width: w, height: h,
-      rx: 8, fill: '#ffffff', stroke: tc.border, 'stroke-width': 1
-    }));
+    // 外框
+    nodeGroup.appendChild(el('rect', { x: x, y: y, width: w, height: h, rx: 8, fill: '#FFFFFF', stroke: tc.border, 'stroke-width': 1 }));
+    // 表头
+    nodeGroup.appendChild(el('rect', { x: x, y: y, width: w, height: HEADER_H, rx: 8, fill: tc.header }));
+    nodeGroup.appendChild(el('rect', { x: x, y: y + HEADER_H - 4, width: w, height: HEADER_BRIDGE + 4, fill: tc.header }));
 
-    // 表头背景（圆角 + 延伸）
-    nodeGroup.appendChild(el('rect', {
-      x: x, y: y, width: w, height: HEADER_H,
-      rx: 8, fill: tc.header
-    }));
-    nodeGroup.appendChild(el('rect', {
-      x: x, y: y + HEADER_H - 4, width: w, height: HEADER_BRIDGE + 4,
-      fill: tc.header
-    }));
-
-    // stereotype 标签（interface / abstract）
-    if (c.type === 'interface' || c.type === 'abstract') {
-      var stereo = el('text', {
-        x: x + w / 2, y: y + 12, 'text-anchor': 'middle',
-        'font-size': 9, fill: 'rgba(255,255,255,0.75)', 'font-style': 'italic', 'font-family': SANS
-      });
-      stereo.textContent = '\u00AB' + c.type + '\u00BB'; nodeGroup.appendChild(stereo);
-      // 类名偏下
-      var nameEl = el('text', {
-        x: x + w / 2, y: y + 26, 'text-anchor': 'middle',
-        'font-size': 14, 'font-weight': 700, fill: '#FFFFFF', 'font-family': SANS
-      });
-      nameEl.textContent = node.label; nodeGroup.appendChild(nameEl);
-    } else if (c.type === 'enum') {
-      // enum 标签
-      var enumTag = el('text', {
-        x: x + w - 8, y: y + 14, 'text-anchor': 'end',
-        'font-size': 9, fill: 'rgba(255,255,255,0.65)', 'font-family': SANS
-      });
-      enumTag.textContent = '\u00ABenum\u00BB'; nodeGroup.appendChild(enumTag);
-      var enumName = el('text', {
-        x: x + w / 2, y: y + HEADER_H / 2 + 4, 'text-anchor': 'middle',
-        'font-size': 14, 'font-weight': 700, fill: '#FFFFFF', 'font-family': SANS
-      });
-      enumName.textContent = node.label; nodeGroup.appendChild(enumName);
-    } else {
-      // 普通 class
-      var clsName = el('text', {
-        x: x + w / 2, y: y + HEADER_H / 2 + 4, 'text-anchor': 'middle',
-        'font-size': 14, 'font-weight': 700, fill: '#FFFFFF', 'font-family': SANS
-      });
-      clsName.textContent = node.label; nodeGroup.appendChild(clsName);
+    // 类型标签
+    if (n.type === 'interface' || n.type === 'abstract' || n.type === 'enum') {
+      var tag = el('text', { x: x + w / 2, y: y + 12, 'text-anchor': 'middle', 'font-size': 9, fill: 'rgba(255,255,255,0.7)', 'font-family': SANS });
+      tag.textContent = '<<' + n.type + '>>'; nodeGroup.appendChild(tag);
     }
 
-    var curY = y + HEADER_H + HEADER_BRIDGE;
+    // 类名
+    var nameY = (n.type === 'interface' || n.type === 'abstract' || n.type === 'enum') ? y + HEADER_H / 2 + 6 : y + HEADER_H / 2 + 2;
+    var nameEl = el('text', { x: x + w / 2, y: nameY, 'text-anchor': 'middle', 'dominant-baseline': 'central', 'font-size': 14, 'font-weight': 700, fill: '#FFFFFF', 'font-family': SANS });
+    nameEl.textContent = n.label; nodeGroup.appendChild(nameEl);
 
-    if (c.type === 'enum') {
-      // 枚举值列表（P1 #4：枚举值颜色 #64748B）
-      curY += SECTION_PAD;
-      (node.values || []).forEach(function(v) {
-        var vEl = el('text', {
-          x: x + FIELD_PAD_X, y: curY + FIELD_H / 2 + 1,
-          'dominant-baseline': 'central',
-          'font-size': 11, fill: '#64748B', 'font-family': MONO
-        });
-        vEl.textContent = v; nodeGroup.appendChild(vEl);
-        curY += FIELD_H;
+    var bodyY = y + HEADER_H + HEADER_BRIDGE;
+
+    if (n.type === 'enum') {
+      // 枚举值
+      (n.values || []).forEach(function(v, i) {
+        var vy = bodyY + i * ENUM_VAL_H;
+        var vt = el('text', { x: x + FIELD_PAD, y: vy + ENUM_VAL_H / 2 + 1, 'dominant-baseline': 'central', 'font-size': 11, fill: theme.enumVal, 'font-family': MONO });
+        vt.textContent = v; nodeGroup.appendChild(vt);
       });
     } else {
-      // Fields 区域背景（P1 #5：#F8FAFC）
-      var fieldsH = SECTION_PAD + (node.fields || []).length * FIELD_H + SECTION_PAD;
-      nodeGroup.appendChild(el('rect', {
-        x: x + 1, y: curY, width: w - 2, height: fieldsH,
-        fill: '#F8FAFC'
-      }));
+      // 字段区（灰色背景）
+      var fieldsH = n.fields.length * FIELD_H;
+      nodeGroup.appendChild(el('rect', { x: x + 1, y: bodyY, width: w - 2, height: fieldsH, fill: theme.field.bg }));
 
-      // Fields（P1 #4：字段文字颜色 #1E293B）
-      curY += SECTION_PAD;
-      (node.fields || []).forEach(function(f) {
-        var line = f.vis + ' ' + f.name + ' : ' + f.dtype;
-        var fEl = el('text', {
-          x: x + FIELD_PAD_X, y: curY + FIELD_H / 2 + 1,
-          'dominant-baseline': 'central',
-          'font-size': 11, fill: '#1E293B', 'font-family': MONO
-        });
-        fEl.textContent = line; nodeGroup.appendChild(fEl);
-        curY += FIELD_H;
+      n.fields.forEach(function(f, i) {
+        var fy = bodyY + i * FIELD_H;
+        var ft = el('text', { x: x + FIELD_PAD, y: fy + FIELD_H / 2 + 1, 'dominant-baseline': 'central', 'font-size': 11, fill: theme.field.text, 'font-family': MONO });
+        ft.textContent = f.vis + ' ' + f.name + ' : ' + f.dtype; nodeGroup.appendChild(ft);
       });
-      curY += SECTION_PAD;
 
       // 分割线
-      if ((node.methods || []).length > 0) {
-        nodeGroup.appendChild(el('line', {
-          x1: x, y1: curY, x2: x + w, y2: curY,
-          stroke: tc.border, 'stroke-width': 1
-        }));
-        curY += DIVIDER_H + SECTION_PAD;
+      if (n.methods.length > 0) {
+        var divY = bodyY + fieldsH;
+        nodeGroup.appendChild(el('line', { x1: x, y1: divY, x2: x + w, y2: divY, stroke: theme.field.divider, 'stroke-width': 1 }));
 
-        // Methods（P1 #4：方法文字颜色 #1E293B）
-        (node.methods || []).forEach(function(m) {
-          var line = m.vis + ' ' + m.name + ' : ' + m.dtype;
-          var mEl = el('text', {
-            x: x + FIELD_PAD_X, y: curY + FIELD_H / 2 + 1,
-            'dominant-baseline': 'central',
-            'font-size': 11, fill: '#1E293B', 'font-family': MONO
-          });
-          mEl.textContent = line; nodeGroup.appendChild(mEl);
-          curY += FIELD_H;
+        // 方法区
+        n.methods.forEach(function(m, i) {
+          var my = divY + 1 + i * METHOD_H;
+          var mtt = el('text', { x: x + FIELD_PAD, y: my + METHOD_H / 2 + 1, 'dominant-baseline': 'central', 'font-size': 11, fill: theme.field.text, 'font-family': MONO });
+          mtt.textContent = m.vis + ' ' + m.name + ' : ' + m.dtype; nodeGroup.appendChild(mtt);
         });
       }
     }
   });
 
-  // ========== 更新画布高度以包含路由通道 ==========
-  var finalMaxY = routeBaseY + depRouteIndex * 16 + 10;
-  if (finalMaxY > maxY) {
-    svgH = finalMaxY + LEGEND_H + 40;
-    svg.setAttribute('height', svgH);
-    svg.setAttribute('viewBox', '0 0 ' + svgW + ' ' + svgH);
-  }
+  // 关系标签已去掉——箭头形状足以区分关系类型（UML 标准）
 
   // ========== 图例 ==========
-  var legendY = (finalMaxY > maxY ? finalMaxY : maxY) + 28;
-  var lx = 0;
-
-  // 类型图例
-  var typeLegend = [
-    { color: typeColors['class'].header, label: '类' },
-    { color: typeColors['interface'].header, label: '接口' },
-    { color: typeColors['enum'].header, label: '枚举' }
+  var legendY = maxY + 20;
+  var legendItems = [
+    { color: theme.typeColors['class'].header, label: '类' },
+    { color: theme.typeColors['interface'].header, label: '接口' },
+    { color: theme.typeColors['enum'].header, label: '枚举' }
   ];
-  typeLegend.forEach(function(item) {
+  var lx = 0;
+  legendItems.forEach(function(item) {
     nodeGroup.appendChild(el('rect', { x: lx, y: legendY, width: 14, height: 14, rx: 3, fill: item.color }));
-    var lt = el('text', { x: lx + 20, y: legendY + 11, 'font-size': 11, fill: '#64748B', 'font-family': SANS });
+    var lt = el('text', { x: lx + 20, y: legendY + 12, 'font-size': 11, fill: '#64748B', 'font-family': SANS });
     lt.textContent = item.label; nodeGroup.appendChild(lt);
-    lx += measureText(item.label, 11) + 42;
+    lx += mt(item.label, 11) + 40;
   });
 
-  // 关系图例
-  // 关联
-  lineGroup.appendChild(el('line', { x1: lx, y1: legendY + 7, x2: lx + 28, y2: legendY + 7, stroke: lineColor, 'stroke-width': 1.5, 'marker-end': 'url(#arrow-open)' }));
-  var assocLbl = el('text', { x: lx + 34, y: legendY + 11, 'font-size': 11, fill: '#64748B', 'font-family': SANS });
-  assocLbl.textContent = '关联'; nodeGroup.appendChild(assocLbl);
-  lx += 76;
-
-  // 组合
-  lineGroup.appendChild(el('line', { x1: lx, y1: legendY + 7, x2: lx + 14, y2: legendY + 7, stroke: lineColor, 'stroke-width': 1.5, 'marker-start': 'url(#diamond-filled)' }));
-  lineGroup.appendChild(el('line', { x1: lx + 14, y1: legendY + 7, x2: lx + 28, y2: legendY + 7, stroke: lineColor, 'stroke-width': 1.5 }));
-  var compLbl = el('text', { x: lx + 34, y: legendY + 11, 'font-size': 11, fill: '#64748B', 'font-family': SANS });
-  compLbl.textContent = '组合'; nodeGroup.appendChild(compLbl);
-  lx += 76;
-
-  // 依赖
-  lineGroup.appendChild(el('line', { x1: lx, y1: legendY + 7, x2: lx + 28, y2: legendY + 7, stroke: dashColor, 'stroke-width': 1, 'stroke-dasharray': '5,3', 'marker-end': 'url(#arrow-dash)' }));
-  var depLbl = el('text', { x: lx + 34, y: legendY + 11, 'font-size': 11, fill: '#64748B', 'font-family': SANS });
-  depLbl.textContent = '依赖'; nodeGroup.appendChild(depLbl);
-  lx += 76;
-
-  // 继承
-  lineGroup.appendChild(el('line', { x1: lx, y1: legendY + 7, x2: lx + 28, y2: legendY + 7, stroke: lineColor, 'stroke-width': 1.5, 'marker-end': 'url(#triangle-solid)' }));
-  var inhLbl = el('text', { x: lx + 34, y: legendY + 11, 'font-size': 11, fill: '#64748B', 'font-family': SANS });
-  inhLbl.textContent = '继承'; nodeGroup.appendChild(inhLbl);
-  lx += 76;
+  // 连线类型图例
+  var lineExamples = [
+    { label: '关联', dash: false, marker: 'url(#arrow)' },
+    { label: '组合', dash: false, markerStart: 'url(#diamond)' },
+    { label: '依赖', dash: true, marker: 'url(#darrow)' },
+    { label: '继承', dash: false, marker: 'url(#triangle)' }
+  ];
+  lineExamples.forEach(function(le) {
+    var lineAttrs = { x1: lx, y1: legendY + 7, x2: lx + 28, y2: legendY + 7, stroke: le.dash ? theme.depLine.color : theme.line.color, 'stroke-width': le.dash ? 1 : 1.5 };
+    if (le.marker) lineAttrs['marker-end'] = le.marker;
+    if (le.markerStart) lineAttrs['marker-start'] = le.markerStart;
+    if (le.dash) lineAttrs['stroke-dasharray'] = '5,3';
+    nodeGroup.appendChild(el('line', lineAttrs));
+    var lt = el('text', { x: lx + 34, y: legendY + 12, 'font-size': 11, fill: '#64748B', 'font-family': SANS });
+    lt.textContent = le.label; nodeGroup.appendChild(lt);
+    lx += mt(le.label, 11) + 56;
+  });
 
 })();
 </script>
