@@ -20,68 +20,42 @@
   var NS = 'http://www.w3.org/2000/svg';
   var svg = document.getElementById('canvas');
 
-  // ========== 数据定义 ==========
-  var title = '电商数据库 ER 图';
-  var subtitle = 'E-Commerce Database Schema';
+  var title = '博客系统 ER 图';
+  var subtitle = 'L1 简单 · 3 表 · 3 关系';
 
   // 表定义：type = 'core'（蓝色高亮）| 'normal'（蓝色浅）| 'junction'（灰色）
   // 字段：pk=主键（表头色标注）, fk=外键（紫色标注）
-  // 重要：表的排列顺序决定网格位置，相关表应放在相邻位置
-  // 当前 3 列网格：Row 0 = [0,1,2], Row 1 = [3,4,5]
   var tables = [
     { id: 'users', label: '用户表 users', type: 'core', fields: [
       { name: 'id', dtype: 'INT', pk: true },
       { name: 'username', dtype: 'VARCHAR(50)' },
-      { name: 'email', dtype: 'VARCHAR(100)' },
-      { name: 'phone', dtype: 'VARCHAR(20)' },
-      { name: 'status', dtype: 'ENUM' },
-      { name: 'created_at', dtype: 'TIMESTAMP' }
+      { name: 'email', dtype: 'VARCHAR(100)' }
     ]},
-    { id: 'orders', label: '订单表 orders', type: 'core', fields: [
+    { id: 'posts', label: '文章表 posts', type: 'normal', fields: [
       { name: 'id', dtype: 'INT', pk: true },
       { name: 'user_id', dtype: 'INT', fk: true },
-      { name: 'total_amount', dtype: 'DECIMAL' },
-      { name: 'status', dtype: 'ENUM' },
-      { name: 'created_at', dtype: 'TIMESTAMP' }
+      { name: 'title', dtype: 'VARCHAR(200)' },
+      { name: 'content', dtype: 'TEXT' }
     ]},
-    { id: 'products', label: '商品表 products', type: 'normal', fields: [
+    { id: 'comments', label: '评论表 comments', type: 'junction', fields: [
       { name: 'id', dtype: 'INT', pk: true },
-      { name: 'name', dtype: 'VARCHAR(200)' },
-      { name: 'price', dtype: 'DECIMAL' },
-      { name: 'stock', dtype: 'INT' },
-      { name: 'category_id', dtype: 'INT', fk: true }
-    ]},
-    { id: 'categories', label: '分类表 categories', type: 'junction', fields: [
-      { name: 'id', dtype: 'INT', pk: true },
-      { name: 'name', dtype: 'VARCHAR(100)' },
-      { name: 'parent_id', dtype: 'INT' }
-    ]},
-    { id: 'order_items', label: '订单明细 order_items', type: 'junction', fields: [
-      { name: 'id', dtype: 'INT', pk: true },
-      { name: 'order_id', dtype: 'INT', fk: true },
-      { name: 'product_id', dtype: 'INT', fk: true },
-      { name: 'quantity', dtype: 'INT' },
-      { name: 'price', dtype: 'DECIMAL' }
-    ]},
-    { id: 'payments', label: '支付记录 payments', type: 'junction', fields: [
-      { name: 'id', dtype: 'INT', pk: true },
-      { name: 'order_id', dtype: 'INT', fk: true },
-      { name: 'amount', dtype: 'DECIMAL' },
-      { name: 'method', dtype: 'ENUM' },
-      { name: 'status', dtype: 'ENUM' },
-      { name: 'paid_at', dtype: 'TIMESTAMP' }
+      { name: 'post_id', dtype: 'INT', fk: true },
+      { name: 'user_id', dtype: 'INT', fk: true },
+      { name: 'content', dtype: 'TEXT' }
     ]}
   ];
 
   // 关系定义
-  // 关系类型：label 支持任意文本（1:1 / 1:N / M:N / 0..1 等）
   var relations = [
-    { from: 'users', to: 'orders', label: '1 : N' },
-    { from: 'orders', to: 'order_items', label: '1 : N' },
-    { from: 'products', to: 'order_items', label: '1 : N' },
-    { from: 'categories', to: 'products', label: '1 : N' },
-    { from: 'orders', to: 'payments', label: '1 : N' }
+    { from: 'users', to: 'posts', label: '1:N 发布' },
+    { from: 'posts', to: 'comments', label: '1:N 包含' },
+    { from: 'users', to: 'comments', label: '1:N 评论' }
   ];
+
+
+
+
+
 
   // ========== 主题 ==========
   var theme = {

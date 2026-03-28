@@ -5,258 +5,694 @@
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
-    background: #ffffff;
     font-family: -apple-system, system-ui, 'PingFang SC', sans-serif;
+    background: #ffffff;
     padding: 24px;
-    -webkit-font-smoothing: antialiased;
+    display: inline-block;
   }
 </style>
 </head>
 <body>
-<svg viewBox="0 0 1080 1080" width="1080" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block;">
-  <defs>
-    <!-- 实线箭头（关联） -->
-    <marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M0,0 L10,4 L0,8" fill="none" stroke="#94A3B8" stroke-width="1.5"/>
-    </marker>
-    <!-- 组合菱形（填充） -->
-    <marker id="diamond" markerWidth="14" markerHeight="10" refX="0" refY="5" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M0,5 L7,0 L14,5 L7,10 Z" fill="#94A3B8" stroke="#94A3B8" stroke-width="1"/>
-    </marker>
-    <!-- 虚线箭头（依赖） -->
-    <marker id="darrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M0,0 L8,3 L0,6" fill="none" stroke="#B0B8C4" stroke-width="1.2"/>
-    </marker>
-  </defs>
+<svg id="canvas"></svg>
 
-  <!-- 标题 -->
-  <text x="24" y="32" font-size="22" font-weight="700" fill="#1a1a2e" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">电商平台类图</text>
-  <text x="24" y="52" font-size="12" fill="#64748B" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">E-Commerce Platform — UML Class Diagram</text>
+<script>
+(function() {
+  var NS = 'http://www.w3.org/2000/svg';
+  var svg = document.getElementById('canvas');
 
-  <!-- ═══════════════════════════════════════════════════
-       连接线层（先绘制，在节点之下）
-       ═══════════════════════════════════════════════════ -->
+  // ========== 数据定义 ==========
+  var title = '电商平台类图';
+  var subtitle = 'E-Commerce Platform — UML Class Diagram';
 
-  <!-- User "1" ──> "*" Order（下单）: User 右侧中点 → Order 左侧中点 -->
-  <line x1="240" y1="200" x2="418" y2="200" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arrow)"/>
-  <text x="245" y="194" font-size="10" fill="#64748B" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">1</text>
-  <text x="400" y="194" font-size="10" fill="#64748B" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">N</text>
-  <text x="330" y="194" text-anchor="middle" font-size="10" fill="#94A3B8" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">下单</text>
+  var classes = [
+    { id: 'User', label: 'User', type: 'class',
+      fields: [
+        { vis: '-', name: 'id', dtype: 'Long' },
+        { vis: '-', name: 'username', dtype: 'String' },
+        { vis: '-', name: 'email', dtype: 'String' },
+        { vis: '-', name: 'phone', dtype: 'String' },
+        { vis: '-', name: 'passwordHash', dtype: 'String' },
+        { vis: '-', name: 'role', dtype: 'UserRole' }
+      ],
+      methods: [
+        { vis: '+', name: 'register()', dtype: 'bool' },
+        { vis: '+', name: 'login(pwd)', dtype: 'Token' },
+        { vis: '+', name: 'updateProfile()', dtype: 'bool' },
+        { vis: '+', name: 'getOrders()', dtype: 'List' }
+      ]
+    },
+    { id: 'Order', label: 'Order', type: 'class',
+      fields: [
+        { vis: '-', name: 'id', dtype: 'Long' },
+        { vis: '-', name: 'orderNo', dtype: 'String' },
+        { vis: '-', name: 'status', dtype: 'OrderStatus' },
+        { vis: '-', name: 'totalAmount', dtype: 'Decimal' },
+        { vis: '-', name: 'payAmount', dtype: 'Decimal' },
+        { vis: '-', name: 'createdAt', dtype: 'DateTime' }
+      ],
+      methods: [
+        { vis: '+', name: 'create(items)', dtype: 'Order' },
+        { vis: '+', name: 'cancel()', dtype: 'bool' },
+        { vis: '+', name: 'pay(payment)', dtype: 'bool' },
+        { vis: '+', name: 'ship(trackNo)', dtype: 'bool' },
+        { vis: '+', name: 'calcTotal()', dtype: 'Decimal' }
+      ]
+    },
+    { id: 'Payment', label: 'Payment', type: 'class',
+      fields: [
+        { vis: '-', name: 'id', dtype: 'Long' },
+        { vis: '-', name: 'paymentNo', dtype: 'String' },
+        { vis: '-', name: 'method', dtype: 'PaymentMethod' },
+        { vis: '-', name: 'status', dtype: 'PayStatus' },
+        { vis: '-', name: 'amount', dtype: 'Decimal' }
+      ],
+      methods: [
+        { vis: '+', name: 'execute()', dtype: 'bool' },
+        { vis: '+', name: 'refund(amt)', dtype: 'bool' }
+      ]
+    },
+    { id: 'OrderItem', label: 'OrderItem', type: 'class',
+      fields: [
+        { vis: '-', name: 'id', dtype: 'Long' },
+        { vis: '-', name: 'quantity', dtype: 'Integer' },
+        { vis: '-', name: 'unitPrice', dtype: 'Decimal' },
+        { vis: '-', name: 'subtotal', dtype: 'Decimal' }
+      ],
+      methods: [
+        { vis: '+', name: 'getSubtotal()', dtype: 'Decimal' },
+        { vis: '+', name: 'updateQty(qty)', dtype: 'void' }
+      ]
+    },
+    { id: 'Product', label: 'Product', type: 'class',
+      fields: [
+        { vis: '-', name: 'id', dtype: 'Long' },
+        { vis: '-', name: 'name', dtype: 'String' },
+        { vis: '-', name: 'price', dtype: 'Decimal' },
+        { vis: '-', name: 'stock', dtype: 'Integer' },
+        { vis: '-', name: 'status', dtype: 'ProdStatus' }
+      ],
+      methods: [
+        { vis: '+', name: 'updateStock(d)', dtype: 'bool' },
+        { vis: '+', name: 'isAvailable()', dtype: 'bool' },
+        { vis: '+', name: 'getCategory()', dtype: 'Category' }
+      ]
+    },
+    { id: 'Category', label: 'Category', type: 'class',
+      fields: [
+        { vis: '-', name: 'id', dtype: 'Long' },
+        { vis: '-', name: 'name', dtype: 'String' },
+        { vis: '-', name: 'sortOrder', dtype: 'Integer' },
+        { vis: '-', name: 'parent', dtype: 'Category' }
+      ],
+      methods: [
+        { vis: '+', name: 'getProducts()', dtype: 'List' },
+        { vis: '+', name: 'getChildren()', dtype: 'List' }
+      ]
+    },
+    { id: 'UserRole', label: 'UserRole', type: 'enum',
+      values: ['CUSTOMER', 'ADMIN', 'MERCHANT']
+    },
+    { id: 'OrderStatus', label: 'OrderStatus', type: 'enum',
+      values: ['PENDING', 'PAID', 'SHIPPING', 'DELIVERED', 'CANCELLED']
+    },
+    { id: 'PaymentMethod', label: 'PaymentMethod', type: 'enum',
+      values: ['ALIPAY', 'WECHAT_PAY', 'CREDIT_CARD']
+    }
+  ];
 
-  <!-- Order "1" *── "1:N" OrderItem（包含 — 组合）: Order 底部 → OrderItem 顶部 -->
-  <line x1="520" y1="350" x2="520" y2="398" stroke="#94A3B8" stroke-width="1.5" marker-start="url(#diamond)"/>
-  <text x="525" y="370" font-size="10" fill="#64748B" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">1</text>
-  <text x="525" y="394" font-size="10" fill="#64748B" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">1:N</text>
-  <text x="535" y="382" font-size="10" fill="#94A3B8" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">包含</text>
+  var relations = [
+    { from: 'User', to: 'Order', type: 'association', label: '下单', fromCard: '1', toCard: 'N' },
+    { from: 'Order', to: 'OrderItem', type: 'composition', label: '包含', fromCard: '1', toCard: '1:N' },
+    { from: 'OrderItem', to: 'Product', type: 'association', label: '关联商品', fromCard: 'N', toCard: '1' },
+    { from: 'Product', to: 'Category', type: 'association', label: '所属分类', fromCard: 'N', toCard: '1' },
+    { from: 'Category', to: 'Category', type: 'association', label: '父子', fromCard: '0:1', toCard: 'N' },
+    { from: 'Order', to: 'Payment', type: 'association', label: '支付信息', fromCard: '1', toCard: '0:1' },
+    { from: 'User', to: 'UserRole', type: 'dependency' },
+    { from: 'Order', to: 'OrderStatus', type: 'dependency' },
+    { from: 'Payment', to: 'PaymentMethod', type: 'dependency' }
+  ];
 
-  <!-- OrderItem "*" ──> "1" Product（关联商品）: OrderItem 底部 → Product 顶部 -->
-  <path d="M460,600 L460,630 Q460,640 440,640 L340,640 Q320,640 320,650 L320,698" stroke="#94A3B8" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
-  <text x="465" y="614" font-size="10" fill="#64748B" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">N</text>
-  <text x="325" y="694" font-size="10" fill="#64748B" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">1</text>
-  <text x="390" y="636" font-size="10" fill="#94A3B8" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">关联商品</text>
+  // ========== 主题色（P1 #3） ==========
+  var typeColors = {
+    'class':     { header: '#3B82F6', border: 'rgba(59,130,246,0.3)' },
+    'interface': { header: '#10B981', border: 'rgba(16,185,129,0.3)' },
+    'abstract':  { header: '#8B5CF6', border: 'rgba(139,92,246,0.3)' },
+    'enum':      { header: '#F59E0B', border: 'rgba(245,158,11,0.3)' }
+  };
 
-  <!-- Product "*" ──> "1" Category（所属分类）: Product 右侧 → Category 左侧 -->
-  <line x1="390" y1="810" x2="628" y2="810" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arrow)"/>
-  <text x="396" y="804" font-size="10" fill="#64748B" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">N</text>
-  <text x="612" y="804" font-size="10" fill="#64748B" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">1</text>
-  <text x="510" y="804" text-anchor="middle" font-size="10" fill="#94A3B8" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">所属分类</text>
+  var lineColor = '#94A3B8';
+  var dashColor = '#B0B8C4';
 
-  <!-- Category "0:1" ──> "*" Category（父子分类，自引用）: 右侧弯回 -->
-  <path d="M830,770 L860,770 Q875,770 875,790 L875,850 Q875,865 860,865 L830,865" stroke="#94A3B8" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
-  <text x="840" y="764" font-size="10" fill="#64748B" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">0:1</text>
-  <text x="840" y="860" font-size="10" fill="#64748B" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">N</text>
-  <text x="880" y="820" font-size="10" fill="#94A3B8" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">父子</text>
+  // ========== 工具函数 ==========
+  function el(tag, attrs) {
+    var e = document.createElementNS(NS, tag);
+    if (attrs) for (var k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+  function measureText(str, fontSize) {
+    var w = 0;
+    for (var i = 0; i < str.length; i++) w += str.charCodeAt(i) > 127 ? fontSize : fontSize * 0.6;
+    return w;
+  }
 
-  <!-- Order "1" ──> "0:1" Payment（支付信息）: Order 右侧 → Payment 左侧 -->
-  <line x1="620" y1="200" x2="798" y2="200" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arrow)"/>
-  <text x="626" y="194" font-size="10" fill="#64748B" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">1</text>
-  <text x="778" y="194" font-size="10" fill="#64748B" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">0:1</text>
-  <text x="710" y="194" text-anchor="middle" font-size="10" fill="#94A3B8" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">支付信息</text>
+  // ========== 布局参数 ==========
+  var HEADER_H = 34;
+  var HEADER_BRIDGE = 8;
+  var FIELD_H = 20;
+  var FIELD_PAD_X = 12;
+  var DIVIDER_H = 1;
+  var SECTION_PAD = 6;
+  var CLASS_MIN_W = 200;
+  var CLASS_GAP_X = 100;
+  var CLASS_GAP_Y = 60;
+  var TITLE_AREA_H = 50;
+  var LEGEND_H = 50;
+  var MONO = "'SF Mono',SFMono-Regular,Menlo,monospace";
+  var SANS = "-apple-system,system-ui,'PingFang SC',sans-serif";
 
-  <!-- User ..> UserRole（依赖） -->
-  <line x1="140" y1="330" x2="140" y2="378" stroke="#B0B8C4" stroke-width="1" stroke-dasharray="5,3" marker-end="url(#darrow)"/>
+  // ========== 计算每个类的尺寸 ==========
+  var classMap = {};
 
-  <!-- Order ..> OrderStatus（依赖） -->
-  <path d="M500,600 L500,660 Q500,680 500,698" stroke="#B0B8C4" stroke-width="1" stroke-dasharray="5,3" fill="none" marker-end="url(#darrow)"/>
+  classes.forEach(function(c) {
+    var tc = typeColors[c.type] || typeColors['class'];
+    var node = { id: c.id, label: c.label, type: c.type, color: tc, fields: c.fields || [], methods: c.methods || [], values: c.values || [] };
 
-  <!-- Payment ..> PaymentMethod（依赖） -->
-  <line x1="900" y1="350" x2="900" y2="398" stroke="#B0B8C4" stroke-width="1" stroke-dasharray="5,3" marker-end="url(#darrow)"/>
+    // 计算宽度
+    var minW = CLASS_MIN_W;
+    var labelW = measureText(c.label, 14) + 40;
+    if (c.type === 'interface' || c.type === 'abstract') labelW += measureText('\u00AB' + c.type + '\u00BB', 9) + 10;
+    if (labelW > minW) minW = labelW;
 
+    if (c.type === 'enum') {
+      (c.values || []).forEach(function(v) {
+        var fw = measureText(v, 11) + FIELD_PAD_X * 2;
+        if (fw > minW) minW = fw;
+      });
+    } else {
+      (c.fields || []).forEach(function(f) {
+        var line = f.vis + ' ' + f.name + ' : ' + f.dtype;
+        var fw = measureText(line, 11) + FIELD_PAD_X * 2;
+        if (fw > minW) minW = fw;
+      });
+      (c.methods || []).forEach(function(m) {
+        var line = m.vis + ' ' + m.name + ' : ' + m.dtype;
+        var fw = measureText(line, 11) + FIELD_PAD_X * 2;
+        if (fw > minW) minW = fw;
+      });
+    }
+    node.w = minW;
 
-  <!-- ═══════════════════════════════════════════════════
-       节点层（在连线之上）
-       ═══════════════════════════════════════════════════ -->
+    // 计算高度
+    var h = HEADER_H + HEADER_BRIDGE;
+    if (c.type === 'enum') {
+      h += SECTION_PAD + (c.values || []).length * FIELD_H + SECTION_PAD;
+    } else {
+      var nFields = (c.fields || []).length;
+      var nMethods = (c.methods || []).length;
+      h += SECTION_PAD + nFields * FIELD_H + SECTION_PAD;
+      if (nMethods > 0) {
+        h += DIVIDER_H + SECTION_PAD + nMethods * FIELD_H + SECTION_PAD;
+      }
+    }
+    node.h = h;
 
-  <!-- ====== User (x=40, y=70, w=200, h=260) ====== -->
-  <g>
-    <!-- 外框 -->
-    <rect x="40" y="70" width="200" height="260" rx="8" fill="#ffffff" stroke="rgba(102,126,234,0.3)" stroke-width="1"/>
-    <!-- Header -->
-    <rect x="40" y="70" width="200" height="34" rx="8" fill="#667eea"/>
-    <rect x="40" y="96" width="200" height="8" fill="#667eea"/>
-    <text x="140" y="93" text-anchor="middle" font-size="14" font-weight="700" fill="#FFFFFF" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">User</text>
-    <!-- Fields 背景 -->
-    <rect x="41" y="104" width="198" height="130" fill="#f8f9fc"/>
-    <!-- Fields -->
-    <text x="52" y="122" font-size="11" fill="#555" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">- id : Long</text>
-    <text x="52" y="142" font-size="11" fill="#555" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">- username : String</text>
-    <text x="52" y="162" font-size="11" fill="#555" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">- email : String</text>
-    <text x="52" y="182" font-size="11" fill="#555" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">- phone : String</text>
-    <text x="52" y="202" font-size="11" fill="#555" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">- passwordHash : String</text>
-    <text x="52" y="222" font-size="11" fill="#555" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">- role : UserRole</text>
-    <!-- 分割线 -->
-    <line x1="40" y1="234" x2="240" y2="234" stroke="rgba(102,126,234,0.2)" stroke-width="1"/>
-    <!-- Methods -->
-    <text x="52" y="252" font-size="11" fill="#333" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">+ register() : bool</text>
-    <text x="52" y="272" font-size="11" fill="#333" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">+ login(pwd) : Token</text>
-    <text x="52" y="292" font-size="11" fill="#333" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">+ updateProfile() : bool</text>
-    <text x="52" y="312" font-size="11" fill="#333" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">+ getOrders() : List</text>
-  </g>
+    classMap[c.id] = node;
+  });
 
-  <!-- ====== Order (x=420, y=70, w=200, h=280) ====== -->
-  <g>
-    <rect x="420" y="70" width="200" height="280" rx="8" fill="#ffffff" stroke="rgba(102,126,234,0.3)" stroke-width="1"/>
-    <rect x="420" y="70" width="200" height="34" rx="8" fill="#667eea"/>
-    <rect x="420" y="96" width="200" height="8" fill="#667eea"/>
-    <text x="520" y="93" text-anchor="middle" font-size="14" font-weight="700" fill="#FFFFFF" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">Order</text>
-    <rect x="421" y="104" width="198" height="130" fill="#f8f9fc"/>
-    <text x="432" y="122" font-size="11" fill="#555" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">- id : Long</text>
-    <text x="432" y="142" font-size="11" fill="#555" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">- orderNo : String</text>
-    <text x="432" y="162" font-size="11" fill="#555" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">- status : OrderStatus</text>
-    <text x="432" y="182" font-size="11" fill="#555" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">- totalAmount : Decimal</text>
-    <text x="432" y="202" font-size="11" fill="#555" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">- payAmount : Decimal</text>
-    <text x="432" y="222" font-size="11" fill="#555" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">- createdAt : DateTime</text>
-    <line x1="420" y1="234" x2="620" y2="234" stroke="rgba(102,126,234,0.2)" stroke-width="1"/>
-    <text x="432" y="252" font-size="11" fill="#333" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">+ create(items) : Order</text>
-    <text x="432" y="272" font-size="11" fill="#333" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">+ cancel() : bool</text>
-    <text x="432" y="292" font-size="11" fill="#333" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">+ pay(payment) : bool</text>
-    <text x="432" y="312" font-size="11" fill="#333" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">+ ship(trackNo) : bool</text>
-    <text x="432" y="332" font-size="11" fill="#333" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">+ calcTotal() : Decimal</text>
-  </g>
+  // ========== 统一同列宽度 ==========
+  var n = classes.length;
+  var cols = Math.min(n, 3);
+  var rows = Math.ceil(n / cols);
 
-  <!-- ====== Payment (x=800, y=70, w=200, h=280) ====== -->
-  <g>
-    <rect x="800" y="70" width="200" height="280" rx="8" fill="#ffffff" stroke="rgba(102,126,234,0.3)" stroke-width="1"/>
-    <rect x="800" y="70" width="200" height="34" rx="8" fill="#667eea"/>
-    <rect x="800" y="96" width="200" height="8" fill="#667eea"/>
-    <text x="900" y="93" text-anchor="middle" font-size="14" font-weight="700" fill="#FFFFFF" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">Payment</text>
-    <rect x="801" y="104" width="198" height="130" fill="#f8f9fc"/>
-    <text x="812" y="122" font-size="11" fill="#555" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">- id : Long</text>
-    <text x="812" y="142" font-size="11" fill="#555" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">- paymentNo : String</text>
-    <text x="812" y="162" font-size="11" fill="#555" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">- method : PayMethod</text>
-    <text x="812" y="182" font-size="11" fill="#555" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">- status : PayStatus</text>
-    <text x="812" y="202" font-size="11" fill="#555" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">- amount : Decimal</text>
-    <line x1="800" y1="234" x2="1000" y2="234" stroke="rgba(102,126,234,0.2)" stroke-width="1"/>
-    <text x="812" y="252" font-size="11" fill="#333" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">+ execute() : bool</text>
-    <text x="812" y="272" font-size="11" fill="#333" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">+ refund(amt) : bool</text>
-  </g>
+  // 找每列最大宽度
+  var colMaxW = [];
+  for (var ci = 0; ci < cols; ci++) colMaxW[ci] = 0;
+  classes.forEach(function(c, i) {
+    var col = i % cols;
+    var node = classMap[c.id];
+    if (node.w > colMaxW[col]) colMaxW[col] = node.w;
+  });
+  // 应用列宽
+  classes.forEach(function(c, i) {
+    var col = i % cols;
+    classMap[c.id].w = colMaxW[col];
+  });
 
-  <!-- ====== OrderItem (x=420, y=400, w=200, h=200) ====== -->
-  <g>
-    <rect x="420" y="400" width="200" height="200" rx="8" fill="#ffffff" stroke="rgba(102,126,234,0.3)" stroke-width="1"/>
-    <rect x="420" y="400" width="200" height="34" rx="8" fill="#667eea"/>
-    <rect x="420" y="426" width="200" height="8" fill="#667eea"/>
-    <text x="520" y="423" text-anchor="middle" font-size="14" font-weight="700" fill="#FFFFFF" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">OrderItem</text>
-    <rect x="421" y="434" width="198" height="86" fill="#f8f9fc"/>
-    <text x="432" y="452" font-size="11" fill="#555" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">- id : Long</text>
-    <text x="432" y="472" font-size="11" fill="#555" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">- quantity : Integer</text>
-    <text x="432" y="492" font-size="11" fill="#555" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">- unitPrice : Decimal</text>
-    <text x="432" y="512" font-size="11" fill="#555" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">- subtotal : Decimal</text>
-    <line x1="420" y1="520" x2="620" y2="520" stroke="rgba(102,126,234,0.2)" stroke-width="1"/>
-    <text x="432" y="540" font-size="11" fill="#333" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">+ getSubtotal() : Decimal</text>
-    <text x="432" y="560" font-size="11" fill="#333" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">+ updateQty(qty) : void</text>
-  </g>
+  // ========== 网格布局 ==========
+  // 找每行最大高度
+  var rowMaxH = [];
+  for (var ri = 0; ri < rows; ri++) rowMaxH[ri] = 0;
+  classes.forEach(function(c, i) {
+    var row = Math.floor(i / cols);
+    var node = classMap[c.id];
+    if (node.h > rowMaxH[row]) rowMaxH[row] = node.h;
+  });
 
-  <!-- ====== Product (x=190, y=700, w=200, h=220) ====== -->
-  <g>
-    <rect x="190" y="700" width="200" height="220" rx="8" fill="#ffffff" stroke="rgba(102,126,234,0.3)" stroke-width="1"/>
-    <rect x="190" y="700" width="200" height="34" rx="8" fill="#667eea"/>
-    <rect x="190" y="726" width="200" height="8" fill="#667eea"/>
-    <text x="290" y="723" text-anchor="middle" font-size="14" font-weight="700" fill="#FFFFFF" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">Product</text>
-    <rect x="191" y="734" width="198" height="106" fill="#f8f9fc"/>
-    <text x="202" y="752" font-size="11" fill="#555" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">- id : Long</text>
-    <text x="202" y="772" font-size="11" fill="#555" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">- name : String</text>
-    <text x="202" y="792" font-size="11" fill="#555" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">- price : Decimal</text>
-    <text x="202" y="812" font-size="11" fill="#555" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">- stock : Integer</text>
-    <text x="202" y="832" font-size="11" fill="#555" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">- status : ProdStatus</text>
-    <line x1="190" y1="840" x2="390" y2="840" stroke="rgba(102,126,234,0.2)" stroke-width="1"/>
-    <text x="202" y="860" font-size="11" fill="#333" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">+ updateStock(d) : bool</text>
-    <text x="202" y="880" font-size="11" fill="#333" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">+ isAvailable() : bool</text>
-    <text x="202" y="900" font-size="11" fill="#333" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">+ getCategory() : Cat</text>
-  </g>
+  // 计算列 X 偏移
+  var colX = [0];
+  for (var ci2 = 1; ci2 < cols; ci2++) {
+    colX[ci2] = colX[ci2 - 1] + colMaxW[ci2 - 1] + CLASS_GAP_X;
+  }
 
-  <!-- ====== Category (x=630, y=700, w=200, h=200) ====== -->
-  <g>
-    <rect x="630" y="700" width="200" height="200" rx="8" fill="#ffffff" stroke="rgba(102,126,234,0.3)" stroke-width="1"/>
-    <rect x="630" y="700" width="200" height="34" rx="8" fill="#667eea"/>
-    <rect x="630" y="726" width="200" height="8" fill="#667eea"/>
-    <text x="730" y="723" text-anchor="middle" font-size="14" font-weight="700" fill="#FFFFFF" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">Category</text>
-    <rect x="631" y="734" width="198" height="86" fill="#f8f9fc"/>
-    <text x="642" y="752" font-size="11" fill="#555" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">- id : Long</text>
-    <text x="642" y="772" font-size="11" fill="#555" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">- name : String</text>
-    <text x="642" y="792" font-size="11" fill="#555" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">- sortOrder : Integer</text>
-    <text x="642" y="812" font-size="11" fill="#555" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">- parent : Category</text>
-    <line x1="630" y1="820" x2="830" y2="820" stroke="rgba(102,126,234,0.2)" stroke-width="1"/>
-    <text x="642" y="840" font-size="11" fill="#333" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">+ getProducts() : List</text>
-    <text x="642" y="860" font-size="11" fill="#333" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">+ getChildren() : List</text>
-  </g>
+  // 计算行 Y 偏移
+  var rowY = [TITLE_AREA_H];
+  for (var ri2 = 1; ri2 < rows; ri2++) {
+    rowY[ri2] = rowY[ri2 - 1] + rowMaxH[ri2 - 1] + CLASS_GAP_Y;
+  }
 
-  <!-- ====== Enum: UserRole (x=40, y=380, w=160, h=110) ====== -->
-  <g>
-    <rect x="40" y="380" width="160" height="110" rx="8" fill="#ffffff" stroke="rgba(250,130,49,0.3)" stroke-width="1"/>
-    <rect x="40" y="380" width="160" height="28" rx="8" fill="#fa8231"/>
-    <rect x="40" y="402" width="160" height="6" fill="#fa8231"/>
-    <text x="120" y="400" text-anchor="middle" font-size="12" font-weight="700" fill="#FFFFFF" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">UserRole</text>
-    <text x="192" y="389" text-anchor="end" font-size="8" fill="rgba(255,255,255,0.6)" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">enum</text>
-    <text x="52" y="428" font-size="11" fill="#666" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">CUSTOMER</text>
-    <text x="52" y="448" font-size="11" fill="#666" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">ADMIN</text>
-    <text x="52" y="468" font-size="11" fill="#666" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">MERCHANT</text>
-  </g>
+  // 分配位置
+  classes.forEach(function(c, i) {
+    var row = Math.floor(i / cols);
+    var col = i % cols;
+    var node = classMap[c.id];
+    node.x = colX[col];
+    node.y = rowY[row];
+    node.row = row;
+    node.col = col;
+    node.cx = node.x + node.w / 2;
+    node.cy = node.y + node.h / 2;
+  });
 
-  <!-- ====== Enum: OrderStatus (x=420, y=700, w=160, h=150) ====== -->
-  <g>
-    <rect x="420" y="700" width="160" height="150" rx="8" fill="#ffffff" stroke="rgba(250,130,49,0.3)" stroke-width="1"/>
-    <rect x="420" y="700" width="160" height="28" rx="8" fill="#fa8231"/>
-    <rect x="420" y="722" width="160" height="6" fill="#fa8231"/>
-    <text x="500" y="720" text-anchor="middle" font-size="12" font-weight="700" fill="#FFFFFF" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">OrderStatus</text>
-    <text x="572" y="709" text-anchor="end" font-size="8" fill="rgba(255,255,255,0.6)" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">enum</text>
-    <text x="432" y="748" font-size="11" fill="#666" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">PENDING</text>
-    <text x="432" y="768" font-size="11" fill="#666" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">PAID</text>
-    <text x="432" y="788" font-size="11" fill="#666" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">SHIPPING</text>
-    <text x="432" y="808" font-size="11" fill="#666" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">DELIVERED</text>
-    <text x="432" y="828" font-size="11" fill="#666" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">CANCELLED</text>
-  </g>
+  // ========== 画布自适应 ==========
+  var maxX = 0, maxY = 0;
+  classes.forEach(function(c) {
+    var node = classMap[c.id];
+    if (node.x + node.w > maxX) maxX = node.x + node.w;
+    if (node.y + node.h > maxY) maxY = node.y + node.h;
+  });
 
-  <!-- ====== Enum: PaymentMethod (x=815, y=400, w=170, h=130) ====== -->
-  <g>
-    <rect x="815" y="400" width="170" height="130" rx="8" fill="#ffffff" stroke="rgba(250,130,49,0.3)" stroke-width="1"/>
-    <rect x="815" y="400" width="170" height="28" rx="8" fill="#fa8231"/>
-    <rect x="815" y="422" width="170" height="6" fill="#fa8231"/>
-    <text x="900" y="420" text-anchor="middle" font-size="12" font-weight="700" fill="#FFFFFF" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">PaymentMethod</text>
-    <text x="978" y="409" text-anchor="end" font-size="8" fill="rgba(255,255,255,0.6)" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">enum</text>
-    <text x="827" y="448" font-size="11" fill="#666" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">ALIPAY</text>
-    <text x="827" y="468" font-size="11" fill="#666" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">WECHAT_PAY</text>
-    <text x="827" y="488" font-size="11" fill="#666" font-family="'SF Mono',SFMono-Regular,Menlo,monospace">CREDIT_CARD</text>
-  </g>
+  var svgW = maxX + 60;
+  var svgH = maxY + LEGEND_H + 40;
+  svg.setAttribute('width', svgW);
+  svg.setAttribute('height', svgH);
+  svg.setAttribute('viewBox', '0 0 ' + svgW + ' ' + svgH);
 
-  <!-- ====== 图例 ====== -->
-  <g transform="translate(40, 960)">
-    <rect x="0" y="0" width="14" height="14" rx="3" fill="#667eea"/>
-    <text x="20" y="12" font-size="11" fill="#64748B" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">类</text>
+  // ========== SVG Defs ==========
+  var defs = el('defs');
 
-    <rect x="60" y="0" width="14" height="14" rx="3" fill="#fa8231"/>
-    <text x="80" y="12" font-size="11" fill="#64748B" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">枚举</text>
+  // 开放箭头（association）
+  var mOpen = el('marker', { id: 'arrow-open', markerWidth: 10, markerHeight: 8, refX: 9, refY: 4, orient: 'auto', markerUnits: 'userSpaceOnUse' });
+  mOpen.appendChild(el('path', { d: 'M0,0.5 L9,4 L0,7.5', fill: 'none', stroke: lineColor, 'stroke-width': 1.5, 'stroke-linecap': 'round' }));
+  defs.appendChild(mOpen);
 
-    <line x1="130" y1="7" x2="160" y2="7" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arrow)"/>
-    <text x="166" y="12" font-size="11" fill="#64748B" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">关联</text>
+  // 填充菱形（composition start）
+  var mDiamond = el('marker', { id: 'diamond-filled', markerWidth: 14, markerHeight: 10, refX: 0, refY: 5, orient: 'auto', markerUnits: 'userSpaceOnUse' });
+  mDiamond.appendChild(el('path', { d: 'M0,5 L7,0 L14,5 L7,10 Z', fill: lineColor, stroke: lineColor, 'stroke-width': 1 }));
+  defs.appendChild(mDiamond);
 
-    <line x1="220" y1="7" x2="234" y2="7" stroke="#94A3B8" stroke-width="1.5" marker-start="url(#diamond)"/>
-    <line x1="234" y1="7" x2="250" y2="7" stroke="#94A3B8" stroke-width="1.5"/>
-    <text x="256" y="12" font-size="11" fill="#64748B" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">组合</text>
+  // 虚线开放箭头（dependency）
+  var mDash = el('marker', { id: 'arrow-dash', markerWidth: 8, markerHeight: 6, refX: 7, refY: 3, orient: 'auto', markerUnits: 'userSpaceOnUse' });
+  mDash.appendChild(el('path', { d: 'M0,0.5 L7,3 L0,5.5', fill: 'none', stroke: dashColor, 'stroke-width': 1.2, 'stroke-linecap': 'round' }));
+  defs.appendChild(mDash);
 
-    <line x1="310" y1="7" x2="340" y2="7" stroke="#B0B8C4" stroke-width="1" stroke-dasharray="5,3" marker-end="url(#darrow)"/>
-    <text x="346" y="12" font-size="11" fill="#64748B" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">依赖</text>
-  </g>
-</svg>
+  // 三角箭头（inheritance）
+  var mTriSolid = el('marker', { id: 'triangle-solid', markerWidth: 12, markerHeight: 10, refX: 11, refY: 5, orient: 'auto', markerUnits: 'userSpaceOnUse' });
+  mTriSolid.appendChild(el('path', { d: 'M0,0 L12,5 L0,10 Z', fill: '#FFFFFF', stroke: lineColor, 'stroke-width': 1.5 }));
+  defs.appendChild(mTriSolid);
+
+  // 三角箭头（realization - 虚线）
+  var mTriDash = el('marker', { id: 'triangle-dash', markerWidth: 12, markerHeight: 10, refX: 11, refY: 5, orient: 'auto', markerUnits: 'userSpaceOnUse' });
+  mTriDash.appendChild(el('path', { d: 'M0,0 L12,5 L0,10 Z', fill: '#FFFFFF', stroke: dashColor, 'stroke-width': 1.5 }));
+  defs.appendChild(mTriDash);
+
+  svg.appendChild(defs);
+
+  // ========== 渲染层 ==========
+  var lineGroup = el('g'); svg.appendChild(lineGroup);
+  var nodeGroup = el('g'); svg.appendChild(nodeGroup);
+
+  // ========== 标题（P1 #6：16px title, 12px subtitle） ==========
+  if (title) {
+    var tEl = el('text', { x: 0, y: 18, 'font-size': 16, 'font-weight': 700, fill: '#1a1a2e', 'font-family': SANS });
+    tEl.textContent = title; nodeGroup.appendChild(tEl);
+  }
+  if (subtitle) {
+    var stEl = el('text', { x: 0, y: 36, 'font-size': 12, fill: '#888888', 'font-family': SANS });
+    stEl.textContent = subtitle; nodeGroup.appendChild(stEl);
+  }
+
+  // ========== 绘制关系连线 ==========
+  var R = 10;
+
+  function getLineAttrs(relType) {
+    switch (relType) {
+      case 'association':
+        return { stroke: lineColor, sw: 1.5, dash: '', markerStart: '', markerEnd: 'url(#arrow-open)' };
+      case 'composition':
+        return { stroke: lineColor, sw: 1.5, dash: '', markerStart: 'url(#diamond-filled)', markerEnd: '' };
+      case 'dependency':
+        return { stroke: dashColor, sw: 1, dash: '5,3', markerStart: '', markerEnd: 'url(#arrow-dash)' };
+      case 'inheritance':
+        return { stroke: lineColor, sw: 1.5, dash: '', markerStart: '', markerEnd: 'url(#triangle-solid)' };
+      case 'realization':
+        return { stroke: dashColor, sw: 1.5, dash: '6,3', markerStart: '', markerEnd: 'url(#triangle-dash)' };
+      default:
+        return { stroke: lineColor, sw: 1.5, dash: '', markerStart: '', markerEnd: 'url(#arrow-open)' };
+    }
+  }
+
+  // P0 #1: 计算依赖线路由所需的全局底部 Y（所有行最底部 + 间距）
+  var allBottomY = 0;
+  classes.forEach(function(c) {
+    var node = classMap[c.id];
+    var bot = node.y + node.h;
+    if (bot > allBottomY) allBottomY = bot;
+  });
+  var routeBaseY = allBottomY + 30; // 路由通道起点，在所有类框下方
+  var depRouteIndex = 0; // 用于错开多条依赖线
+
+  relations.forEach(function(rel) {
+    var fromN = classMap[rel.from], toN = classMap[rel.to];
+    if (!fromN || !toN) return;
+
+    var attrs = getLineAttrs(rel.type);
+    var x1, y1, x2, y2, d, labelX, labelY, fromCardX, fromCardY, toCardX, toCardY;
+
+    // 自引用
+    if (rel.from === rel.to) {
+      var selfX = fromN.x + fromN.w;
+      var selfY1 = fromN.y + fromN.h * 0.3;
+      var selfY2 = fromN.y + fromN.h * 0.7;
+      var selfOut = 40;
+      d = 'M' + selfX + ',' + selfY1 +
+          ' L' + (selfX + selfOut) + ',' + selfY1 +
+          ' Q' + (selfX + selfOut + R) + ',' + selfY1 + ' ' + (selfX + selfOut + R) + ',' + (selfY1 + R) +
+          ' L' + (selfX + selfOut + R) + ',' + (selfY2 - R) +
+          ' Q' + (selfX + selfOut + R) + ',' + selfY2 + ' ' + (selfX + selfOut) + ',' + selfY2 +
+          ' L' + selfX + ',' + selfY2;
+
+      labelX = selfX + selfOut + R + 6;
+      labelY = (selfY1 + selfY2) / 2 + 4;
+      fromCardX = selfX + 4; fromCardY = selfY1 - 6;
+      toCardX = selfX + 4; toCardY = selfY2 - 6;
+
+      var pathAttrs = { d: d, stroke: attrs.stroke, 'stroke-width': attrs.sw, fill: 'none' };
+      if (attrs.dash) pathAttrs['stroke-dasharray'] = attrs.dash;
+      if (attrs.markerEnd) pathAttrs['marker-end'] = attrs.markerEnd;
+      if (attrs.markerStart) pathAttrs['marker-start'] = attrs.markerStart;
+      lineGroup.appendChild(el('path', pathAttrs));
+
+      // 标签
+      if (rel.label) {
+        var lbl = el('text', { x: labelX, y: labelY, 'font-size': 10, fill: lineColor, 'font-family': SANS });
+        lbl.textContent = rel.label; lineGroup.appendChild(lbl);
+      }
+      if (rel.fromCard) {
+        var fc = el('text', { x: fromCardX, y: fromCardY, 'font-size': 10, fill: '#64748B', 'font-family': SANS });
+        fc.textContent = rel.fromCard; lineGroup.appendChild(fc);
+      }
+      if (rel.toCard) {
+        var tc = el('text', { x: toCardX, y: toCardY, 'font-size': 10, fill: '#64748B', 'font-family': SANS });
+        tc.textContent = rel.toCard; lineGroup.appendChild(tc);
+      }
+      return;
+    }
+
+    var dx = toN.cx - fromN.cx;
+    var dy = toN.cy - fromN.cy;
+    var sameRow = fromN.row === toN.row;
+    var sameCol = fromN.col === toN.col;
+
+    // P0 #1: 依赖线特殊路由 — 绕过类框
+    if (rel.type === 'dependency') {
+      if (sameCol) {
+        // 同列依赖：直接垂直连接
+        if (dy > 0) { y1 = fromN.y + fromN.h; y2 = toN.y; }
+        else        { y1 = fromN.y; y2 = toN.y + toN.h; }
+        d = 'M' + fromN.cx + ',' + y1 + ' L' + fromN.cx + ',' + y2;
+        labelX = fromN.cx + 14;
+        labelY = (y1 + y2) / 2 + 4;
+      } else {
+        // 不同列依赖：从源底部出发 → 下到路由通道 → 水平到目标列 → 上到目标顶部
+        var routeY = routeBaseY + depRouteIndex * 16;
+        depRouteIndex++;
+        var srcX = fromN.cx;
+        var srcY = fromN.y + fromN.h;
+        var tgtX = toN.cx;
+        var tgtY = toN.y + toN.h; // 连接到目标底部
+
+        // 路径：源底部 → 下到路由通道 → 水平到目标列 → 上到目标底部
+        var hDir = tgtX > srcX ? 1 : -1;
+        d = 'M' + srcX + ',' + srcY +
+            ' L' + srcX + ',' + (routeY - R) +
+            ' Q' + srcX + ',' + routeY + ' ' + (srcX + R * hDir) + ',' + routeY +
+            ' L' + (tgtX - R * hDir) + ',' + routeY +
+            ' Q' + tgtX + ',' + routeY + ' ' + tgtX + ',' + (routeY - R) +
+            ' L' + tgtX + ',' + tgtY;
+        labelX = (srcX + tgtX) / 2;
+        labelY = routeY - 6;
+      }
+
+      var depPathAttrs = { d: d, stroke: attrs.stroke, 'stroke-width': attrs.sw, fill: 'none' };
+      if (attrs.dash) depPathAttrs['stroke-dasharray'] = attrs.dash;
+      if (attrs.markerEnd) depPathAttrs['marker-end'] = attrs.markerEnd;
+      lineGroup.appendChild(el('path', depPathAttrs));
+
+      if (rel.label) {
+        var drl = el('text', { x: labelX, y: labelY, 'text-anchor': 'middle', 'font-size': 10, fill: dashColor, 'font-family': SANS });
+        drl.textContent = rel.label; lineGroup.appendChild(drl);
+      }
+      return;
+    }
+
+    if (sameRow) {
+      // P0 #2: 水平连接 — 增大标签与端点的偏移
+      var commonY = (fromN.cy + toN.cy) / 2;
+      if (dx > 0) { x1 = fromN.x + fromN.w; x2 = toN.x; }
+      else        { x1 = fromN.x; x2 = toN.x + toN.w; }
+      d = 'M' + x1 + ',' + commonY + ' L' + x2 + ',' + commonY;
+      labelX = (x1 + x2) / 2;
+      labelY = commonY - 10;
+      // 基数标签离端点更远，避免重叠
+      fromCardX = (dx > 0 ? x1 + 8 : x1 - 8);
+      fromCardY = commonY - 10;
+      toCardX = (dx > 0 ? x2 - 28 : x2 + 8);
+      toCardY = commonY - 10;
+
+    } else if (sameCol) {
+      // 垂直连接
+      if (dy > 0) { y1 = fromN.y + fromN.h; y2 = toN.y; }
+      else        { y1 = fromN.y; y2 = toN.y + toN.h; }
+      d = 'M' + fromN.cx + ',' + y1 + ' L' + toN.cx + ',' + y2;
+      labelX = fromN.cx + 14;
+      labelY = (y1 + y2) / 2 + 4;
+      fromCardX = fromN.cx + 6;
+      fromCardY = (dy > 0 ? y1 + 14 : y1 - 6);
+      toCardX = toN.cx + 6;
+      toCardY = (dy > 0 ? y2 - 8 : y2 + 14);
+
+    } else {
+      // 对角 L 形折线 + Q 圆角
+      if (dx > 0) {
+        x1 = fromN.x + fromN.w; y1 = fromN.cy;
+        x2 = toN.cx; y2 = dy > 0 ? toN.y : toN.y + toN.h;
+      } else {
+        x1 = fromN.x; y1 = fromN.cy;
+        x2 = toN.cx; y2 = dy > 0 ? toN.y : toN.y + toN.h;
+      }
+      var sx = x2 > x1 ? 1 : -1;
+      var sy = y2 > y1 ? 1 : -1;
+      d = 'M' + x1 + ',' + y1 +
+          ' L' + (x2 - R * sx) + ',' + y1 +
+          ' Q' + x2 + ',' + y1 + ' ' + x2 + ',' + (y1 + R * sy) +
+          ' L' + x2 + ',' + y2;
+      labelX = (x1 + x2) / 2;
+      labelY = y1 - 8;
+      fromCardX = (dx > 0 ? x1 + 4 : x1 - 20);
+      fromCardY = y1 - 8;
+      toCardX = x2 + 6;
+      toCardY = (dy > 0 ? y2 - 8 : y2 + 14);
+    }
+
+    var pathAttrs = { d: d, stroke: attrs.stroke, 'stroke-width': attrs.sw, fill: 'none' };
+    if (attrs.dash) pathAttrs['stroke-dasharray'] = attrs.dash;
+    if (attrs.markerEnd) pathAttrs['marker-end'] = attrs.markerEnd;
+    if (attrs.markerStart) pathAttrs['marker-start'] = attrs.markerStart;
+    lineGroup.appendChild(el('path', pathAttrs));
+
+    // 关系标签
+    if (rel.label) {
+      var rl = el('text', { x: labelX, y: labelY, 'text-anchor': 'middle', 'font-size': 10, fill: lineColor, 'font-family': SANS });
+      rl.textContent = rel.label; lineGroup.appendChild(rl);
+    }
+    // 基数标签
+    if (rel.fromCard) {
+      var fcl = el('text', { x: fromCardX, y: fromCardY, 'font-size': 10, fill: '#64748B', 'font-family': SANS });
+      fcl.textContent = rel.fromCard; lineGroup.appendChild(fcl);
+    }
+    if (rel.toCard) {
+      var tcl = el('text', { x: toCardX, y: toCardY, 'font-size': 10, fill: '#64748B', 'font-family': SANS });
+      tcl.textContent = rel.toCard; lineGroup.appendChild(tcl);
+    }
+  });
+
+  // ========== 绘制类框 ==========
+  classes.forEach(function(c) {
+    var node = classMap[c.id];
+    var x = node.x, y = node.y, w = node.w, h = node.h;
+    var tc = node.color;
+
+    // 外边框
+    nodeGroup.appendChild(el('rect', {
+      x: x, y: y, width: w, height: h,
+      rx: 8, fill: '#ffffff', stroke: tc.border, 'stroke-width': 1
+    }));
+
+    // 表头背景（圆角 + 延伸）
+    nodeGroup.appendChild(el('rect', {
+      x: x, y: y, width: w, height: HEADER_H,
+      rx: 8, fill: tc.header
+    }));
+    nodeGroup.appendChild(el('rect', {
+      x: x, y: y + HEADER_H - 4, width: w, height: HEADER_BRIDGE + 4,
+      fill: tc.header
+    }));
+
+    // stereotype 标签（interface / abstract）
+    if (c.type === 'interface' || c.type === 'abstract') {
+      var stereo = el('text', {
+        x: x + w / 2, y: y + 12, 'text-anchor': 'middle',
+        'font-size': 9, fill: 'rgba(255,255,255,0.75)', 'font-style': 'italic', 'font-family': SANS
+      });
+      stereo.textContent = '\u00AB' + c.type + '\u00BB'; nodeGroup.appendChild(stereo);
+      // 类名偏下
+      var nameEl = el('text', {
+        x: x + w / 2, y: y + 26, 'text-anchor': 'middle',
+        'font-size': 14, 'font-weight': 700, fill: '#FFFFFF', 'font-family': SANS
+      });
+      nameEl.textContent = node.label; nodeGroup.appendChild(nameEl);
+    } else if (c.type === 'enum') {
+      // enum 标签
+      var enumTag = el('text', {
+        x: x + w - 8, y: y + 14, 'text-anchor': 'end',
+        'font-size': 9, fill: 'rgba(255,255,255,0.65)', 'font-family': SANS
+      });
+      enumTag.textContent = '\u00ABenum\u00BB'; nodeGroup.appendChild(enumTag);
+      var enumName = el('text', {
+        x: x + w / 2, y: y + HEADER_H / 2 + 4, 'text-anchor': 'middle',
+        'font-size': 14, 'font-weight': 700, fill: '#FFFFFF', 'font-family': SANS
+      });
+      enumName.textContent = node.label; nodeGroup.appendChild(enumName);
+    } else {
+      // 普通 class
+      var clsName = el('text', {
+        x: x + w / 2, y: y + HEADER_H / 2 + 4, 'text-anchor': 'middle',
+        'font-size': 14, 'font-weight': 700, fill: '#FFFFFF', 'font-family': SANS
+      });
+      clsName.textContent = node.label; nodeGroup.appendChild(clsName);
+    }
+
+    var curY = y + HEADER_H + HEADER_BRIDGE;
+
+    if (c.type === 'enum') {
+      // 枚举值列表（P1 #4：枚举值颜色 #64748B）
+      curY += SECTION_PAD;
+      (node.values || []).forEach(function(v) {
+        var vEl = el('text', {
+          x: x + FIELD_PAD_X, y: curY + FIELD_H / 2 + 1,
+          'dominant-baseline': 'central',
+          'font-size': 11, fill: '#64748B', 'font-family': MONO
+        });
+        vEl.textContent = v; nodeGroup.appendChild(vEl);
+        curY += FIELD_H;
+      });
+    } else {
+      // Fields 区域背景（P1 #5：#F8FAFC）
+      var fieldsH = SECTION_PAD + (node.fields || []).length * FIELD_H + SECTION_PAD;
+      nodeGroup.appendChild(el('rect', {
+        x: x + 1, y: curY, width: w - 2, height: fieldsH,
+        fill: '#F8FAFC'
+      }));
+
+      // Fields（P1 #4：字段文字颜色 #1E293B）
+      curY += SECTION_PAD;
+      (node.fields || []).forEach(function(f) {
+        var line = f.vis + ' ' + f.name + ' : ' + f.dtype;
+        var fEl = el('text', {
+          x: x + FIELD_PAD_X, y: curY + FIELD_H / 2 + 1,
+          'dominant-baseline': 'central',
+          'font-size': 11, fill: '#1E293B', 'font-family': MONO
+        });
+        fEl.textContent = line; nodeGroup.appendChild(fEl);
+        curY += FIELD_H;
+      });
+      curY += SECTION_PAD;
+
+      // 分割线
+      if ((node.methods || []).length > 0) {
+        nodeGroup.appendChild(el('line', {
+          x1: x, y1: curY, x2: x + w, y2: curY,
+          stroke: tc.border, 'stroke-width': 1
+        }));
+        curY += DIVIDER_H + SECTION_PAD;
+
+        // Methods（P1 #4：方法文字颜色 #1E293B）
+        (node.methods || []).forEach(function(m) {
+          var line = m.vis + ' ' + m.name + ' : ' + m.dtype;
+          var mEl = el('text', {
+            x: x + FIELD_PAD_X, y: curY + FIELD_H / 2 + 1,
+            'dominant-baseline': 'central',
+            'font-size': 11, fill: '#1E293B', 'font-family': MONO
+          });
+          mEl.textContent = line; nodeGroup.appendChild(mEl);
+          curY += FIELD_H;
+        });
+      }
+    }
+  });
+
+  // ========== 更新画布高度以包含路由通道 ==========
+  var finalMaxY = routeBaseY + depRouteIndex * 16 + 10;
+  if (finalMaxY > maxY) {
+    svgH = finalMaxY + LEGEND_H + 40;
+    svg.setAttribute('height', svgH);
+    svg.setAttribute('viewBox', '0 0 ' + svgW + ' ' + svgH);
+  }
+
+  // ========== 图例 ==========
+  var legendY = (finalMaxY > maxY ? finalMaxY : maxY) + 28;
+  var lx = 0;
+
+  // 类型图例
+  var typeLegend = [
+    { color: typeColors['class'].header, label: '类' },
+    { color: typeColors['interface'].header, label: '接口' },
+    { color: typeColors['enum'].header, label: '枚举' }
+  ];
+  typeLegend.forEach(function(item) {
+    nodeGroup.appendChild(el('rect', { x: lx, y: legendY, width: 14, height: 14, rx: 3, fill: item.color }));
+    var lt = el('text', { x: lx + 20, y: legendY + 11, 'font-size': 11, fill: '#64748B', 'font-family': SANS });
+    lt.textContent = item.label; nodeGroup.appendChild(lt);
+    lx += measureText(item.label, 11) + 42;
+  });
+
+  // 关系图例
+  // 关联
+  lineGroup.appendChild(el('line', { x1: lx, y1: legendY + 7, x2: lx + 28, y2: legendY + 7, stroke: lineColor, 'stroke-width': 1.5, 'marker-end': 'url(#arrow-open)' }));
+  var assocLbl = el('text', { x: lx + 34, y: legendY + 11, 'font-size': 11, fill: '#64748B', 'font-family': SANS });
+  assocLbl.textContent = '关联'; nodeGroup.appendChild(assocLbl);
+  lx += 76;
+
+  // 组合
+  lineGroup.appendChild(el('line', { x1: lx, y1: legendY + 7, x2: lx + 14, y2: legendY + 7, stroke: lineColor, 'stroke-width': 1.5, 'marker-start': 'url(#diamond-filled)' }));
+  lineGroup.appendChild(el('line', { x1: lx + 14, y1: legendY + 7, x2: lx + 28, y2: legendY + 7, stroke: lineColor, 'stroke-width': 1.5 }));
+  var compLbl = el('text', { x: lx + 34, y: legendY + 11, 'font-size': 11, fill: '#64748B', 'font-family': SANS });
+  compLbl.textContent = '组合'; nodeGroup.appendChild(compLbl);
+  lx += 76;
+
+  // 依赖
+  lineGroup.appendChild(el('line', { x1: lx, y1: legendY + 7, x2: lx + 28, y2: legendY + 7, stroke: dashColor, 'stroke-width': 1, 'stroke-dasharray': '5,3', 'marker-end': 'url(#arrow-dash)' }));
+  var depLbl = el('text', { x: lx + 34, y: legendY + 11, 'font-size': 11, fill: '#64748B', 'font-family': SANS });
+  depLbl.textContent = '依赖'; nodeGroup.appendChild(depLbl);
+  lx += 76;
+
+  // 继承
+  lineGroup.appendChild(el('line', { x1: lx, y1: legendY + 7, x2: lx + 28, y2: legendY + 7, stroke: lineColor, 'stroke-width': 1.5, 'marker-end': 'url(#triangle-solid)' }));
+  var inhLbl = el('text', { x: lx + 34, y: legendY + 11, 'font-size': 11, fill: '#64748B', 'font-family': SANS });
+  inhLbl.textContent = '继承'; nodeGroup.appendChild(inhLbl);
+  lx += 76;
+
+})();
+</script>
 </body>
 </html>

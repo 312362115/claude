@@ -5,234 +5,297 @@
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
-    background: #F8FAFC;
-    font-family: "PingFang SC", "Inter", -apple-system, "Segoe UI", sans-serif;
-    display: flex;
-    justify-content: center;
-    padding: 48px 32px;
+    font-family: -apple-system, system-ui, 'PingFang SC', sans-serif;
+    background: #fff;
+    padding: 24px;
+    display: inline-block;
     -webkit-font-smoothing: antialiased;
-  }
-
-  .arch {
-    width: 1040px;
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-    overflow: hidden;
-  }
-
-  /* 标题栏 */
-  .header {
-    padding: 28px 32px 24px;
-    border-bottom: 1px solid #E2E8F0;
-  }
-  .header h1 {
-    font-size: 18px;
-    font-weight: 600;
-    color: #0F172A;
-    letter-spacing: 0.5px;
-  }
-  .header p {
-    font-size: 12px;
-    color: #64748B;
-    margin-top: 4px;
-  }
-
-  /* 每层 */
-  .layer {
-    padding: 20px 32px;
-    display: flex;
-    align-items: flex-start;
-    gap: 24px;
-    border-bottom: 1px solid #E2E8F0;
-    position: relative;
-  }
-  .layer:last-child { border-bottom: none; }
-
-  /* 协议标注：骑在分隔线上 */
-  .layer-proto {
-    position: absolute;
-    bottom: -10px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #fff;
-    padding: 0 12px;
-    font-size: 10px;
-    color: #94A3B8;
-    letter-spacing: 0.5px;
-    z-index: 1;
-    white-space: nowrap;
-  }
-
-  /* 层标签 */
-  .layer-meta {
-    width: 88px;
-    flex-shrink: 0;
-    padding-top: 6px;
-  }
-  .layer-name {
-    font-size: 13px;
-    font-weight: 600;
-    line-height: 1.3;
-  }
-  /* 层标签颜色 — 对应层级色深色 */
-  .layer-name.l1 { color: #1E40AF; }
-  .layer-name.l2 { color: #155E75; }
-  .layer-name.l3 { color: #065F46; }
-  .layer-name.l4 { color: #92400E; }
-  .layer-name.l5 { color: #5B21B6; }
-  .layer-name.l6 { color: #334155; }
-  .layer-en {
-    font-size: 10px;
-    color: #94A3B8;
-    font-weight: 400;
-    margin-top: 2px;
-    letter-spacing: 0.3px;
-  }
-
-  /* 组件区域 */
-  .layer-body {
-    flex: 1;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-
-  /* 组件卡片 — min-width 保证每行最多 5 个，超出自动换行 */
-  .comp {
-    padding: 8px 16px;
-    border-radius: 6px;
-    font-size: 13px;
-    font-weight: 500;
-    color: #fff;
-    letter-spacing: 0.3px;
-    min-width: 148px;
-    text-align: center;
-  }
-
-  /* 每层组件配色 — 设计规范层级色 */
-  .c-client  { background: #3B82F6; }   /* L-1 Blue */
-  .c-gateway { background: #06B6D4; }   /* L-6 Cyan */
-  .c-service { background: #10B981; }   /* L-2 Emerald */
-  .c-mw      { background: #D97706; }   /* L-3 Amber（降一级） */
-  .c-data    { background: #8B5CF6; }   /* L-4 Violet */
-  .c-infra   { background: #64748B; }   /* N-6 Slate */
-
-  /* 层间协议标注 */
-  .proto-row {
-    display: none;
-  }
-  .proto-row .line {
-    display: none;
-  }
-  .proto-row .label {
-    font-size: 10px;
-    color: #94A3B8;
-    letter-spacing: 0.5px;
-    white-space: nowrap;
   }
 </style>
 </head>
 <body>
-  <div class="arch">
-    <div class="header">
-      <h1>电商平台 · 系统架构</h1>
-      <p>Microservice Architecture Overview</p>
-    </div>
+<svg id="canvas"></svg>
 
-    <!-- 客户端 -->
-    <div class="layer">
-      <div class="layer-meta">
-        <div class="layer-name l1">客户端</div>
-        <div class="layer-en">Client</div>
-      </div>
-      <div class="layer-body">
-        <div class="comp c-client">Web 应用</div>
-        <div class="comp c-client">iOS / Android</div>
-        <div class="comp c-client">微信小程序</div>
-        <div class="comp c-client">管理后台</div>
-      </div>
-      <div class="layer-proto">HTTPS / WebSocket</div>
-    </div>
+<script>
+(function() {
+  var NS = 'http://www.w3.org/2000/svg';
+  var svg = document.getElementById('canvas');
 
-    <!-- 接入层 -->
-    <div class="layer">
-      <div class="layer-meta">
-        <div class="layer-name l2">接入层</div>
-        <div class="layer-en">Gateway</div>
-      </div>
-      <div class="layer-body">
-        <div class="comp c-gateway">Nginx</div>
-        <div class="comp c-gateway">Kong API Gateway</div>
-        <div class="comp c-gateway">OAuth 2.0</div>
-        <div class="comp c-gateway">WAF</div>
-      </div>
-      <div class="layer-proto">gRPC / REST</div>
-    </div>
+  // ========== 数据定义 ==========
+  var title = '电商平台 · 系统架构';
+  var subtitle = 'System Architecture Overview';
 
-    <!-- 业务服务 -->
-    <div class="layer">
-      <div class="layer-meta">
-        <div class="layer-name l3">业务服务</div>
-        <div class="layer-en">Service</div>
-      </div>
-      <div class="layer-body">
-        <div class="comp c-service">用户服务</div>
-        <div class="comp c-service">商品服务</div>
-        <div class="comp c-service">订单服务</div>
-        <div class="comp c-service">支付服务</div>
-        <div class="comp c-service">库存服务</div>
-        <div class="comp c-service">通知服务</div>
-        <div class="comp c-service">搜索服务</div>
-        <div class="comp c-service">推荐服务</div>
-      </div>
-    </div>
+  var layers = [
+    { label: '客户端层', nodes: [
+      { label: 'Web App', desc: 'React SPA' },
+      { label: 'Mobile App', desc: 'React Native' },
+      { label: 'Admin Panel', desc: 'Vue.js' }
+    ]},
+    { label: 'API 网关层', nodes: [
+      { label: 'Nginx', desc: '负载均衡' },
+      { label: 'API Gateway', desc: '鉴权 + 路由' }
+    ]},
+    { label: '服务层', nodes: [
+      { label: '用户服务', desc: 'Go' },
+      { label: '订单服务', desc: 'Java' },
+      { label: '支付服务', desc: 'Java' },
+      { label: '商品服务', desc: 'Go' }
+    ]},
+    { label: '数据层', nodes: [
+      { label: 'MySQL', desc: '主从集群' },
+      { label: 'Redis', desc: '缓存集群' },
+      { label: 'Elasticsearch', desc: '搜索引擎' }
+    ]}
+  ];
 
-    <!-- 中间件 -->
-    <div class="layer">
-      <div class="layer-meta">
-        <div class="layer-name l4">中间件</div>
-        <div class="layer-en">Middleware</div>
-      </div>
-      <div class="layer-body">
-        <div class="comp c-mw">Kafka</div>
-        <div class="comp c-mw">Redis</div>
-        <div class="comp c-mw">RocketMQ</div>
-        <div class="comp c-mw">Sentinel</div>
-        <div class="comp c-mw">Nacos</div>
-      </div>
-    </div>
+  // ========== 主题 ==========
+  var theme = {
+    title: { color: '#0F172A', size: 16 },
+    layers: [
+      { bg: 'rgba(59,130,246,0.08)',  border: 'rgba(59,130,246,0.2)',  color: '#1E40AF' },
+      { bg: 'rgba(6,182,212,0.08)',   border: 'rgba(6,182,212,0.2)',   color: '#155E75' },
+      { bg: 'rgba(16,185,129,0.08)',  border: 'rgba(16,185,129,0.2)',  color: '#065F46' },
+      { bg: 'rgba(245,158,11,0.08)',  border: 'rgba(245,158,11,0.2)',  color: '#92400E' },
+      { bg: 'rgba(139,92,246,0.08)',  border: 'rgba(139,92,246,0.2)',  color: '#5B21B6' },
+      { bg: 'rgba(244,63,94,0.08)',   border: 'rgba(244,63,94,0.2)',   color: '#9F1239' }
+    ],
+    node: { bg: '#FFFFFF', border: '#E2E8F0', text: '#1E293B', desc: '#64748B' },
+    arrow: { color: '#94A3B8', width: 1.2 }
+  };
 
-    <!-- 数据层 -->
-    <div class="layer">
-      <div class="layer-meta">
-        <div class="layer-name l5">数据层</div>
-        <div class="layer-en">Data Store</div>
-      </div>
-      <div class="layer-body">
-        <div class="comp c-data">MySQL</div>
-        <div class="comp c-data">MongoDB</div>
-        <div class="comp c-data">Elasticsearch</div>
-        <div class="comp c-data">OSS</div>
-        <div class="comp c-data">HDFS</div>
-      </div>
-    </div>
+  // ========== 布局参数 ==========
+  var FONT = "-apple-system, system-ui, 'PingFang SC', sans-serif";
+  var TITLE_FONT_SIZE = theme.title.size;
+  var LABEL_FONT_SIZE = 13;
+  var NODE_LABEL_SIZE = 13;
+  var NODE_DESC_SIZE = 11;
+  var CANVAS_PAD = 24;
+  var LAYER_GAP = 40;           // 层间距（含箭头空间）
+  var LAYER_PAD_X = 20;         // 层内左右 padding
+  var LAYER_PAD_Y = 16;         // 层内上下 padding
+  var LAYER_LABEL_W = 72;       // 层标签宽度
+  var LAYER_LABEL_GAP = 12;     // 层标签和节点区域间距
+  var NODE_GAP = 16;            // 节点间距
+  var NODE_PAD_X = 20;          // 节点内左右 padding
+  var NODE_H = 48;              // 节点高度
+  var NODE_RX = 6;              // 节点圆角
+  var LAYER_RX = 8;             // 层背景圆角
 
-    <!-- 基础设施 -->
-    <div class="layer">
-      <div class="layer-meta">
-        <div class="layer-name l6">基础设施</div>
-        <div class="layer-en">Infrastructure</div>
-      </div>
-      <div class="layer-body">
-        <div class="comp c-infra">Docker / K8s</div>
-        <div class="comp c-infra">GitLab CI/CD</div>
-        <div class="comp c-infra">Prometheus</div>
-        <div class="comp c-infra">Grafana</div>
-        <div class="comp c-infra">ELK</div>
-        <div class="comp c-infra">Jaeger</div>
-      </div>
-    </div>
-  </div>
+  // ========== 工具函数 ==========
+  function measureText(str, fontSize) {
+    var w = 0;
+    for (var i = 0; i < str.length; i++) {
+      w += str.charCodeAt(i) > 127 ? fontSize : fontSize * 0.6;
+    }
+    return w;
+  }
+
+  function el(tag, attrs, text) {
+    var e = document.createElementNS(NS, tag);
+    if (attrs) {
+      for (var k in attrs) {
+        if (attrs.hasOwnProperty(k)) e.setAttribute(k, attrs[k]);
+      }
+    }
+    if (text !== undefined) e.textContent = text;
+    return e;
+  }
+
+  // ========== 计算节点宽度 ==========
+  // 同一层内所有节点等宽（取最大宽度）
+  function calcLayerNodeWidth(nodes) {
+    var maxW = 0;
+    for (var i = 0; i < nodes.length; i++) {
+      var labelW = measureText(nodes[i].label, NODE_LABEL_SIZE);
+      var descW = measureText(nodes[i].desc, NODE_DESC_SIZE);
+      var w = Math.max(labelW, descW) + NODE_PAD_X * 2;
+      if (w > maxW) maxW = w;
+    }
+    return Math.max(maxW, 80);
+  }
+
+  // ========== 布局计算 ==========
+  var layoutLayers = [];
+  var titleH = 52;  // 标题区高度（含 subtitle）
+
+  // 先计算每层节点宽度和层的总宽度
+  for (var li = 0; li < layers.length; li++) {
+    var layer = layers[li];
+    var nodeW = calcLayerNodeWidth(layer.nodes);
+    var nodesAreaW = layer.nodes.length * nodeW + (layer.nodes.length - 1) * NODE_GAP;
+    var layerContentW = LAYER_LABEL_W + LAYER_LABEL_GAP + nodesAreaW + LAYER_PAD_X * 2;
+    layoutLayers.push({
+      data: layer,
+      nodeW: nodeW,
+      nodesAreaW: nodesAreaW,
+      contentW: layerContentW,
+      nodeCount: layer.nodes.length
+    });
+  }
+
+  // 画布宽度取所有层的最大宽度
+  var maxLayerW = 0;
+  for (var li = 0; li < layoutLayers.length; li++) {
+    if (layoutLayers[li].contentW > maxLayerW) maxLayerW = layoutLayers[li].contentW;
+  }
+  var canvasW = maxLayerW + CANVAS_PAD * 2;
+
+  // 计算每层 y 坐标
+  var curY = CANVAS_PAD + titleH;
+  for (var li = 0; li < layoutLayers.length; li++) {
+    var ll = layoutLayers[li];
+    ll.x = CANVAS_PAD;
+    ll.y = curY;
+    ll.w = canvasW - CANVAS_PAD * 2;
+    ll.h = NODE_H + LAYER_PAD_Y * 2;
+    curY += ll.h + LAYER_GAP;
+  }
+
+  var canvasH = curY - LAYER_GAP + CANVAS_PAD;
+
+  // ========== 计算节点坐标 ==========
+  for (var li = 0; li < layoutLayers.length; li++) {
+    var ll = layoutLayers[li];
+    var nodesStartX = ll.x + LAYER_PAD_X + LAYER_LABEL_W + LAYER_LABEL_GAP;
+    // 居中节点区域
+    var availW = ll.w - LAYER_PAD_X * 2 - LAYER_LABEL_W - LAYER_LABEL_GAP;
+    var offset = (availW - ll.nodesAreaW) / 2;
+    nodesStartX += offset;
+
+    ll.nodePositions = [];
+    for (var ni = 0; ni < ll.data.nodes.length; ni++) {
+      var nx = nodesStartX + ni * (ll.nodeW + NODE_GAP);
+      var ny = ll.y + LAYER_PAD_Y;
+      ll.nodePositions.push({ x: nx, y: ny, w: ll.nodeW, h: NODE_H });
+    }
+  }
+
+  // ========== 设置画布尺寸 ==========
+  svg.setAttribute('width', canvasW);
+  svg.setAttribute('height', canvasH);
+  svg.setAttribute('viewBox', '0 0 ' + canvasW + ' ' + canvasH);
+  svg.style.fontFamily = FONT;
+
+  // ========== 箭头标记 ==========
+  var defs = el('defs');
+  var marker = el('marker', {
+    id: 'arrowhead', markerWidth: '8', markerHeight: '6',
+    refX: '7', refY: '3', orient: 'auto', markerUnits: 'strokeWidth'
+  });
+  marker.appendChild(el('path', {
+    d: 'M0,0.5 L7,3 L0,5.5', fill: 'none', stroke: theme.arrow.color,
+    'stroke-width': '1.2', 'stroke-linecap': 'round'
+  }));
+  defs.appendChild(marker);
+  svg.appendChild(defs);
+
+  // ========== 绘制标题 ==========
+  svg.appendChild(el('text', {
+    x: 0, y: 18,
+    'font-size': TITLE_FONT_SIZE, 'font-weight': '700',
+    fill: theme.title.color, 'font-family': FONT
+  }, title));
+
+  svg.appendChild(el('text', {
+    x: 0, y: 36,
+    'font-size': 12, 'font-weight': '400',
+    fill: '#888', 'font-family': FONT
+  }, subtitle));
+
+  // ========== 绘制层 ==========
+  for (var li = 0; li < layoutLayers.length; li++) {
+    var ll = layoutLayers[li];
+    var layerTheme = theme.layers[li % theme.layers.length];
+
+    // 层背景
+    svg.appendChild(el('rect', {
+      x: ll.x, y: ll.y, width: ll.w, height: ll.h,
+      rx: LAYER_RX, fill: layerTheme.bg,
+      stroke: layerTheme.border, 'stroke-width': '1'
+    }));
+
+    // 层标签（左侧垂直居中）
+    var labelX = ll.x + LAYER_PAD_X;
+    var labelY = ll.y + ll.h / 2;
+    svg.appendChild(el('text', {
+      x: labelX, y: labelY,
+      'font-size': LABEL_FONT_SIZE, 'font-weight': '600',
+      fill: layerTheme.color, 'font-family': FONT,
+      'dominant-baseline': 'central'
+    }, ll.data.label));
+
+    // 绘制节点
+    for (var ni = 0; ni < ll.nodePositions.length; ni++) {
+      var np = ll.nodePositions[ni];
+      var node = ll.data.nodes[ni];
+
+      // 节点背景
+      svg.appendChild(el('rect', {
+        x: np.x, y: np.y, width: np.w, height: np.h,
+        rx: NODE_RX, fill: theme.node.bg,
+        stroke: theme.node.border, 'stroke-width': '1'
+      }));
+
+      // 节点标签
+      svg.appendChild(el('text', {
+        x: np.x + np.w / 2, y: np.y + 19,
+        'font-size': NODE_LABEL_SIZE, 'font-weight': '600',
+        fill: theme.node.text, 'font-family': FONT,
+        'text-anchor': 'middle'
+      }, node.label));
+
+      // 节点描述
+      svg.appendChild(el('text', {
+        x: np.x + np.w / 2, y: np.y + 35,
+        'font-size': NODE_DESC_SIZE, 'font-weight': '400',
+        fill: theme.node.desc, 'font-family': FONT,
+        'text-anchor': 'middle'
+      }, node.desc));
+    }
+  }
+
+  // ========== 绘制层间连线 ==========
+  for (var li = 0; li < layoutLayers.length - 1; li++) {
+    var upperLayer = layoutLayers[li];
+    var lowerLayer = layoutLayers[li + 1];
+
+    // 找出上下层节点的中心 x 坐标，取重叠范围内的连线
+    var upperNodes = upperLayer.nodePositions;
+    var lowerNodes = lowerLayer.nodePositions;
+
+    // 确定连线的 x 位置：使用下层节点的中心 x
+    for (var ni = 0; ni < lowerNodes.length; ni++) {
+      var lnp = lowerNodes[ni];
+      var cx = lnp.x + lnp.w / 2;
+
+      // 找到上层最近的节点
+      var bestUpper = null;
+      var bestDist = Infinity;
+      for (var ui = 0; ui < upperNodes.length; ui++) {
+        var ucx = upperNodes[ui].x + upperNodes[ui].w / 2;
+        var dist = Math.abs(ucx - cx);
+        if (dist < bestDist) {
+          bestDist = dist;
+          bestUpper = upperNodes[ui];
+        }
+      }
+
+      if (bestUpper) {
+        var x1 = bestUpper.x + bestUpper.w / 2;
+        var y1 = bestUpper.y + bestUpper.h;
+        var x2 = cx;
+        var y2 = lnp.y;
+
+        svg.appendChild(el('line', {
+          x1: x1, y1: y1, x2: x2, y2: y2,
+          stroke: theme.arrow.color, 'stroke-width': theme.arrow.width,
+          'marker-end': 'url(#arrowhead)'
+        }));
+      }
+    }
+  }
+
+})();
+</script>
 </body>
 </html>

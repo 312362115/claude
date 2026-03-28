@@ -2,161 +2,509 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=1200, height=900">
-<title>泳道图 - 请假审批流程</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
-    width: 1200px; height: 900px;
     font-family: -apple-system, system-ui, 'PingFang SC', sans-serif;
-    background: #f8fafc;
-    overflow: hidden;
+    background: #fff;
+    padding: 24px;
+    display: inline-block;
   }
 </style>
 </head>
 <body>
-<svg width="1200" height="900" viewBox="0 0 1200 900" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">
-  <defs>
-    <filter id="s" x="-5%" y="-10%" width="115%" height="130%">
-      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.1"/>
-    </filter>
-    <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-      <polygon points="0 0, 10 3.5, 0 7" fill="#6366f1"/>
-    </marker>
-    <marker id="arrow-g" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-      <polygon points="0 0, 10 3.5, 0 7" fill="#10b981"/>
-    </marker>
-    <marker id="arrow-r" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-      <polygon points="0 0, 10 3.5, 0 7" fill="#ef4444"/>
-    </marker>
-  </defs>
+<svg id="canvas"></svg>
 
-  <!-- Title -->
-  <text x="600" y="38" text-anchor="middle" font-size="22" font-weight="700" fill="#1e293b">请假审批流程 — 泳道图</text>
+<script>
+(function() {
+  var NS = 'http://www.w3.org/2000/svg';
+  var svg = document.getElementById('canvas');
 
-  <!-- 整体外框（圆角） -->
-  <rect x="10" y="60" width="1170" height="760" rx="10" fill="none" stroke="#e2e8f0" stroke-width="1"/>
+  // ========== 数据定义 ==========
+  var title = '用户注册流程';
+  var subtitle = 'User Registration Workflow';
 
-  <!-- Lane backgrounds（无圆角，外框负责圆角） -->
-  <rect x="120" y="60" width="1060" height="190" rx="0" fill="#eef2ff" opacity="0.5"/>
-  <rect x="120" y="250" width="1060" height="190" rx="0" fill="#ecfdf5" opacity="0.5"/>
-  <rect x="120" y="440" width="1060" height="190" rx="0" fill="#fef3c7" opacity="0.4"/>
-  <rect x="120" y="630" width="1060" height="190" rx="0" fill="#f0f4ff" opacity="0.4"/>
+  var lanes = [
+    { id: 'user', label: '用户' },
+    { id: 'frontend', label: '前端' },
+    { id: 'backend', label: '后端' },
+    { id: 'db', label: '数据库' }
+  ];
 
-  <!-- Lane dividers -->
-  <line x1="120" y1="250" x2="1180" y2="250" stroke="#cbd5e1" stroke-width="1"/>
-  <line x1="120" y1="440" x2="1180" y2="440" stroke="#cbd5e1" stroke-width="1"/>
-  <line x1="120" y1="630" x2="1180" y2="630" stroke="#cbd5e1" stroke-width="1"/>
-  <line x1="120" y1="820" x2="1180" y2="820" stroke="#cbd5e1" stroke-width="1"/>
+  // Steps flow left-to-right within lanes, top-to-bottom for sequence
+  var steps = [
+    { id: 's1', label: '提交表单', lane: 'user', type: 'start' },
+    { id: 's2', label: '表单校验', lane: 'frontend', type: 'process' },
+    { id: 'd1', label: '校验通过?', lane: 'frontend', type: 'decision', no: 'e1' },
+    { id: 's3', label: '调用 API', lane: 'frontend', type: 'process' },
+    { id: 's4', label: '业务处理', lane: 'backend', type: 'process' },
+    { id: 's5', label: '写入数据', lane: 'db', type: 'datastore' },
+    { id: 's6', label: '返回结果', lane: 'backend', type: 'process' },
+    { id: 's7', label: '显示成功', lane: 'frontend', type: 'success' },
+    { id: 'end', label: '完成', lane: 'user', type: 'end' }
+  ];
 
-  <!-- Lane labels -->
-  <g font-size="15" font-weight="700" text-anchor="middle">
-    <!-- 第一个泳道：左上+右上圆角 -->
-    <path d="M20,60 L100,60 Q110,60 110,70 L110,250 L10,250 L10,70 Q10,60 20,60 Z" fill="#6366f1"/>
-    <text x="60" y="160" fill="white" transform="rotate(-90,60,160)">员工</text>
+  var sideNodes = [
+    { id: 'e1', label: '显示错误', type: 'error' }
+  ];
 
-    <!-- 中间泳道：无圆角 -->
-    <rect x="10" y="250" width="100" height="190" rx="0" fill="#10b981"/>
-    <text x="60" y="350" fill="white" transform="rotate(-90,60,350)">直属主管</text>
+  // ========== 主题 ==========
+  var theme = {
+    title: { color: '#1a1a2e', size: 16 },
+    node:      { bg: '#EFF6FF', border: '#93C5FD', text: '#1E293B' },
+    highlight: { bg: '#3B82F6', border: '#3B82F6', text: '#FFFFFF' },
+    decision:  { bg: '#FFFBEB', border: '#FCD34D', text: '#92400E' },
+    success:   { bg: '#ECFDF5', border: '#6EE7B7', text: '#065F46' },
+    error:     { bg: '#FFF1F2', border: '#FDA4AF', text: '#9F1239' },
+    datastore: { bg: '#F5F3FF', border: '#C4B5FD', text: '#5B21B6' },
+    line: { color: '#94A3B8', width: 1.5, label: '#64748B' },
+    lineYes: { color: '#10B981', width: 2 },
+    lineNo:  { color: '#F43F5E', width: 2 },
+    laneHeaders: ['#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#06B6D4'],
+    laneBgs: ['#FFFFFF', '#F8FAFC']
+  };
 
-    <rect x="10" y="440" width="100" height="190" rx="0" fill="#f59e0b"/>
-    <text x="60" y="540" fill="white" transform="rotate(-90,60,540)">HR</text>
+  function getStyle(type) {
+    var map = { start: 'success', end: 'success', process: 'node', decision: 'decision',
+      highlight: 'highlight', error: 'error', success: 'success', datastore: 'datastore' };
+    return theme[map[type] || 'node'];
+  }
 
-    <!-- 最后一个泳道：左下+右下圆角 -->
-    <path d="M10,630 L110,630 L110,810 Q110,820 100,820 L20,820 Q10,820 10,810 Z" fill="#3b82f6"/>
-    <text x="60" y="730" fill="white" transform="rotate(-90,60,730)">系统</text>
-  </g>
+  // ========== 工具函数 ==========
+  function el(tag, attrs) {
+    var e = document.createElementNS(NS, tag);
+    if (attrs) for (var k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
 
-  <!-- Process nodes -->
-  <!-- Start: 员工提交请假 -->
-  <circle cx="200" cy="155" r="18" fill="#6366f1" filter="url(#s)"/>
-  <text x="200" y="160" text-anchor="middle" font-size="12" font-weight="700" fill="white">开始</text>
+  function measureText(str, fontSize) {
+    var w = 0;
+    for (var i = 0; i < str.length; i++) {
+      w += str.charCodeAt(i) > 127 ? fontSize : fontSize * 0.6;
+    }
+    return w;
+  }
 
-  <!-- Step 1: 填写请假单 -->
-  <rect x="280" y="125" width="130" height="55" rx="12" fill="white" stroke="#6366f1" stroke-width="2" filter="url(#s)"/>
-  <text x="345" y="148" text-anchor="middle" font-size="13" font-weight="600" fill="#1e293b">填写请假单</text>
-  <text x="345" y="166" text-anchor="middle" font-size="11" fill="#64748b">选择类型/日期</text>
+  // ========== 布局参数 ==========
+  var FONT_SIZE = 13;
+  var NODE_PAD_X = 24;
+  var NODE_MIN_W = 110;
+  var NODE_H = 40;
+  var TERMINAL_H = 36;
+  var DECISION_PAD = 32;
+  var COL_GAP = 56;
+  var LANE_HEADER_W = 60;
+  var LANE_MIN_H = 80;
+  var LANE_PAD_Y = 20;
+  var TITLE_H = 52;
+  var SIDE_GAP_Y = 44;
+  var SIDE_OFFSET_X = 24;
+  var LANE_DIVIDER_COLOR = '#E2E8F0';
 
-  <!-- Arrow: start → step1 -->
-  <line x1="218" y1="155" x2="278" y2="152" stroke="#6366f1" stroke-width="2" marker-end="url(#arrow)"/>
+  function calcNodeW(label) {
+    return Math.max(measureText(label, FONT_SIZE) + NODE_PAD_X * 2, NODE_MIN_W);
+  }
 
-  <!-- Step 2: 系统校验 -->
-  <rect x="280" y="700" width="130" height="55" rx="12" fill="white" stroke="#3b82f6" stroke-width="2" filter="url(#s)"/>
-  <text x="345" y="723" text-anchor="middle" font-size="13" font-weight="600" fill="#1e293b">余额校验</text>
-  <text x="345" y="741" text-anchor="middle" font-size="11" fill="#64748b">检查假期余额</text>
+  function calcDiamondSize(label) {
+    var textW = measureText(label, FONT_SIZE);
+    return { w: textW + DECISION_PAD * 2, h: FONT_SIZE + DECISION_PAD * 2 };
+  }
 
-  <!-- Arrow: step1 → system check -->
-  <line x1="345" y1="180" x2="345" y2="698" stroke="#6366f1" stroke-width="2" marker-end="url(#arrow)"/>
+  // ========== 构建 lane index ==========
+  var laneIndex = {};
+  lanes.forEach(function(l, i) { laneIndex[l.id] = i; });
 
-  <!-- Decision: 余额足够？ -->
-  <polygon points="500,727 545,700 590,727 545,754" fill="#f59e0b" stroke="#d97706" stroke-width="2" filter="url(#s)"/>
-  <text x="545" y="731" text-anchor="middle" font-size="12" font-weight="600" fill="white">足够?</text>
+  // ========== 计算节点尺寸 ==========
+  var nodeMap = {};
 
-  <!-- Arrow: system → decision -->
-  <line x1="410" y1="727" x2="498" y2="727" stroke="#3b82f6" stroke-width="2" marker-end="url(#arrow)"/>
+  var mainRectMaxW = 0;
+  steps.forEach(function(step) {
+    if (step.type !== 'decision') {
+      var w = calcNodeW(step.label);
+      if (w > mainRectMaxW) mainRectMaxW = w;
+    }
+  });
 
-  <!-- No → back to employee (rejected) -->
-  <rect x="480" y="125" width="130" height="55" rx="12" fill="#fef2f2" stroke="#ef4444" stroke-width="2" filter="url(#s)"/>
-  <text x="545" y="148" text-anchor="middle" font-size="13" font-weight="600" fill="#ef4444">余额不足</text>
-  <text x="545" y="166" text-anchor="middle" font-size="11" fill="#ef4444">通知员工</text>
-  <line x1="545" y1="700" x2="545" y2="182" stroke="#ef4444" stroke-width="2" stroke-dasharray="6" marker-end="url(#arrow-r)"/>
-  <text x="555" y="440" font-size="11" fill="#ef4444">否</text>
+  steps.forEach(function(step) {
+    var n = { id: step.id, label: step.label, type: step.type, lane: step.lane, no: step.no };
+    if (step.type === 'decision') {
+      var ds = calcDiamondSize(step.label);
+      n.w = ds.w; n.h = ds.h;
+    } else {
+      n.w = mainRectMaxW;
+      n.h = (step.type === 'start' || step.type === 'end') ? TERMINAL_H : NODE_H;
+    }
+    nodeMap[step.id] = n;
+  });
 
-  <!-- Yes → manager review -->
-  <rect x="660" y="315" width="130" height="55" rx="12" fill="white" stroke="#10b981" stroke-width="2" filter="url(#s)"/>
-  <text x="725" y="338" text-anchor="middle" font-size="13" font-weight="600" fill="#1e293b">主管审批</text>
-  <text x="725" y="356" text-anchor="middle" font-size="11" fill="#64748b">审核请假理由</text>
+  // 侧分支节点尺寸
+  var sideMaxW = 0;
+  sideNodes.forEach(function(sn) {
+    var w = calcNodeW(sn.label);
+    if (w > sideMaxW) sideMaxW = w;
+  });
+  sideNodes.forEach(function(sn) {
+    var n = { id: sn.id, label: sn.label, type: sn.type, isSide: true };
+    n.w = sideMaxW; n.h = NODE_H;
+    nodeMap[sn.id] = n;
+  });
 
-  <line x1="590" y1="727" x2="725" y2="727" stroke="#10b981" stroke-width="1.5"/>
-  <line x1="725" y1="727" x2="725" y2="372" stroke="#10b981" stroke-width="2" marker-end="url(#arrow-g)"/>
-  <text x="610" y="718" font-size="11" fill="#10b981">是</text>
+  // ========== 分配列（column）==========
+  // 每个 step 占一列，从左到右递增
+  steps.forEach(function(step, i) {
+    nodeMap[step.id].col = i;
+  });
 
-  <!-- Decision: 主管同意？ -->
-  <polygon points="850,342 895,315 940,342 895,369" fill="#f59e0b" stroke="#d97706" stroke-width="2" filter="url(#s)"/>
-  <text x="895" y="346" text-anchor="middle" font-size="12" font-weight="600" fill="white">同意?</text>
+  // ========== 计算列 X 坐标 ==========
+  // 每列宽度 = 该列中最宽节点 + COL_GAP
+  var colCount = steps.length;
+  var colWidths = [];
+  for (var c = 0; c < colCount; c++) {
+    var n = nodeMap[steps[c].id];
+    colWidths.push(n.w);
+  }
 
-  <line x1="790" y1="342" x2="848" y2="342" stroke="#10b981" stroke-width="2" marker-end="url(#arrow-g)"/>
+  var colX = []; // 每列中心 X
+  var cx = LANE_HEADER_W + COL_GAP / 2;
+  for (var c = 0; c < colCount; c++) {
+    cx += colWidths[c] / 2;
+    colX.push(cx);
+    cx += colWidths[c] / 2 + COL_GAP;
+  }
+  var totalW = cx;
 
-  <!-- No → reject back to employee -->
-  <rect x="830" y="125" width="130" height="55" rx="12" fill="#fef2f2" stroke="#ef4444" stroke-width="2" filter="url(#s)"/>
-  <text x="895" y="148" text-anchor="middle" font-size="13" font-weight="600" fill="#ef4444">审批驳回</text>
-  <text x="895" y="166" text-anchor="middle" font-size="11" fill="#ef4444">退回修改</text>
-  <line x1="895" y1="315" x2="895" y2="182" stroke="#ef4444" stroke-width="2" stroke-dasharray="6" marker-end="url(#arrow-r)"/>
-  <text x="905" y="255" font-size="11" fill="#ef4444">否</text>
+  // ========== 计算泳道 Y 坐标 ==========
+  // 每条泳道独立计算高度，基于该泳道中节点的最大高度
+  var laneMaxNodeH = [];
+  lanes.forEach(function() { laneMaxNodeH.push(0); });
 
-  <!-- Yes → HR review -->
-  <rect x="960" y="505" width="130" height="55" rx="12" fill="white" stroke="#f59e0b" stroke-width="2" filter="url(#s)"/>
-  <text x="1025" y="528" text-anchor="middle" font-size="13" font-weight="600" fill="#1e293b">HR 审核</text>
-  <text x="1025" y="546" text-anchor="middle" font-size="11" fill="#64748b">合规检查</text>
+  steps.forEach(function(step) {
+    var n = nodeMap[step.id];
+    var li = laneIndex[step.lane];
+    if (n.h > laneMaxNodeH[li]) laneMaxNodeH[li] = n.h;
+  });
 
-  <line x1="940" y1="342" x2="1025" y2="342" stroke="#10b981" stroke-width="1.5"/>
-  <line x1="1025" y1="342" x2="1025" y2="503" stroke="#10b981" stroke-width="2" marker-end="url(#arrow-g)"/>
-  <text x="955" y="335" font-size="11" fill="#10b981">是</text>
+  // 每条泳道独立计算所需高度
+  var laneH = [];
+  lanes.forEach(function(l, i) {
+    laneH.push(Math.max(LANE_MIN_H, laneMaxNodeH[i] + LANE_PAD_Y * 2));
+  });
 
-  <!-- System notification -->
-  <rect x="960" y="700" width="130" height="55" rx="12" fill="white" stroke="#3b82f6" stroke-width="2" filter="url(#s)"/>
-  <text x="1025" y="723" text-anchor="middle" font-size="13" font-weight="600" fill="#1e293b">发送通知</text>
-  <text x="1025" y="741" text-anchor="middle" font-size="11" fill="#64748b">邮件+IM通知</text>
+  // 仅为包含 decision+侧分支的泳道增加额外高度
+  steps.forEach(function(step) {
+    if (step.type === 'decision' && step.no) {
+      var sn = nodeMap[step.no];
+      if (sn) {
+        var li = laneIndex[step.lane];
+        var needed = laneMaxNodeH[li] + SIDE_GAP_Y + sn.h + LANE_PAD_Y * 2;
+        if (needed > laneH[li]) laneH[li] = needed;
+      }
+    }
+  });
 
-  <line x1="1025" y1="560" x2="1025" y2="698" stroke="#10b981" stroke-width="2" marker-end="url(#arrow-g)"/>
+  var laneY = []; // 每条泳道顶部 Y
+  var y = TITLE_H;
+  lanes.forEach(function(l, i) {
+    laneY.push(y);
+    y += laneH[i];
+  });
+  var totalH = y;
 
-  <!-- End -->
-  <circle cx="1140" cy="727" r="18" fill="#10b981" filter="url(#s)"/>
-  <text x="1140" y="732" text-anchor="middle" font-size="12" font-weight="700" fill="white">完成</text>
+  // ========== 预计算哪些泳道包含侧分支 ==========
+  var laneHasSide = {};
+  steps.forEach(function(s) {
+    if (s.type === 'decision' && s.no) laneHasSide[s.lane] = true;
+  });
 
-  <line x1="1090" y1="727" x2="1120" y2="727" stroke="#10b981" stroke-width="2" marker-end="url(#arrow-g)"/>
+  // ========== 计算每个节点的精确坐标 ==========
+  steps.forEach(function(step) {
+    var n = nodeMap[step.id];
+    var li = laneIndex[step.lane];
+    n.cx = colX[n.col];
+    // 如果这个泳道有侧节点且泳道被加高了，主节点居上半部分
+    if (laneHasSide[step.lane] && laneH[li] > LANE_MIN_H) {
+      var mainCenterY = laneY[li] + LANE_PAD_Y + laneMaxNodeH[li] / 2;
+      n.cy = mainCenterY;
+    } else {
+      // 无侧分支的泳道，节点垂直居中
+      n.cy = laneY[li] + laneH[li] / 2;
+    }
+    n.x = n.cx - n.w / 2;
+    n.y = n.cy - n.h / 2;
+  });
 
-  <!-- Legend -->
-  <g transform="translate(140, 845)" font-size="12" fill="#64748b">
-    <rect x="0" y="0" width="16" height="16" rx="4" fill="white" stroke="#6366f1" stroke-width="2"/>
-    <text x="22" y="12">流程步骤</text>
-    <polygon points="115,8 127,0 139,8 127,16" fill="#f59e0b"/>
-    <text x="145" y="12">判断节点</text>
-    <line x1="230" y1="8" x2="280" y2="8" stroke="#ef4444" stroke-width="2" stroke-dasharray="6"/>
-    <text x="286" y="12">驳回</text>
-    <line x1="330" y1="8" x2="380" y2="8" stroke="#10b981" stroke-width="2"/>
-    <text x="386" y="12">通过</text>
-  </g>
-</svg>
+  // 侧节点坐标：在 decision 下方，同列偏右
+  steps.forEach(function(step) {
+    if (step.type === 'decision' && step.no) {
+      var dn = nodeMap[step.id];
+      var sn = nodeMap[step.no];
+      if (!sn) return;
+      sn.cx = dn.cx + SIDE_OFFSET_X;
+      sn.cy = dn.cy + dn.h / 2 + SIDE_GAP_Y + sn.h / 2;
+      sn.x = sn.cx - sn.w / 2;
+      sn.y = sn.cy - sn.h / 2;
+    }
+  });
+
+  // ========== SVG 尺寸 ==========
+  var svgW = totalW;
+  var svgH = totalH;
+
+  svg.setAttribute('width', svgW);
+  svg.setAttribute('height', svgH);
+  svg.setAttribute('viewBox', '0 0 ' + svgW + ' ' + svgH);
+
+  // ========== SVG Defs ==========
+  var defs = el('defs');
+  function addArrow(id, color) {
+    var marker = el('marker', {
+      id: id, markerWidth: 8, markerHeight: 6, refX: 8, refY: 3, orient: 'auto'
+    });
+    marker.appendChild(el('path', {
+      d: 'M0,0.5 L7,3 L0,5.5', fill: 'none', stroke: color,
+      'stroke-width': 1.2, 'stroke-linecap': 'round'
+    }));
+    defs.appendChild(marker);
+  }
+  addArrow('arrow', theme.line.color);
+  addArrow('arrow-g', theme.lineYes.color);
+  addArrow('arrow-r', theme.lineNo.color);
+  svg.appendChild(defs);
+
+  // ========== 渲染层 ==========
+  var bgGroup = el('g'); svg.appendChild(bgGroup);
+  var lineGroup = el('g'); svg.appendChild(lineGroup);
+  var nodeGroup = el('g'); svg.appendChild(nodeGroup);
+
+  // ========== 标题 ==========
+  var tEl = el('text', {
+    x: 0, y: 18,
+    'font-size': theme.title.size, 'font-weight': 700, fill: theme.title.color,
+    'font-family': "-apple-system, system-ui, 'PingFang SC', sans-serif"
+  });
+  tEl.textContent = title;
+  nodeGroup.appendChild(tEl);
+
+  var stEl = el('text', {
+    x: 0, y: 36,
+    'font-size': 12, 'font-weight': 400, fill: '#888',
+    'font-family': "-apple-system, system-ui, 'PingFang SC', sans-serif"
+  });
+  stEl.textContent = subtitle;
+  nodeGroup.appendChild(stEl);
+
+  // ========== 绘制泳道背景 ==========
+  // 外框
+  bgGroup.appendChild(el('rect', {
+    x: 0, y: TITLE_H, width: svgW, height: totalH - TITLE_H,
+    rx: 8, fill: 'none', stroke: LANE_DIVIDER_COLOR, 'stroke-width': 1
+  }));
+
+  lanes.forEach(function(lane, i) {
+    var ly = laneY[i];
+    var lh = laneH[i];
+    var headerColor = theme.laneHeaders[i % theme.laneHeaders.length];
+    var bgColor = theme.laneBgs[i % theme.laneBgs.length];
+
+    // 泳道背景
+    var bgAttrs = {
+      x: LANE_HEADER_W, y: ly, width: svgW - LANE_HEADER_W, height: lh,
+      fill: bgColor
+    };
+    // 第一个泳道：右上圆角；最后一个：右下圆角
+    if (i === 0 && lanes.length === 1) {
+      bgAttrs.rx = 8;
+    }
+    bgGroup.appendChild(el('rect', bgAttrs));
+
+    // 泳道 header
+    var hPath;
+    var hx = 0, hy = ly, hw = LANE_HEADER_W;
+    if (i === 0) {
+      // 左上圆角
+      hPath = 'M' + (hx + 8) + ',' + hy +
+              ' L' + (hx + hw) + ',' + hy +
+              ' L' + (hx + hw) + ',' + (hy + lh) +
+              ' L' + hx + ',' + (hy + lh) +
+              ' L' + hx + ',' + (hy + 8) +
+              ' Q' + hx + ',' + hy + ' ' + (hx + 8) + ',' + hy + ' Z';
+    } else if (i === lanes.length - 1) {
+      // 左下圆角
+      hPath = 'M' + hx + ',' + hy +
+              ' L' + (hx + hw) + ',' + hy +
+              ' L' + (hx + hw) + ',' + (hy + lh) +
+              ' L' + (hx + 8) + ',' + (hy + lh) +
+              ' Q' + hx + ',' + (hy + lh) + ' ' + hx + ',' + (hy + lh - 8) +
+              ' L' + hx + ',' + hy + ' Z';
+    } else {
+      hPath = 'M' + hx + ',' + hy +
+              ' L' + (hx + hw) + ',' + hy +
+              ' L' + (hx + hw) + ',' + (hy + lh) +
+              ' L' + hx + ',' + (hy + lh) + ' Z';
+    }
+    bgGroup.appendChild(el('path', { d: hPath, fill: headerColor }));
+
+    // 泳道标签（水平居中，垂直居中）
+    var labelEl = el('text', {
+      x: hw / 2, y: ly + lh / 2,
+      'text-anchor': 'middle', 'dominant-baseline': 'central',
+      'font-size': 14, 'font-weight': 700, fill: '#FFFFFF',
+      'font-family': "-apple-system, system-ui, 'PingFang SC', sans-serif",
+      'writing-mode': 'tb', 'glyph-orientation-vertical': 0
+    });
+    labelEl.textContent = lane.label;
+    bgGroup.appendChild(labelEl);
+
+    // 泳道分隔线
+    if (i < lanes.length - 1) {
+      bgGroup.appendChild(el('line', {
+        x1: 0, y1: ly + lh, x2: svgW, y2: ly + lh,
+        stroke: LANE_DIVIDER_COLOR, 'stroke-width': 1
+      }));
+    }
+  });
+
+  // ========== 绘制连线 ==========
+  function drawLabel(x, y, text, color) {
+    var lw = measureText(text, 11) + 8;
+    lineGroup.appendChild(el('rect', {
+      x: x - lw / 2, y: y - 8, width: lw, height: 16, rx: 3, fill: '#ffffff'
+    }));
+    var lt = el('text', {
+      x: x, y: y + 1, 'text-anchor': 'middle', 'dominant-baseline': 'central',
+      'font-size': 11, 'font-weight': 500, fill: color,
+      'font-family': "-apple-system, system-ui, 'PingFang SC', sans-serif"
+    });
+    lt.textContent = text; lineGroup.appendChild(lt);
+  }
+
+  function drawRoute(x1, y1, x2, y2, color, width, arrowId) {
+    var r = 10;
+    // 同一 Y：水平直线
+    if (Math.abs(y1 - y2) < 2) {
+      lineGroup.appendChild(el('line', {
+        x1: x1, y1: y1, x2: x2, y2: y2,
+        stroke: color, 'stroke-width': width, 'marker-end': 'url(#' + arrowId + ')'
+      }));
+      return;
+    }
+    // 不同 Y：水平 → 拐角 → 垂直 → 拐角 → 水平
+    var midX = (x1 + x2) / 2;
+    var dy = y2 > y1 ? 1 : -1;
+    var d;
+    if (Math.abs(x1 - x2) < 2) {
+      // 纯垂直
+      d = 'M' + x1 + ',' + y1 + ' L' + x2 + ',' + y2;
+    } else {
+      // L 型路由：先水平再垂直，或先垂直再水平
+      // 使用折线：先水平到 midX，再垂直到 y2，再水平到 x2
+      var ry1 = Math.min(r, Math.abs(y2 - y1) / 2);
+      var rx1 = Math.min(r, Math.abs(midX - x1));
+      var rx2 = Math.min(r, Math.abs(x2 - midX));
+      d = 'M' + x1 + ',' + y1 +
+          ' L' + (midX - rx1) + ',' + y1 +
+          ' Q' + midX + ',' + y1 + ' ' + midX + ',' + (y1 + dy * ry1) +
+          ' L' + midX + ',' + (y2 - dy * ry1) +
+          ' Q' + midX + ',' + y2 + ' ' + (midX + (x2 > midX ? rx2 : -rx2)) + ',' + y2 +
+          ' L' + x2 + ',' + y2;
+    }
+    lineGroup.appendChild(el('path', {
+      d: d, stroke: color, 'stroke-width': width, fill: 'none',
+      'marker-end': 'url(#' + arrowId + ')'
+    }));
+  }
+
+  // 主路径连线
+  for (var i = 0; i < steps.length - 1; i++) {
+    var curr = nodeMap[steps[i].id];
+    var next = nodeMap[steps[i + 1].id];
+    var isAfterDecision = curr.type === 'decision';
+    var lc = isAfterDecision ? theme.lineYes.color : theme.line.color;
+    var lw = isAfterDecision ? theme.lineYes.width : theme.line.width;
+    var aid = isAfterDecision ? 'arrow-g' : 'arrow';
+
+    // 出口点和入口点
+    var sx, sy, tx, ty;
+    if (curr.type === 'decision') {
+      // decision 右侧出口（是）
+      sx = curr.cx + curr.w / 2;
+      sy = curr.cy;
+    } else {
+      sx = curr.cx + curr.w / 2;
+      sy = curr.cy;
+    }
+    tx = next.cx - next.w / 2;
+    ty = next.cy;
+
+    drawRoute(sx, sy, tx, ty, lc, lw, aid);
+
+    if (isAfterDecision) {
+      drawLabel((sx + tx) / 2, Math.min(sy, ty) - 10, '是', theme.lineYes.color);
+    }
+  }
+
+  // 侧分支连线（decision → sideNode）
+  steps.forEach(function(step) {
+    if (step.type === 'decision' && step.no) {
+      var dn = nodeMap[step.id];
+      var sn = nodeMap[step.no];
+      if (!sn) return;
+
+      // decision 底部出口
+      var sx = dn.cx;
+      var sy = dn.cy + dn.h / 2;
+      var tx = sn.cx;
+      var ty = sn.y;
+
+      lineGroup.appendChild(el('line', {
+        x1: sx, y1: sy, x2: tx, y2: ty,
+        stroke: theme.lineNo.color, 'stroke-width': theme.lineNo.width,
+        'marker-end': 'url(#arrow-r)'
+      }));
+
+      drawLabel(sx + 16, (sy + ty) / 2, '否', theme.lineNo.color);
+    }
+  });
+
+  // ========== 绘制节点 ==========
+  function drawNode(n) {
+    var style = getStyle(n.type);
+    var isTerminal = (n.type === 'start' || n.type === 'end');
+
+    if (n.type === 'decision') {
+      var hw = n.w / 2, hh = n.h / 2;
+      var points = n.cx + ',' + (n.cy - hh) + ' ' + (n.cx + hw) + ',' + n.cy + ' ' +
+                   n.cx + ',' + (n.cy + hh) + ' ' + (n.cx - hw) + ',' + n.cy;
+      nodeGroup.appendChild(el('polygon', {
+        points: points, fill: style.bg, stroke: style.border, 'stroke-width': 1.5
+      }));
+      var dt = el('text', {
+        x: n.cx, y: n.cy + 1, 'text-anchor': 'middle', 'dominant-baseline': 'central',
+        'font-size': 12, 'font-weight': 500, fill: style.text,
+        'font-family': "-apple-system, system-ui, 'PingFang SC', sans-serif"
+      });
+      dt.textContent = n.label; nodeGroup.appendChild(dt);
+    } else {
+      var rx = isTerminal ? n.h / 2 : 6;
+      nodeGroup.appendChild(el('rect', {
+        x: n.x, y: n.y, width: n.w, height: n.h,
+        rx: rx, fill: style.bg, stroke: style.border, 'stroke-width': 1.5
+      }));
+      var fw = (n.type === 'highlight') ? 700 : 500;
+      var nt = el('text', {
+        x: n.cx, y: n.cy + 1,
+        'text-anchor': 'middle', 'dominant-baseline': 'central',
+        'font-size': FONT_SIZE, 'font-weight': fw, fill: style.text,
+        'font-family': "-apple-system, system-ui, 'PingFang SC', sans-serif"
+      });
+      nt.textContent = n.label; nodeGroup.appendChild(nt);
+    }
+  }
+
+  steps.forEach(function(s) { drawNode(nodeMap[s.id]); });
+  sideNodes.forEach(function(s) { drawNode(nodeMap[s.id]); });
+
+})();
+</script>
 </body>
 </html>
