@@ -265,42 +265,99 @@ function validateDiagram(nodes, lines, canvas) {
 
 ## 七、配色（Theme）
 
+所有模板的 theme 对象从 design-system.md 的配色表取值。以下是标准 theme 接口，按用途分区。
+
+### 通用字段（所有图表都有）
+
 ```javascript
-// 从 theme 对象取色，布局代码中不硬编码任何颜色
-// 使用方式：var color = theme.node.bg;
-var defaultTheme = {
-  canvas: '#FFFFFF',
-  title: { color: '#1a1a2e', size: 22 },
-  subtitle: { color: '#888888', size: 14 },
+var theme = {
+  // 标题（所有模板统一：左上角 16px bold）
+  title: { color: '#1a1a2e' },       // N-8 近似
+  subtitle: { color: '#888888' },
 
-  // 结构图节点
-  node:      { bg: '#EFF6FF', border: '#93C5FD', text: '#1E293B' },
-  highlight: { bg: '#3B82F6', border: '#3B82F6', text: '#FFFFFF' },
-  decision:  { bg: '#FFFBEB', border: '#FCD34D', text: '#92400E' },
-  success:   { bg: '#ECFDF5', border: '#6EE7B7', text: '#065F46' },
-  error:     { bg: '#FFF1F2', border: '#FDA4AF', text: '#9F1239' },
-  external:  { bg: '#F8FAFC', border: '#CBD5E1', text: '#64748B', dash: true },
-  datastore: { bg: '#F5F3FF', border: '#C4B5FD', text: '#5B21B6' },
-
-  // 连线
-  line: { color: '#94A3B8', width: 1.5, label: '#64748B' },
-  lineSuccess: { color: '#10B981', width: 2 },
-  lineError:   { color: '#F43F5E', width: 2 },
-
-  // 统计图序列色
-  series: ['#667eea', '#f5576c', '#43e97b', '#4facfe', '#fa8231', '#a55eea', '#fc5c65', '#26de81'],
-
-  // 分层色（架构图、C4 等）
-  layers: [
-    { bg: 'rgba(102,126,234,0.06)', color: '#667eea' },
-    { bg: 'rgba(67,233,123,0.06)',  color: '#43e97b' },
-    { bg: 'rgba(79,172,254,0.06)',  color: '#4facfe' },
-    { bg: 'rgba(245,158,11,0.06)',  color: '#f59e0b' },
-    { bg: 'rgba(139,92,246,0.06)',  color: '#8b5cf6' },
-    { bg: 'rgba(244,63,94,0.06)',   color: '#f43f5e' },
-  ]
+  // 连线（所有结构图共用）
+  line: { color: '#94A3B8', width: 1.5, label: '#64748B' },  // N-5, N-6
 };
 ```
+
+### 流程图/泳道图节点色
+
+```javascript
+  // 节点类型 → 配色（来自语义色 + 主题色序列）
+  node:      { bg: '#EFF6FF', border: '#93C5FD', text: '#1E293B' },  // C-1 浅底/中间/N-7
+  highlight: { bg: '#3B82F6', border: '#3B82F6', text: '#FFFFFF' },  // C-1 实心
+  decision:  { bg: '#FFFBEB', border: '#FCD34D', text: '#92400E' },  // C-3 Amber
+  success:   { bg: '#ECFDF5', border: '#6EE7B7', text: '#065F46' },  // C-2 Emerald
+  error:     { bg: '#FFF1F2', border: '#FDA4AF', text: '#9F1239' },  // C-4 Rose
+  external:  { bg: '#F8FAFC', border: '#CBD5E1', text: '#64748B' },  // N-1/N-4/N-6
+  datastore: { bg: '#F5F3FF', border: '#C4B5FD', text: '#5B21B6' },  // C-5 Violet
+
+  // 连线（判断分支）
+  lineYes: { color: '#10B981', width: 2 },   // 语义：成功
+  lineNo:  { color: '#F43F5E', width: 2 },   // 语义：错误
+```
+
+### ER 图表色
+
+```javascript
+  // 表类型 → 表头配色
+  tableTypes: {
+    core:     { headerBg: '#3B82F6', headerText: '#FFFFFF', pkColor: '#3B82F6' },  // C-1
+    normal:   { headerBg: '#10B981', headerText: '#FFFFFF', pkColor: '#10B981' },  // C-2
+    junction: { headerBg: '#64748B', headerText: '#FFFFFF', pkColor: '#64748B' }   // N-6
+  },
+  field: { text: '#1E293B', type: '#94A3B8', fk: '#8B5CF6', divider: '#F1F5F9' },
+  table: { bg: '#FFFFFF', border: '#E2E8F0' },
+```
+
+### 类图类型色
+
+```javascript
+  typeColors: {
+    'class':     { header: '#3B82F6', border: 'rgba(59,130,246,0.3)' },   // C-1
+    'interface': { header: '#10B981', border: 'rgba(16,185,129,0.3)' },   // C-2
+    'abstract':  { header: '#8B5CF6', border: 'rgba(139,92,246,0.3)' },   // C-5
+    'enum':      { header: '#F59E0B', border: 'rgba(245,158,11,0.3)' }    // C-3
+  },
+  depLine: { color: '#B0B8C4', width: 1 },  // 依赖线（更细更淡）
+```
+
+### 分层/分组色（架构图、流程图分组、泳道标题）
+
+```javascript
+  // 6 色循环，半透明背景 + 实色标签
+  layers: [
+    { bg: 'rgba(102,126,234,0.06)', border: 'rgba(102,126,234,0.15)', color: '#667eea' },
+    { bg: 'rgba(67,233,123,0.06)',  border: 'rgba(67,233,123,0.15)',  color: '#43e97b' },
+    { bg: 'rgba(79,172,254,0.06)',  border: 'rgba(79,172,254,0.15)',  color: '#4facfe' },
+    { bg: 'rgba(245,158,11,0.06)',  border: 'rgba(245,158,11,0.15)',  color: '#f59e0b' },
+    { bg: 'rgba(139,92,246,0.06)',  border: 'rgba(139,92,246,0.15)',  color: '#8b5cf6' },
+    { bg: 'rgba(244,63,94,0.06)',   border: 'rgba(244,63,94,0.15)',   color: '#f43f5e' }
+  ],
+
+  // 泳道标题色（实色背景）
+  laneHeaders: [
+    { bg: '#3B82F6', text: '#FFFFFF' },  // C-1
+    { bg: '#10B981', text: '#FFFFFF' },  // C-2
+    { bg: '#F59E0B', text: '#FFFFFF' },  // C-3
+    { bg: '#8B5CF6', text: '#FFFFFF' },  // C-5
+    { bg: '#06B6D4', text: '#FFFFFF' },  // C-6
+    { bg: '#F43F5E', text: '#FFFFFF' }   // C-4
+  ],
+```
+
+### 统计图序列色
+
+```javascript
+  series: ['#667eea', '#f5576c', '#43e97b', '#4facfe', '#fa8231', '#a55eea', '#fc5c65', '#26de81'],
+```
+
+### 使用规则
+
+- **不硬编码颜色**：所有颜色从 theme 对象取值
+- **每个模板只引入需要的字段**：流程图不需要 `tableTypes`，ER 图不需要 `decision`
+- **颜色值来源**：全部来自 `design-system.md` 的配色表，对应关系用注释标明（如 `// C-1`）
+- **title/subtitle 统一**：所有模板使用相同的标题颜色和字号（16px/12px），不在 theme 里定义 size（避免声明了不用的混乱）
 
 ---
 
