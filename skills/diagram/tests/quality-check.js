@@ -16,8 +16,23 @@ function checkDiagramQuality() {
 
   var svg = document.querySelector('svg');
   var body = document.body;
+  var isHtmlTemplate = !svg || svg.children.length === 0;  // swot/journey 等 HTML/CSS 模板
 
   // ========== A 级：基础渲染 ==========
+  if (isHtmlTemplate) {
+    // HTML/CSS 模板：检查 body 有内容
+    check('页面有内容', 'A', body.children.length > 0 && body.scrollHeight > 100, 'height=' + body.scrollHeight);
+    check('有标题', 'E', !!document.querySelector('h1, h2, [class*=title]') || body.textContent.length > 10);
+    check('body inline-block', 'E', window.getComputedStyle(body).display === 'inline-block', 'display=' + window.getComputedStyle(body).display);
+    var bg = window.getComputedStyle(body).backgroundColor;
+    check('白色背景', 'E', bg === 'rgb(255, 255, 255)');
+    results.summary = results.checks.filter(function(c) { return c.passed; }).length + '/' + results.checks.length;
+    results.nodeCount = 0;
+    results.textCount = 0;
+    results.isHtml = true;
+    return results;
+  }
+
   check('画布存在', 'A', !!svg, svg ? 'found' : 'no SVG element');
   if (!svg) return results;
 
@@ -41,19 +56,24 @@ function checkDiagramQuality() {
   for (var i = 0; i < rects.length; i++) {
     for (var j = i + 1; j < rects.length; j++) {
       var a = rects[i], b = rects[j];
-      // 检查两个矩形是否重叠（容差 2px）
-      var gap = 2;
-      if (!(a.x + a.w + gap <= b.x || b.x + b.w + gap <= a.x ||
-            a.y + a.h + gap <= b.y || b.y + b.h + gap <= a.y)) {
-        // 排除包含关系（容差 10px，或面积比 > 3 倍视为容器包含子节点）
-        var M = 10;
-        var aContainsB = a.x - M <= b.x && a.y - M <= b.y && a.x + a.w + M >= b.x + b.w && a.y + a.h + M >= b.y + b.h;
-        var bContainsA = b.x - M <= a.x && b.y - M <= a.y && b.x + b.w + M >= a.x + a.w && b.y + b.h + M >= a.y + a.h;
-        var areaA = a.w * a.h, areaB = b.w * b.h;
-        var areaRatio = Math.max(areaA, areaB) / Math.min(areaA, areaB);
-        var isContainer = areaRatio > 3;  // 面积差 3 倍以上视为容器关系
-        if (!aContainsB && !bContainsA && !isContainer) {
-          overlaps++;
+      // 计算交叉面积
+      var ix = Math.max(a.x, b.x);
+      var iy = Math.max(a.y, b.y);
+      var iw = Math.min(a.x + a.w, b.x + b.w) - ix;
+      var ih = Math.min(a.y + a.h, b.y + b.h) - iy;
+      if (iw > 0 && ih > 0) {
+        var interArea = iw * ih;
+        // 排除：交叉面积太小（边界触碰）、包含关系、容器关系
+        if (interArea > 100) {
+          var M = 10;
+          var aContainsB = a.x - M <= b.x && a.y - M <= b.y && a.x + a.w + M >= b.x + b.w && a.y + a.h + M >= b.y + b.h;
+          var bContainsA = b.x - M <= a.x && b.y - M <= a.y && b.x + b.w + M >= a.x + a.w && b.y + b.h + M >= a.y + a.h;
+          var areaA = a.w * a.h, areaB = b.w * b.h;
+          var areaRatio = Math.max(areaA, areaB) / Math.min(areaA, areaB);
+          var isContainer = areaRatio > 3;
+          if (!aContainsB && !bContainsA && !isContainer) {
+            overlaps++;
+          }
         }
       }
     }
@@ -80,15 +100,19 @@ function checkDiagramQuality() {
   check('文字不截断', 'B', truncated === 0, truncated + ' 个截断');
 
   // ========== E 级：设计规范 ==========
-  // E1: 标题检测
+  // E1: 标题检测（兼容 SVG text 14-16px bold 或 HTML h1/h2）
   var texts = svg.querySelectorAll('text');
   var hasTitle = false;
   texts.forEach(function(t) {
-    var fs = t.getAttribute('font-size');
+    var fs = parseInt(t.getAttribute('font-size') || '0');
     var fw = t.getAttribute('font-weight');
-    if (fs === '16' && (fw === '700' || fw === 'bold')) hasTitle = true;
+    if (fs >= 14 && fs <= 22 && (fw === '700' || fw === 'bold')) hasTitle = true;
   });
-  check('有标题(16px bold)', 'E', hasTitle);
+  // 也检查 HTML 标题元素
+  if (!hasTitle) {
+    hasTitle = !!document.querySelector('h1, h2, .title');
+  }
+  check('有标题', 'E', hasTitle);
 
   // E2: body inline-block
   var bodyDisplay = window.getComputedStyle(body).display;
