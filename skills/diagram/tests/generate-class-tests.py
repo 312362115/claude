@@ -453,7 +453,8 @@ L4 = '''
     { from: 'Course', to: 'Discussion', type: 'association', label: '讨论' },
     { from: 'Course', to: 'CourseStatus', type: 'dependency' },
     { from: 'Enrollment', to: 'EnrollStatus', type: 'dependency' },
-    { from: 'Homework', to: 'HwType', type: 'dependency' }
+    { from: 'Homework', to: 'HwType', type: 'dependency' },
+    { from: 'Person', to: 'Role', type: 'dependency' }
   ];
 '''
 
