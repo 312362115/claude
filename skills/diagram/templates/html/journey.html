@@ -2,251 +2,231 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=1100, height=900">
-<title>用户旅程图 - 电商购物</title>
+<title>用户旅程图</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
-    width: 1100px;
+    display: inline-block; padding: 24px; background: #fff;
     font-family: -apple-system, system-ui, 'PingFang SC', sans-serif;
-    background: #f8fafc;
-    padding: 24px 30px;
   }
-  h1 { font-size: 20px; color: #1e293b; text-align: center; margin-bottom: 16px; }
-
-  .emotion-chart {
-    width: 100%; height: 120px; position: relative;
-    margin-bottom: 12px;
+  .title { font-size: 16px; font-weight: 700; color: #1a1a2e; }
+  .subtitle { font-size: 12px; color: #888; margin-top: 2px; }
+  .chart-area { margin-top: 16px; }
+  .phases {
+    display: flex; gap: 2px; margin-top: 0;
   }
-  .stages {
-    display: flex; gap: 10px; min-height: 520px;
+  .phase { flex: 1; min-width: 120px; }
+  .phase-header {
+    padding: 8px 12px; color: #fff; font-size: 13px; font-weight: 700;
+    text-align: center; border-radius: 8px 8px 0 0;
   }
-  .stage {
-    flex: 1; background: white; border-radius: 14px;
-    box-shadow: 0 2px 16px rgba(0,0,0,0.06);
-    padding: 18px 12px; display: flex; flex-direction: column;
-    border-top: 4px solid;
-    position: relative;
+  .phase-body {
+    background: #F8FAFC; border: 1px solid #E2E8F0; border-top: none;
+    border-radius: 0 0 8px 8px; padding: 8px;
+    display: flex; flex-direction: column; gap: 6px;
   }
-  .stage-num {
-    position: absolute; top: -16px; left: 12px;
-    width: 28px; height: 28px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 13px; font-weight: 700; color: white;
+  .step-card {
+    background: #fff; border-radius: 8px; padding: 10px 12px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    display: flex; align-items: center; gap: 10px;
   }
-  .stage-title {
-    font-size: 15px; font-weight: 700; color: #1e293b; margin-bottom: 12px;
-    text-align: center; padding-top: 6px;
+  .step-label { font-size: 12px; color: #334155; flex: 1; }
+  .step-score {
+    font-size: 18px; flex-shrink: 0;
   }
-  .section { margin-bottom: 12px; }
-  .section-label {
-    font-size: 11px; font-weight: 600; color: #94a3b8;
-    text-transform: uppercase; letter-spacing: 0.5px;
-    margin-bottom: 4px;
-  }
-  .section-content { font-size: 12px; color: #475569; line-height: 1.6; }
-  .emotion { font-size: 28px; text-align: center; margin: 4px 0 10px; }
-  .pain { color: #ef4444; font-size: 11.5px; line-height: 1.5; }
-  .opportunity { color: #10b981; font-size: 11.5px; line-height: 1.5; }
-
-  .s1 { border-color: #6366f1; }  .s1 .stage-num { background: #6366f1; }
-  .s2 { border-color: #8b5cf6; }  .s2 .stage-num { background: #8b5cf6; }
-  .s3 { border-color: #0891b2; }  .s3 .stage-num { background: #0891b2; }
-  .s4 { border-color: #0d9488; }  .s4 .stage-num { background: #0d9488; }
-  .s5 { border-color: #f59e0b; }  .s5 .stage-num { background: #f59e0b; }
-  .s6 { border-color: #f97316; }  .s6 .stage-num { background: #f97316; }
-  .s7 { border-color: #10b981; }  .s7 .stage-num { background: #10b981; }
 </style>
 </head>
 <body>
-  <h1>电商购物用户旅程图</h1>
 
-  <!-- Emotion curve -->
-  <div class="emotion-chart">
-    <svg width="1040" height="120" viewBox="0 0 1040 120">
-      <!-- Grid lines -->
-      <line x1="0" y1="60" x2="1040" y2="60" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="4"/>
-      <text x="0" y="14" font-size="11" fill="#94a3b8">高兴</text>
-      <text x="0" y="68" font-size="11" fill="#94a3b8">中性</text>
-      <text x="0" y="114" font-size="11" fill="#94a3b8">沮丧</text>
+<div class="title">用户旅程图</div>
+<div class="subtitle">用户体验情绪曲线与触点分析</div>
+<div class="chart-area">
+  <svg id="curve"></svg>
+  <div class="phases" id="phases"></div>
+</div>
 
-      <!-- Emotion curve: 发现(happy) → 浏览(neutral+) → 比较(slightly down) → 下单(happy) → 支付(low) → 收货(very happy) → 评价(happy) -->
-      <polyline
-        points="74,35 222,45 370,65 520,30 668,80 816,15 964,35"
-        fill="none" stroke="#6366f1" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-      <!-- Dots -->
-      <circle cx="74" cy="35" r="6" fill="#6366f1"/>
-      <circle cx="222" cy="45" r="6" fill="#8b5cf6"/>
-      <circle cx="370" cy="65" r="6" fill="#0891b2"/>
-      <circle cx="520" cy="30" r="6" fill="#0d9488"/>
-      <circle cx="668" cy="80" r="6" fill="#f59e0b"/>
-      <circle cx="816" cy="15" r="6" fill="#f97316"/>
-      <circle cx="964" cy="35" r="6" fill="#10b981"/>
-      <!-- Gradient fill -->
-      <linearGradient id="curve-fill" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="#6366f1" stop-opacity="0.15"/>
-        <stop offset="100%" stop-color="#6366f1" stop-opacity="0"/>
-      </linearGradient>
-      <polygon
-        points="74,35 222,45 370,65 520,30 668,80 816,15 964,35 964,120 74,120"
-        fill="url(#curve-fill)"/>
-    </svg>
-  </div>
+<script>
+// ===== 数据 =====
+var phases = [
+  { label: '发现', steps: [
+    { label: '看到广告', score: 3 },
+    { label: '搜索产品', score: 4 }
+  ]},
+  { label: '购买', steps: [
+    { label: '浏览商品', score: 4 },
+    { label: '加入购物车', score: 3 },
+    { label: '下单支付', score: 2 }
+  ]},
+  { label: '使用', steps: [
+    { label: '收到商品', score: 5 },
+    { label: '使用体验', score: 4 }
+  ]},
+  { label: '售后', steps: [
+    { label: '联系客服', score: 2 },
+    { label: '退换货', score: 1 }
+  ]}
+];
+// ===== 数据结束 =====
 
-  <div class="stages">
-    <div class="stage s1">
-      <div class="stage-num">1</div>
-      <div class="stage-title">发现</div>
-      <div class="emotion">😊</div>
-      <div class="section">
-        <div class="section-label">行为</div>
-        <div class="section-content">刷社交媒体看到推荐，点击广告链接</div>
-      </div>
-      <div class="section">
-        <div class="section-label">触点</div>
-        <div class="section-content">小红书、抖音、朋友推荐</div>
-      </div>
-      <div class="section">
-        <div class="section-label">痛点</div>
-        <div class="pain">广告太多，难辨真假</div>
-      </div>
-      <div class="section">
-        <div class="section-label">机会</div>
-        <div class="opportunity">个性化推荐提升精准度</div>
-      </div>
-    </div>
+// 主题色（layers 循环）
+var headerColors = [
+  '#3B82F6',  // C-1
+  '#10B981',  // C-2
+  '#F59E0B',  // C-3
+  '#8B5CF6',  // C-5
+  '#06B6D4',  // C-6
+  '#F43F5E'   // C-4
+];
 
-    <div class="stage s2">
-      <div class="stage-num">2</div>
-      <div class="stage-title">浏览</div>
-      <div class="emotion">🙂</div>
-      <div class="section">
-        <div class="section-label">行为</div>
-        <div class="section-content">搜索商品、查看详情、看评价</div>
-      </div>
-      <div class="section">
-        <div class="section-label">触点</div>
-        <div class="section-content">搜索框、商品详情页</div>
-      </div>
-      <div class="section">
-        <div class="section-label">痛点</div>
-        <div class="pain">图片与实物不符，描述模糊</div>
-      </div>
-      <div class="section">
-        <div class="section-label">机会</div>
-        <div class="opportunity">AR 试穿/试用功能</div>
-      </div>
-    </div>
+// 分数对应的 emoji 和颜色
+var scoreMap = {
+  5: { emoji: '\uD83D\uDE04', color: '#10B981' },  // 非常满意
+  4: { emoji: '\uD83D\uDE42', color: '#3B82F6' },  // 满意
+  3: { emoji: '\uD83D\uDE10', color: '#F59E0B' },  // 一般
+  2: { emoji: '\uD83D\uDE1F', color: '#F97316' },  // 不满
+  1: { emoji: '\uD83D\uDE23', color: '#EF4444' }   // 很差
+};
 
-    <div class="stage s3">
-      <div class="stage-num">3</div>
-      <div class="stage-title">比较</div>
-      <div class="emotion">😐</div>
-      <div class="section">
-        <div class="section-label">行为</div>
-        <div class="section-content">跨店比价、看评测视频、问朋友</div>
-      </div>
-      <div class="section">
-        <div class="section-label">触点</div>
-        <div class="section-content">比价工具、评测平台</div>
-      </div>
-      <div class="section">
-        <div class="section-label">痛点</div>
-        <div class="pain">信息分散，比较费时</div>
-      </div>
-      <div class="section">
-        <div class="section-label">机会</div>
-        <div class="opportunity">智能比较工具，一键对比</div>
-      </div>
-    </div>
+// 收集所有步骤的分数点用于绘制曲线
+var allPoints = [];
+var stepIndex = 0;
+phases.forEach(function(phase) {
+  phase.steps.forEach(function(step) {
+    allPoints.push({ score: step.score, index: stepIndex++ });
+  });
+});
 
-    <div class="stage s4">
-      <div class="stage-num">4</div>
-      <div class="stage-title">下单</div>
-      <div class="emotion">😊</div>
-      <div class="section">
-        <div class="section-label">行为</div>
-        <div class="section-content">加购物车、选规格、填地址</div>
-      </div>
-      <div class="section">
-        <div class="section-label">触点</div>
-        <div class="section-content">购物车、结算页</div>
-      </div>
-      <div class="section">
-        <div class="section-label">痛点</div>
-        <div class="pain">优惠券规则复杂</div>
-      </div>
-      <div class="section">
-        <div class="section-label">机会</div>
-        <div class="opportunity">自动计算最优优惠组合</div>
-      </div>
-    </div>
+var totalSteps = allPoints.length;
 
-    <div class="stage s5">
-      <div class="stage-num">5</div>
-      <div class="stage-title">支付</div>
-      <div class="emotion">😟</div>
-      <div class="section">
-        <div class="section-label">行为</div>
-        <div class="section-content">选支付方式、验证身份、确认</div>
-      </div>
-      <div class="section">
-        <div class="section-label">触点</div>
-        <div class="section-content">支付页面、银行验证</div>
-      </div>
-      <div class="section">
-        <div class="section-label">痛点</div>
-        <div class="pain">支付失败、验证繁琐</div>
-      </div>
-      <div class="section">
-        <div class="section-label">机会</div>
-        <div class="opportunity">免密支付、一键付款</div>
-      </div>
-    </div>
+// 计算曲线 SVG 尺寸
+var CURVE_H = 100;
+var CURVE_PAD_X = 40;
+var CURVE_PAD_Y = 16;
+// 宽度根据阶段数量计算：每个阶段至少 130px
+var phaseWidths = phases.map(function(p) { return Math.max(130, p.steps.length * 50 + 40); });
+var totalW = 0;
+phaseWidths.forEach(function(w) { totalW += w + 2; }); // +2 for gap
 
-    <div class="stage s6">
-      <div class="stage-num">6</div>
-      <div class="stage-title">收货</div>
-      <div class="emotion">🤩</div>
-      <div class="section">
-        <div class="section-label">行为</div>
-        <div class="section-content">查物流、取快递、拆包验货</div>
-      </div>
-      <div class="section">
-        <div class="section-label">触点</div>
-        <div class="section-content">物流通知、快递柜</div>
-      </div>
-      <div class="section">
-        <div class="section-label">痛点</div>
-        <div class="pain">物流慢、包装破损</div>
-      </div>
-      <div class="section">
-        <div class="section-label">机会</div>
-        <div class="opportunity">实时物流地图追踪</div>
-      </div>
-    </div>
+var curveSvg = document.getElementById('curve');
+curveSvg.setAttribute('width', totalW);
+curveSvg.setAttribute('height', CURVE_H);
+curveSvg.setAttribute('viewBox', '0 0 ' + totalW + ' ' + CURVE_H);
+curveSvg.style.display = 'block';
 
-    <div class="stage s7">
-      <div class="stage-num">7</div>
-      <div class="stage-title">评价</div>
-      <div class="emotion">😊</div>
-      <div class="section">
-        <div class="section-label">行为</div>
-        <div class="section-content">写评价、晒图、分享给朋友</div>
-      </div>
-      <div class="section">
-        <div class="section-label">触点</div>
-        <div class="section-content">评价页面、社交分享</div>
-      </div>
-      <div class="section">
-        <div class="section-label">痛点</div>
-        <div class="pain">评价流程长、无激励</div>
-      </div>
-      <div class="section">
-        <div class="section-label">机会</div>
-        <div class="opportunity">积分奖励、一键晒单</div>
-      </div>
-    </div>
-  </div>
+// 绘制背景参考线
+var svgNS = 'http://www.w3.org/2000/svg';
+function el(tag, attrs) {
+  var e = document.createElementNS(svgNS, tag);
+  for (var k in attrs) e.setAttribute(k, attrs[k]);
+  return e;
+}
+
+// 水平参考线（得分刻度）
+for (var s = 1; s <= 5; s++) {
+  var ly = CURVE_PAD_Y + (5 - s) * (CURVE_H - 2 * CURVE_PAD_Y) / 4;
+  curveSvg.appendChild(el('line', {
+    x1: '0', y1: ly, x2: totalW, y2: ly,
+    stroke: '#F1F5F9', 'stroke-width': '1'
+  }));
+}
+
+// 计算每个点在曲线上的 x 位置
+var cumX = 0;
+var pointIdx = 0;
+var pointCoords = [];
+
+phases.forEach(function(phase, pi) {
+  var pw = phaseWidths[pi];
+  var nSteps = phase.steps.length;
+  phase.steps.forEach(function(step, si) {
+    var x = cumX + (si + 0.5) * pw / nSteps;
+    var y = CURVE_PAD_Y + (5 - step.score) * (CURVE_H - 2 * CURVE_PAD_Y) / 4;
+    pointCoords.push({ x: x, y: y, score: step.score });
+  });
+  cumX += pw + 2;
+});
+
+// 绘制平滑曲线（贝塞尔）
+if (pointCoords.length > 1) {
+  var pathD = 'M ' + pointCoords[0].x + ' ' + pointCoords[0].y;
+  for (var i = 1; i < pointCoords.length; i++) {
+    var prev = pointCoords[i - 1];
+    var curr = pointCoords[i];
+    var cpx = (prev.x + curr.x) / 2;
+    pathD += ' C ' + cpx + ' ' + prev.y + ' ' + cpx + ' ' + curr.y + ' ' + curr.x + ' ' + curr.y;
+  }
+
+  // 渐变填充
+  var defs = el('defs', {});
+  var grad = el('linearGradient', { id: 'curveFill', x1: '0', y1: '0', x2: '0', y2: '1' });
+  var stop1 = el('stop', { offset: '0%', 'stop-color': '#3B82F6', 'stop-opacity': '0.15' });
+  var stop2 = el('stop', { offset: '100%', 'stop-color': '#3B82F6', 'stop-opacity': '0' });
+  grad.appendChild(stop1); grad.appendChild(stop2);
+  defs.appendChild(grad);
+  curveSvg.appendChild(defs);
+
+  // 填充区域
+  var fillD = pathD + ' L ' + pointCoords[pointCoords.length - 1].x + ' ' + CURVE_H + ' L ' + pointCoords[0].x + ' ' + CURVE_H + ' Z';
+  curveSvg.appendChild(el('path', {
+    d: fillD, fill: 'url(#curveFill)'
+  }));
+
+  // 曲线
+  curveSvg.appendChild(el('path', {
+    d: pathD, fill: 'none', stroke: '#3B82F6',
+    'stroke-width': '2.5', 'stroke-linecap': 'round', 'stroke-linejoin': 'round'
+  }));
+}
+
+// 绘制得分点
+pointCoords.forEach(function(pt) {
+  var sc = scoreMap[pt.score] || scoreMap[3];
+  curveSvg.appendChild(el('circle', {
+    cx: pt.x, cy: pt.y, r: '5',
+    fill: sc.color, stroke: '#fff', 'stroke-width': '2'
+  }));
+});
+
+// 渲染阶段卡片
+var phasesEl = document.getElementById('phases');
+
+phases.forEach(function(phase, pi) {
+  var color = headerColors[pi % headerColors.length];
+
+  var phaseDiv = document.createElement('div');
+  phaseDiv.className = 'phase';
+  phaseDiv.style.minWidth = phaseWidths[pi] + 'px';
+
+  var header = document.createElement('div');
+  header.className = 'phase-header';
+  header.style.background = color;
+  header.textContent = phase.label;
+
+  var body = document.createElement('div');
+  body.className = 'phase-body';
+
+  phase.steps.forEach(function(step) {
+    var card = document.createElement('div');
+    card.className = 'step-card';
+
+    var label = document.createElement('span');
+    label.className = 'step-label';
+    label.textContent = step.label;
+
+    var scoreSpan = document.createElement('span');
+    scoreSpan.className = 'step-score';
+    var sc = scoreMap[step.score] || scoreMap[3];
+    scoreSpan.textContent = sc.emoji;
+
+    card.appendChild(label);
+    card.appendChild(scoreSpan);
+    body.appendChild(card);
+  });
+
+  phaseDiv.appendChild(header);
+  phaseDiv.appendChild(body);
+  phasesEl.appendChild(phaseDiv);
+});
+</script>
 </body>
 </html>

@@ -5,151 +5,299 @@
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
-    background: #F8FAFC;
-    font-family: 'PingFang SC','Inter',-apple-system,sans-serif;
-    display: flex; justify-content: center;
-    padding: 48px 32px;
-    -webkit-font-smoothing: antialiased;
-  }
-  .diagram {
-    background: #FFFFFF;
-    border-radius: 12px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-    padding: 32px;
+    font-family: -apple-system, system-ui, 'PingFang SC', sans-serif;
+    background: #ffffff;
+    padding: 24px;
+    display: inline-block;
   }
 </style>
+<script src="lib/elk.bundled.js"></script>
 </head>
 <body>
-<div class="diagram">
-  <svg width="1000" height="400" viewBox="0 0 1000 400" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <marker id="arr" markerWidth="12" markerHeight="10" refX="11" refY="5" orient="auto" markerUnits="userSpaceOnUse">
-        <path d="M0,0 L11,5 L0,10 Z" fill="#94A3B8"/>
-      </marker>
-      <marker id="arr-r" markerWidth="12" markerHeight="10" refX="11" refY="5" orient="auto" markerUnits="userSpaceOnUse">
-        <path d="M0,0 L11,5 L0,10 Z" fill="#F43F5E"/>
-      </marker>
-      <marker id="arr-g" markerWidth="12" markerHeight="10" refX="11" refY="5" orient="auto" markerUnits="userSpaceOnUse">
-        <path d="M0,0 L11,5 L0,10 Z" fill="#10B981"/>
-      </marker>
-    </defs>
+<svg id="canvas"></svg>
 
-    <!-- 标题 -->
-    <text x="24" y="24" font-size="16" font-weight="700" fill="#0F172A">订单状态机</text>
-    <text x="24" y="42" font-size="12" fill="#64748B">Order State Machine</text>
+<script>
+(function() {
+  var NS = 'http://www.w3.org/2000/svg';
+  var svg = document.getElementById('canvas');
+  var SANS = "-apple-system, system-ui, 'PingFang SC', sans-serif";
 
-    <!--
-      布局：横向，间距加宽
-      节点宽 110，高 40
-      主流程 y=120，异常 y=270
-      节点X: 80, 260, 440, 620, 800
-      节点中心X: 135, 315, 495, 675, 855
-    -->
+  // ========== 数据定义 ==========
+  var title = '订单状态机';
+  var subtitle = 'Order State Machine';
 
-    <!-- ● 初始状态 -->
-    <circle cx="40" cy="120" r="10" fill="#1E293B"/>
+  var states = [
+    { id: 'start', label: '●', type: 'start' },
+    { id: 'pending', label: '待支付', type: 'state' },
+    { id: 'paid', label: '已支付', type: 'state' },
+    { id: 'shipping', label: '配送中', type: 'state' },
+    { id: 'delivered', label: '已签收', type: 'state' },
+    { id: 'cancelled', label: '已取消', type: 'state' },
+    { id: 'refunded', label: '已退款', type: 'state' },
+    { id: 'end', label: '◎', type: 'end' }
+  ];
 
-    <!-- 待支付 cx=135 -->
-    <rect x="80" y="100" width="110" height="40" rx="6" fill="#EFF6FF" stroke="#93C5FD" stroke-width="1.5"/>
-    <text x="135" y="125" text-anchor="middle" font-size="13" font-weight="500" fill="#1E293B">待支付</text>
+  var transitions = [
+    { from: 'start', to: 'pending', label: '创建订单' },
+    { from: 'pending', to: 'paid', label: '支付成功' },
+    { from: 'pending', to: 'cancelled', label: '超时取消' },
+    { from: 'paid', to: 'shipping', label: '发货' },
+    { from: 'paid', to: 'refunded', label: '申请退款' },
+    { from: 'shipping', to: 'delivered', label: '签收' },
+    { from: 'delivered', to: 'refunded', label: '退货退款' },
+    { from: 'delivered', to: 'end', label: '完成' },
+    { from: 'cancelled', to: 'end', label: '关闭' },
+    { from: 'refunded', to: 'end', label: '关闭' }
+  ];
 
-    <!-- 已支付 cx=315 -->
-    <rect x="260" y="100" width="110" height="40" rx="6" fill="#EFF6FF" stroke="#93C5FD" stroke-width="1.5"/>
-    <text x="315" y="125" text-anchor="middle" font-size="13" font-weight="500" fill="#1E293B">已支付</text>
+  // ========== 工具函数 ==========
+  function el(tag, attrs) {
+    var e = document.createElementNS(NS, tag);
+    if (attrs) for (var k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+  function mt(str, fs) {
+    var w = 0;
+    for (var i = 0; i < str.length; i++) w += str.charCodeAt(i) > 127 ? fs : fs * 0.62;
+    return w;
+  }
 
-    <!-- 备货中 cx=495 -->
-    <rect x="440" y="100" width="110" height="40" rx="6" fill="#EFF6FF" stroke="#93C5FD" stroke-width="1.5"/>
-    <text x="495" y="125" text-anchor="middle" font-size="13" font-weight="500" fill="#1E293B">备货中</text>
+  // ========== 节点尺寸计算 ==========
+  var TITLE_H = 48;
+  var STATE_H = 36;
+  var STATE_PAD_X = 24;
+  var CIRCLE_R = 12;
+  var CIRCLE_SIZE = CIRCLE_R * 2 + 4; // 节点尺寸包含一点间距
 
-    <!-- 已发货 cx=675 -->
-    <rect x="620" y="100" width="110" height="40" rx="6" fill="#EFF6FF" stroke="#93C5FD" stroke-width="1.5"/>
-    <text x="675" y="125" text-anchor="middle" font-size="13" font-weight="500" fill="#1E293B">已发货</text>
+  var stateMap = {};
+  states.forEach(function(s) {
+    var node = { id: s.id, label: s.label, type: s.type };
+    if (s.type === 'start' || s.type === 'end') {
+      node.w = CIRCLE_SIZE;
+      node.h = CIRCLE_SIZE;
+    } else {
+      var textW = mt(s.label, 13);
+      node.w = Math.max(textW + STATE_PAD_X * 2, 80);
+      node.h = STATE_H;
+    }
+    stateMap[s.id] = node;
+  });
 
-    <!-- 已完成 cx=855 -->
-    <rect x="800" y="100" width="110" height="40" rx="6" fill="#ECFDF5" stroke="#6EE7B7" stroke-width="1.5"/>
-    <text x="855" y="125" text-anchor="middle" font-size="13" font-weight="500" fill="#065F46">已完成</text>
+  // ========== ELKjs 布局 ==========
+  var elk = new ELK();
 
-    <!-- 异常行 y=270 -->
-    <!-- 已取消 cx=135（和待支付对齐） -->
-    <rect x="80" y="250" width="110" height="40" rx="6" fill="#FFF1F2" stroke="#FDA4AF" stroke-width="1.5"/>
-    <text x="135" y="275" text-anchor="middle" font-size="13" font-weight="500" fill="#9F1239">已取消</text>
+  var elkGraph = {
+    id: 'root',
+    layoutOptions: {
+      'elk.algorithm': 'layered',
+      'elk.direction': 'RIGHT',
+      'elk.spacing.nodeNode': '100',
+      'elk.layered.spacing.nodeNodeBetweenLayers': '70',
+      'elk.spacing.edgeNode': '40',
+      'elk.spacing.edgeEdge': '30',
+      'elk.layered.spacing.edgeNodeBetweenLayers': '30',
+      'elk.layered.nodePlacement.strategy': 'NETWORK_SIMPLEX',
+      'elk.layered.compaction.postCompaction.strategy': 'NONE',
+      'elk.layered.crossingMinimization.strategy': 'LAYER_SWEEP',
+      'elk.edgeRouting': 'ORTHOGONAL'
+    },
+    children: [],
+    edges: []
+  };
 
-    <!-- 退款中 cx=495 -->
-    <rect x="440" y="250" width="110" height="40" rx="6" fill="#FFF1F2" stroke="#FDA4AF" stroke-width="1.5"/>
-    <text x="495" y="275" text-anchor="middle" font-size="13" font-weight="500" fill="#9F1239">退款中</text>
+  states.forEach(function(s) {
+    var n = stateMap[s.id];
+    elkGraph.children.push({ id: s.id, width: n.w, height: n.h });
+  });
 
-    <!-- 已退款 cx=675 -->
-    <rect x="620" y="250" width="110" height="40" rx="6" fill="#FFF1F2" stroke="#FDA4AF" stroke-width="1.5"/>
-    <text x="675" y="275" text-anchor="middle" font-size="13" font-weight="500" fill="#9F1239">已退款</text>
+  transitions.forEach(function(t, i) {
+    elkGraph.edges.push({ id: 'e' + i, sources: [t.from], targets: [t.to] });
+  });
 
-    <!-- ◉ 终止状态 cx=855（和已完成对齐） -->
-    <circle cx="855" cy="270" r="12" fill="none" stroke="#64748B" stroke-width="2"/>
-    <circle cx="855" cy="270" r="6" fill="#64748B"/>
+  // ========== 执行布局并渲染 ==========
+  elk.layout(elkGraph).then(function(result) {
 
-    <!-- ====== 主路径连线 ====== -->
+    // 读取布局结果
+    result.children.forEach(function(child) {
+      var n = stateMap[child.id];
+      n.x = child.x;
+      n.y = child.y + TITLE_H;
+      n.cx = n.x + n.w / 2;
+      n.cy = n.y + n.h / 2;
+    });
 
-    <!-- ● → 待支付 -->
-    <line x1="50" y1="120" x2="78" y2="120" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arr)"/>
+    // 画布自适应
+    var maxX = 0, maxY = 0;
+    states.forEach(function(s) {
+      var n = stateMap[s.id];
+      if (n.x + n.w > maxX) maxX = n.x + n.w;
+      if (n.y + n.h > maxY) maxY = n.y + n.h;
+    });
+    var svgW = maxX + 40;
+    var svgH = maxY + 40;
 
-    <!-- 待支付 → 已支付 -->
-    <line x1="190" y1="120" x2="258" y2="120" stroke="#10B981" stroke-width="2" marker-end="url(#arr-g)"/>
-    <text x="224" y="112" text-anchor="middle" font-size="10" fill="#065F46">支付成功</text>
+    svg.setAttribute('width', svgW);
+    svg.setAttribute('height', svgH);
+    svg.setAttribute('viewBox', '0 0 ' + svgW + ' ' + svgH);
 
-    <!-- 已支付 → 备货中 -->
-    <line x1="370" y1="120" x2="438" y2="120" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arr)"/>
-    <text x="404" y="112" text-anchor="middle" font-size="10" fill="#64748B">商家确认</text>
+    // ========== Defs ==========
+    var defs = el('defs');
+    var arr = el('marker', { id: 'arrow', markerWidth: 10, markerHeight: 8, refX: 9, refY: 4, orient: 'auto', markerUnits: 'userSpaceOnUse' });
+    arr.appendChild(el('path', { d: 'M0,0.5 L8.5,4 L0,7.5', fill: 'none', stroke: '#94A3B8', 'stroke-width': 1.5, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }));
+    defs.appendChild(arr);
+    svg.appendChild(defs);
 
-    <!-- 备货中 → 已发货 -->
-    <line x1="550" y1="120" x2="618" y2="120" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arr)"/>
-    <text x="584" y="112" text-anchor="middle" font-size="10" fill="#64748B">发货</text>
+    // ========== 渲染层 ==========
+    var edgeGroup = el('g'); svg.appendChild(edgeGroup);
+    var nodeGroup = el('g'); svg.appendChild(nodeGroup);
+    var labelGroup = el('g'); svg.appendChild(labelGroup);
 
-    <!-- 已发货 → 已完成 -->
-    <line x1="730" y1="120" x2="798" y2="120" stroke="#10B981" stroke-width="2" marker-end="url(#arr-g)"/>
-    <text x="764" y="112" text-anchor="middle" font-size="10" fill="#065F46">签收确认</text>
+    // ========== 标题 ==========
+    nodeGroup.appendChild(el('text', { x: 0, y: 18, 'font-size': 16, 'font-weight': 700, fill: '#0F172A', 'font-family': SANS })).textContent = title;
+    nodeGroup.appendChild(el('text', { x: 0, y: 36, 'font-size': 12, fill: '#64748B', 'font-family': SANS })).textContent = subtitle;
 
-    <!-- ====== 异常路径（标签统一在线上方） ====== -->
+    // ========== 绘制边（使用 ELK edge sections） ==========
+    (result.edges || []).forEach(function(edge, ei) {
+      var t = transitions[ei];
+      if (!t) return;
 
-    <!-- 待支付 → 已取消（直线向下，居中对齐） -->
-    <line x1="135" y1="140" x2="135" y2="248" stroke="#F43F5E" stroke-width="1.5" marker-end="url(#arr-r)"/>
-    <text x="147" y="195" font-size="10" fill="#9F1239">超时取消</text>
+      var sec = edge.sections && edge.sections[0];
+      if (!sec) return;
 
-    <!-- 已支付 → 退款中（向下，标签在上方） -->
-    <path d="M315,140 L315,190 Q315,200 325,200 L485,200 Q495,200 495,210 L495,248" stroke="#F43F5E" stroke-width="1.5" fill="none" marker-end="url(#arr-r)"/>
-    <text x="400" y="195" text-anchor="middle" font-size="10" fill="#9F1239">申请退款</text>
+      // 构建路径（折线拐角用圆弧）
+      var sp = sec.startPoint;
+      var ep = sec.endPoint;
+      var R = 8;  // 圆弧半径
+      var pts = [{ x: sp.x, y: sp.y + TITLE_H }];
+      if (sec.bendPoints) {
+        sec.bendPoints.forEach(function(bp) { pts.push({ x: bp.x, y: bp.y + TITLE_H }); });
+      }
+      pts.push({ x: ep.x, y: ep.y + TITLE_H });
 
-    <!-- 已发货 → 退款中（向下，标签在上方） -->
-    <path d="M675,140 L675,190 Q675,200 665,200 L505,200 Q495,200 495,210 L495,248" stroke="#F43F5E" stroke-width="1.5" fill="none" marker-end="url(#arr-r)"/>
-    <text x="590" y="195" text-anchor="middle" font-size="10" fill="#9F1239">拒收退回</text>
+      var d = 'M' + pts[0].x + ',' + pts[0].y;
+      for (var pi = 1; pi < pts.length; pi++) {
+        if (pi < pts.length - 1) {
+          // 中间点：用圆弧连接
+          var prev = pts[pi - 1], cur = pts[pi], next = pts[pi + 1];
+          // 从前一段末尾到拐点前 R 处
+          var dx1 = cur.x - prev.x, dy1 = cur.y - prev.y;
+          var len1 = Math.sqrt(dx1 * dx1 + dy1 * dy1);
+          var r1 = Math.min(R, len1 / 2);
+          var dx2 = next.x - cur.x, dy2 = next.y - cur.y;
+          var len2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
+          var r2 = Math.min(R, len2 / 2);
+          var rr = Math.min(r1, r2);
+          d += ' L' + (cur.x - (dx1 / len1) * rr) + ',' + (cur.y - (dy1 / len1) * rr);
+          d += ' Q' + cur.x + ',' + cur.y + ' ' + (cur.x + (dx2 / len2) * rr) + ',' + (cur.y + (dy2 / len2) * rr);
+        } else {
+          d += ' L' + pts[pi].x + ',' + pts[pi].y;
+        }
+      }
 
-    <!-- 退款中 → 已退款 -->
-    <line x1="550" y1="270" x2="618" y2="270" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arr)"/>
-    <text x="584" y="262" text-anchor="middle" font-size="10" fill="#64748B">退款通过</text>
+      edgeGroup.appendChild(el('path', {
+        d: d,
+        stroke: '#94A3B8',
+        'stroke-width': 1.5,
+        fill: 'none',
+        'marker-end': 'url(#arrow)'
+      }));
 
-    <!-- ====== 终止连线 ====== -->
+      // 计算标签位置（边的中点）
+      var allPts = [{ x: sp.x, y: sp.y + TITLE_H }];
+      if (sec.bendPoints) {
+        sec.bendPoints.forEach(function(bp) {
+          allPts.push({ x: bp.x, y: bp.y + TITLE_H });
+        });
+      }
+      allPts.push({ x: ep.x, y: ep.y + TITLE_H });
 
-    <!-- 已完成 → ◉（居中向下） -->
-    <line x1="855" y1="140" x2="855" y2="256" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arr)"/>
+      // 计算总长度和中点
+      var totalLen = 0;
+      var segs = [];
+      for (var i = 1; i < allPts.length; i++) {
+        var dx = allPts[i].x - allPts[i - 1].x;
+        var dy = allPts[i].y - allPts[i - 1].y;
+        var segLen = Math.sqrt(dx * dx + dy * dy);
+        segs.push({ len: segLen, from: allPts[i - 1], to: allPts[i] });
+        totalLen += segLen;
+      }
+      var halfLen = totalLen / 2;
+      var acc = 0;
+      var midX = 0, midY = 0;
+      for (var j = 0; j < segs.length; j++) {
+        if (acc + segs[j].len >= halfLen) {
+          var ratio = (halfLen - acc) / segs[j].len;
+          midX = segs[j].from.x + (segs[j].to.x - segs[j].from.x) * ratio;
+          midY = segs[j].from.y + (segs[j].to.y - segs[j].from.y) * ratio;
+          break;
+        }
+        acc += segs[j].len;
+      }
 
-    <!-- 已退款 → ◉（向右） -->
-    <line x1="730" y1="270" x2="841" y2="270" stroke="#94A3B8" stroke-width="1" stroke-dasharray="4 3" marker-end="url(#arr)"/>
+      // 标签文字和白色背景
+      if (t.label) {
+        var labelW = mt(t.label, 10) + 8;
+        var labelH = 16;
+        labelGroup.appendChild(el('rect', {
+          x: midX - labelW / 2,
+          y: midY - labelH / 2,
+          width: labelW,
+          height: labelH,
+          rx: 3,
+          fill: '#FFFFFF'
+        }));
+        labelGroup.appendChild(el('text', {
+          x: midX,
+          y: midY,
+          'text-anchor': 'middle',
+          'dominant-baseline': 'central',
+          'font-size': 10,
+          fill: '#64748B',
+          'font-family': SANS
+        })).textContent = t.label;
+      }
+    });
 
-    <!-- ====== 图例 ====== -->
-    <rect x="40" y="370" width="12" height="12" rx="3" fill="#EFF6FF" stroke="#93C5FD" stroke-width="1"/>
-    <text x="58" y="381" font-size="11" fill="#64748B">普通状态</text>
+    // ========== 绘制状态节点 ==========
+    states.forEach(function(s) {
+      var n = stateMap[s.id];
 
-    <rect x="140" y="370" width="12" height="12" rx="3" fill="#ECFDF5" stroke="#6EE7B7" stroke-width="1"/>
-    <text x="158" y="381" font-size="11" fill="#64748B">成功终态</text>
+      if (s.type === 'start') {
+        // 实心圆
+        nodeGroup.appendChild(el('circle', {
+          cx: n.cx, cy: n.cy, r: CIRCLE_R,
+          fill: '#1E293B'
+        }));
+      } else if (s.type === 'end') {
+        // 双圆（外圈描边，内圈填充）
+        nodeGroup.appendChild(el('circle', {
+          cx: n.cx, cy: n.cy, r: CIRCLE_R,
+          fill: 'none', stroke: '#1E293B', 'stroke-width': 2
+        }));
+        nodeGroup.appendChild(el('circle', {
+          cx: n.cx, cy: n.cy, r: 6,
+          fill: '#1E293B'
+        }));
+      } else {
+        // 圆角矩形状态
+        nodeGroup.appendChild(el('rect', {
+          x: n.x, y: n.y, width: n.w, height: n.h,
+          rx: 20, fill: '#EFF6FF', stroke: '#93C5FD', 'stroke-width': 1.5
+        }));
+        nodeGroup.appendChild(el('text', {
+          x: n.cx, y: n.cy,
+          'text-anchor': 'middle',
+          'dominant-baseline': 'central',
+          'font-size': 13,
+          'font-weight': 500,
+          fill: '#1E293B',
+          'font-family': SANS
+        })).textContent = s.label;
+      }
+    });
 
-    <rect x="240" y="370" width="12" height="12" rx="3" fill="#FFF1F2" stroke="#FDA4AF" stroke-width="1"/>
-    <text x="258" y="381" font-size="11" fill="#64748B">异常状态</text>
-
-    <circle cx="366" cy="376" r="5" fill="#1E293B"/>
-    <text x="378" y="381" font-size="11" fill="#64748B">初始</text>
-
-    <circle cx="436" cy="376" r="6" fill="none" stroke="#64748B" stroke-width="1.5"/>
-    <circle cx="436" cy="376" r="3" fill="#64748B"/>
-    <text x="448" y="381" font-size="11" fill="#64748B">终止</text>
-  </svg>
-</div>
+  }); // end elk.layout().then()
+})();
+</script>
 </body>
 </html>
