@@ -1,8 +1,8 @@
 ---
 priority: P1
-status: open
-spec:
-plan:
+status: done
+spec: docs/specs/2026-03-29-deep-research-analysis-frameworks.md
+plan: docs/plans/2026-03-29-deep-research-upgrade-plan.md
 ---
 
 # Deep Research Skill 升级：从信息搜集到专业研究引擎
