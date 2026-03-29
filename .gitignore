@@ -53,6 +53,9 @@ downloads/
 
 # 待办事项 - 运行时产物
 todos/
+
+# 使用数据 - 运行时产物
+usage-data/
 playwright-mcp
 node_modules/
 .playwright-mcp/
