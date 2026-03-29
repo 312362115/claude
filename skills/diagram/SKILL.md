@@ -24,6 +24,32 @@ description: >
 2. **哪种图表** — 根据信息类型匹配最合适的图表
 3. **用什么布局** — 根据图表类型选择布局策略
 
+### Mermaid / Graphviz 标记语言转换
+
+当发现 Markdown 中有 ` ```mermaid ` 或 ` ```dot ` 代码块时：
+
+1. **解读**图结构（节点、边、标签、类型、分组等）
+2. **映射**到对应的图表类型模板数据结构
+3. **渲染**为设计规范统一的 PNG
+4. **替换**原始文本块为图片引用
+
+映射规则：
+
+| 源格式 | 关键字/语法 | 映射目标 |
+|--------|-----------|---------|
+| Mermaid `graph TD` / `flowchart` | 节点 + 箭头 | flowchart 模板 |
+| Mermaid `sequenceDiagram` | 参与者 + 消息 | sequence 模板 |
+| Mermaid `classDiagram` | 类 + 关系 | class 模板 |
+| Mermaid `stateDiagram` | 状态 + 转换 | state 模板 |
+| Mermaid `erDiagram` | 实体 + 关系 | er 模板 |
+| Mermaid `gantt` | 任务 + 日期 | gantt 模板 |
+| Mermaid `pie` | 标签 + 数值 | pie 模板 |
+| Mermaid `journey` | 阶段 + 评分 | journey 模板 |
+| DOT `digraph` | 有向图 | flowchart / state / class（按结构判断） |
+| DOT `graph` | 无向图 | er / network（按结构判断） |
+
+> **注意**：不是调用 Mermaid/Graphviz 工具渲染，而是 Claude 理解标记语言描述的图结构，转成我们的模板数据，用统一设计规范渲染。这样所有图表风格一致。
+
 ### 图表类型速查
 
 | 要展示什么 | 图表类型 | 布局策略 | 专属规范 |
