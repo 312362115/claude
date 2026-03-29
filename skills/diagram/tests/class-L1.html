@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, system-ui, 'PingFang SC', sans-serif;
+    background: #ffffff;
+    padding: 24px;
+    display: inline-block;
+  }
+</style>
+<script src="lib/elk.bundled.js"></script>
+</head>
+<body>
+<svg id="canvas"></svg>
+
+<script>
+(function() {
+  var NS = 'http://www.w3.org/2000/svg';
+  var svg = document.getElementById('canvas');
+
+
+  var title = '简单博客类图';
+  var subtitle = 'L1 简单 · 3 类 · 2 关系';
+
+  var classes = [
+    { id: 'User', label: 'User', type: 'class',
+      fields: [
+        { vis: '-', name: 'id', dtype: 'Long' },
+        { vis: '-', name: 'username', dtype: 'String' },
+        { vis: '-', name: 'email', dtype: 'String' }
+      ],
+      methods: [
+        { vis: '+', name: 'login()', dtype: 'bool' },
+        { vis: '+', name: 'getPosts()', dtype: 'List' }
+      ]
+    },
+    { id: 'Post', label: 'Post', type: 'class',
+      fields: [
+        { vis: '-', name: 'id', dtype: 'Long' },
+        { vis: '-', name: 'title', dtype: 'String' },
+        { vis: '-', name: 'content', dtype: 'String' }
+      ],
+      methods: [
+        { vis: '+', name: 'publish()', dtype: 'bool' }
+      ]
+    },
+    { id: 'Comment', label: 'Comment', type: 'class',
+      fields: [
+        { vis: '-', name: 'id', dtype: 'Long' },
+        { vis: '-', name: 'content', dtype: 'String' }
+      ],
+      methods: [
+        { vis: '+', name: 'create()', dtype: 'bool' }
+      ]
+    }
+  ];
+
+  var relations = [
+    { from: 'User', to: 'Post', type: 'association', label: '发布' },
+    { from: 'Post', to: 'Comment', type: 'composition', label: '包含' }
+  ];
+
+  // ========== 主题 ==========
+  var SANS = "-apple-system, system-ui, 'PingFang SC', sans-serif";
+  var MONO = "'SF Mono', SFMono-Regular, Menlo, monospace";
+  var theme = {
+    typeColors: {
+      'class':     { header: '#3B82F6', border: 'rgba(59,130,246,0.3)' },
+      'interface': { header: '#10B981', border: 'rgba(16,185,129,0.3)' },
+      'abstract':  { header: '#8B5CF6', border: 'rgba(139,92,246,0.3)' },
+      'enum':      { header: '#F59E0B', border: 'rgba(245,158,11,0.3)' }
+    },
+    field: { bg: '#F8FAFC', text: '#1E293B', type: '#94A3B8', divider: 'rgba(59,130,246,0.15)' },
+    enumVal: '#64748B',
+    line: { color: '#94A3B8', width: 1.5 },
+    depLine: { color: '#B0B8C4', width: 1 }
+  };
+
+  // ========== 工具函数 ==========
+  function el(tag, attrs) {
+    var e = document.createElementNS(NS, tag);
+    if (attrs) for (var k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+  function mt(str, fs) {
+    var w = 0;
+    for (var i = 0; i < str.length; i++) w += str.charCodeAt(i) > 127 ? fs : fs * 0.62;
+    return w;
+  }
+
+  // ========== 计算每个节点的尺寸 ==========
+  var HEADER_H = 34, HEADER_BRIDGE = 8, FIELD_H = 20, METHOD_H = 20, ENUM_VAL_H = 20, FIELD_PAD = 12, TITLE_H = 52;
+
+  var classMap = {};
+  classes.forEach(function(c) {
+    var node = { id: c.id, label: c.label, type: c.type };
+    var maxW = mt(c.label, 14) + 40;
+    if (c.type === 'enum') {
+      node.values = c.values || [];
+      node.values.forEach(function(v) { var w = mt(v, 11) + FIELD_PAD * 2; if (w > maxW) maxW = w; });
+      node.h = HEADER_H + HEADER_BRIDGE + node.values.length * ENUM_VAL_H + 8;
+    } else {
+      node.fields = c.fields || []; node.methods = c.methods || [];
+      node.fields.forEach(function(f) { var w = mt(f.vis + ' ' + f.name + ' : ' + f.dtype, 11) + FIELD_PAD * 2; if (w > maxW) maxW = w; });
+      node.methods.forEach(function(m) { var w = mt(m.vis + ' ' + m.name + ' : ' + m.dtype, 11) + FIELD_PAD * 2; if (w > maxW) maxW = w; });
+      node.h = HEADER_H + HEADER_BRIDGE + node.fields.length * FIELD_H + (node.methods.length > 0 ? 1 + node.methods.length * METHOD_H : 0) + 8;
+    }
+    node.w = Math.max(maxW, 160);
+    classMap[c.id] = node;
+  });
+
+  // ========== ELKjs 布局 ==========
+  var elk = new ELK();
+
+  var elkGraph = {
+    id: 'root',
+    layoutOptions: {
+      'elk.algorithm': 'layered',
+      'elk.direction': 'DOWN',
+      'elk.spacing.nodeNode': '50',
+      'elk.layered.spacing.nodeNodeBetweenLayers': '50',
+      'elk.spacing.edgeNode': '20',
+      'elk.spacing.edgeEdge': '15',
+      'elk.layered.crossingMinimization.strategy': 'LAYER_SWEEP'
+    },
+    children: [],
+    edges: []
+  };
+
+  // 添加节点
+  classes.forEach(function(c) {
+    var n = classMap[c.id];
+    elkGraph.children.push({ id: c.id, width: n.w, height: n.h });
+  });
+
+  // 添加边
+  relations.forEach(function(r, i) {
+    elkGraph.edges.push({ id: 'e' + i, sources: [r.from], targets: [r.to] });
+  });
+
+  // 执行布局（异步）
+  elk.layout(elkGraph).then(function(result) {
+
+  // 读取布局结果
+  result.children.forEach(function(child) {
+    var n = classMap[child.id];
+    n.x = child.x;
+    n.y = child.y + TITLE_H;
+    n.cx = n.x + n.w / 2;
+    n.cy = n.y + n.h / 2;
+  });
+
+  // 画布自适应
+  var maxX = 0, maxY = 0;
+  classes.forEach(function(c) {
+    var n = classMap[c.id];
+    if (n.x + n.w > maxX) maxX = n.x + n.w;
+    if (n.y + n.h > maxY) maxY = n.y + n.h;
+  });
+  var svgW = maxX + 40;
+  var svgH = maxY + 60;
+
+  svg.setAttribute('width', svgW);
+  svg.setAttribute('height', svgH);
+  svg.setAttribute('viewBox', '0 0 ' + svgW + ' ' + svgH);
+
+  // ========== SVG Defs ==========
+  var defs = el('defs');
+  var arr = el('marker', { id: 'arrow', markerWidth: 8, markerHeight: 6, refX: 8, refY: 3, orient: 'auto' });
+  arr.appendChild(el('path', { d: 'M0,0.5 L7,3 L0,5.5', fill: 'none', stroke: theme.line.color, 'stroke-width': 1.2, 'stroke-linecap': 'round' }));
+  defs.appendChild(arr);
+  var dia = el('marker', { id: 'diamond', markerWidth: 12, markerHeight: 8, refX: 0, refY: 4, orient: 'auto' });
+  dia.appendChild(el('path', { d: 'M0,4 L6,0 L12,4 L6,8 Z', fill: theme.line.color, stroke: theme.line.color, 'stroke-width': 0.5 }));
+  defs.appendChild(dia);
+  var tri = el('marker', { id: 'triangle', markerWidth: 10, markerHeight: 8, refX: 10, refY: 4, orient: 'auto' });
+  tri.appendChild(el('path', { d: 'M0,0 L10,4 L0,8 Z', fill: '#FFFFFF', stroke: theme.line.color, 'stroke-width': 1 }));
+  defs.appendChild(tri);
+  var darr = el('marker', { id: 'darrow', markerWidth: 8, markerHeight: 6, refX: 8, refY: 3, orient: 'auto' });
+  darr.appendChild(el('path', { d: 'M0,0.5 L7,3 L0,5.5', fill: 'none', stroke: theme.depLine.color, 'stroke-width': 1, 'stroke-linecap': 'round' }));
+  defs.appendChild(darr);
+  svg.appendChild(defs);
+
+  // ========== 渲染层 ==========
+  var lineGroup = el('g'); svg.appendChild(lineGroup);
+  var nodeGroup = el('g'); svg.appendChild(nodeGroup);
+
+  // ========== 标题 ==========
+  nodeGroup.appendChild(el('text', { x: 0, y: 18, 'font-size': 16, 'font-weight': 700, fill: '#1a1a2e', 'font-family': SANS })).textContent = title;
+  nodeGroup.appendChild(el('text', { x: 0, y: 36, 'font-size': 12, fill: '#888', 'font-family': SANS })).textContent = subtitle;
+
+  // ========== 绘制连线（使用 ELK 计算的边路由） ==========
+  (result.edges || []).forEach(function(edge, ei) {
+    var r = relations[ei];
+    if (!r) return;
+    var isDep = r.type === 'dependency';
+    var isComp = r.type === 'composition';
+    var isInh = r.type === 'inheritance' || r.type === 'realization';
+    var isDash = isDep || r.type === 'realization';
+    var lineColor = isDep ? theme.depLine.color : theme.line.color;
+    var lineW = isDep ? theme.depLine.width : theme.line.width;
+    var markerEnd = isComp ? '' : isInh ? 'url(#triangle)' : isDep ? 'url(#darrow)' : 'url(#arrow)';
+    var markerStart = isComp ? 'url(#diamond)' : '';
+
+    var sec = edge.sections && edge.sections[0];
+    if (!sec) return;
+
+    var d = 'M' + sec.startPoint.x + ',' + (sec.startPoint.y + TITLE_H);
+    if (sec.bendPoints) {
+      sec.bendPoints.forEach(function(bp) {
+        d += ' L' + bp.x + ',' + (bp.y + TITLE_H);
+      });
+    }
+    d += ' L' + sec.endPoint.x + ',' + (sec.endPoint.y + TITLE_H);
+
+    var pathAttrs = { d: d, stroke: lineColor, 'stroke-width': lineW, fill: 'none' };
+    if (markerEnd) pathAttrs['marker-end'] = markerEnd;
+    if (markerStart) pathAttrs['marker-start'] = markerStart;
+    if (isDash) pathAttrs['stroke-dasharray'] = '5,3';
+    lineGroup.appendChild(el('path', pathAttrs));
+  });
+
+  // ========== 绘制类框 ==========
+  classes.forEach(function(c) {
+    var n = classMap[c.id];
+    var x = n.x, y = n.y, w = n.w, h = n.h;
+    var tc = theme.typeColors[n.type] || theme.typeColors['class'];
+
+    nodeGroup.appendChild(el('rect', { x: x, y: y, width: w, height: h, rx: 8, fill: '#FFFFFF', stroke: tc.border, 'stroke-width': 1 }));
+    nodeGroup.appendChild(el('rect', { x: x, y: y, width: w, height: HEADER_H, rx: 8, fill: tc.header }));
+    nodeGroup.appendChild(el('rect', { x: x, y: y + HEADER_H - 4, width: w, height: HEADER_BRIDGE + 4, fill: tc.header }));
+
+    if (n.type === 'interface' || n.type === 'abstract') {
+      nodeGroup.appendChild(el('text', { x: x + w / 2, y: y + 12, 'text-anchor': 'middle', 'font-size': 9, fill: 'rgba(255,255,255,0.7)', 'font-family': SANS })).textContent = '<<' + n.type + '>>';
+    }
+
+    var nameY = (n.type === 'interface' || n.type === 'abstract') ? y + HEADER_H / 2 + 6 : y + HEADER_H / 2 + 2;
+    nodeGroup.appendChild(el('text', { x: x + w / 2, y: nameY, 'text-anchor': 'middle', 'dominant-baseline': 'central', 'font-size': 14, 'font-weight': 700, fill: '#FFFFFF', 'font-family': SANS })).textContent = n.label;
+
+    var bodyY = y + HEADER_H + HEADER_BRIDGE;
+    if (n.type === 'enum') {
+      (n.values || []).forEach(function(v, i) {
+        nodeGroup.appendChild(el('text', { x: x + FIELD_PAD, y: bodyY + i * ENUM_VAL_H + ENUM_VAL_H / 2 + 1, 'dominant-baseline': 'central', 'font-size': 11, fill: theme.enumVal, 'font-family': MONO })).textContent = v;
+      });
+    } else {
+      var fieldsH = n.fields.length * FIELD_H;
+      nodeGroup.appendChild(el('rect', { x: x + 1, y: bodyY, width: w - 2, height: fieldsH, fill: theme.field.bg }));
+      n.fields.forEach(function(f, i) {
+        nodeGroup.appendChild(el('text', { x: x + FIELD_PAD, y: bodyY + i * FIELD_H + FIELD_H / 2 + 1, 'dominant-baseline': 'central', 'font-size': 11, fill: theme.field.text, 'font-family': MONO })).textContent = f.vis + ' ' + f.name + ' : ' + f.dtype;
+      });
+      if (n.methods.length > 0) {
+        var divY = bodyY + fieldsH;
+        nodeGroup.appendChild(el('line', { x1: x, y1: divY, x2: x + w, y2: divY, stroke: theme.field.divider, 'stroke-width': 1 }));
+        n.methods.forEach(function(m, i) {
+          nodeGroup.appendChild(el('text', { x: x + FIELD_PAD, y: divY + 1 + i * METHOD_H + METHOD_H / 2 + 1, 'dominant-baseline': 'central', 'font-size': 11, fill: theme.field.text, 'font-family': MONO })).textContent = m.vis + ' ' + m.name + ' : ' + m.dtype;
+        });
+      }
+    }
+  });
+
+  // ========== 图例 ==========
+  var legendY = maxY + 20;
+  var lx = 0;
+  [{ color: '#3B82F6', label: '类' }, { color: '#10B981', label: '接口' }, { color: '#F59E0B', label: '枚举' }].forEach(function(item) {
+    nodeGroup.appendChild(el('rect', { x: lx, y: legendY, width: 14, height: 14, rx: 3, fill: item.color }));
+    nodeGroup.appendChild(el('text', { x: lx + 20, y: legendY + 12, 'font-size': 11, fill: '#64748B', 'font-family': SANS })).textContent = item.label;
+    lx += mt(item.label, 11) + 40;
+  });
+  [{ label: '关联', dash: false, marker: 'url(#arrow)' }, { label: '组合', dash: false, ms: 'url(#diamond)' }, { label: '依赖', dash: true, marker: 'url(#darrow)' }, { label: '继承', dash: false, marker: 'url(#triangle)' }].forEach(function(le) {
+    var la = { x1: lx, y1: legendY + 7, x2: lx + 28, y2: legendY + 7, stroke: le.dash ? theme.depLine.color : theme.line.color, 'stroke-width': le.dash ? 1 : 1.5 };
+    if (le.marker) la['marker-end'] = le.marker;
+    if (le.ms) la['marker-start'] = le.ms;
+    if (le.dash) la['stroke-dasharray'] = '5,3';
+    nodeGroup.appendChild(el('line', la));
+    nodeGroup.appendChild(el('text', { x: lx + 34, y: legendY + 12, 'font-size': 11, fill: '#64748B', 'font-family': SANS })).textContent = le.label;
+    lx += mt(le.label, 11) + 56;
+  });
+
+  }); // end elk.layout().then()
+})();
+</script>
+</body>
+</html>

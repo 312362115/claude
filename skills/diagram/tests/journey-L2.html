@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>用户旅程图</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    display: inline-block; padding: 24px; background: #fff;
+    font-family: -apple-system, system-ui, 'PingFang SC', sans-serif;
+  }
+  .title { font-size: 16px; font-weight: 700; color: #1a1a2e; }
+  .subtitle { font-size: 12px; color: #888; margin-top: 2px; }
+  .chart-area { margin-top: 16px; }
+  .phases {
+    display: flex; gap: 2px; margin-top: 0;
+  }
+  .phase { flex: 1; min-width: 120px; }
+  .phase-header {
+    padding: 8px 12px; color: #fff; font-size: 13px; font-weight: 700;
+    text-align: center; border-radius: 8px 8px 0 0;
+  }
+  .phase-body {
+    background: #F8FAFC; border: 1px solid #E2E8F0; border-top: none;
+    border-radius: 0 0 8px 8px; padding: 8px;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .step-card {
+    background: #fff; border-radius: 8px; padding: 10px 12px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .step-label { font-size: 12px; color: #334155; flex: 1; }
+  .step-score {
+    font-size: 18px; flex-shrink: 0;
+  }
+</style>
+</head>
+<body>
+
+<div class="title">用户旅程图</div>
+<div class="subtitle">用户体验情绪曲线与触点分析</div>
+<div class="chart-area">
+  <svg id="curve"></svg>
+  <div class="phases" id="phases"></div>
+</div>
+
+<script>
+// ===== 数据 =====
+var phases = [
+  { label: '发现', steps: [
+    { label: '看到广告', score: 3 },
+    { label: '搜索产品', score: 4 }
+  ]},
+  { label: '购买', steps: [
+    { label: '浏览商品', score: 4 },
+    { label: '加入购物车', score: 3 },
+    { label: '下单支付', score: 2 }
+  ]},
+  { label: '使用', steps: [
+    { label: '收到商品', score: 5 },
+    { label: '使用体验', score: 4 }
+  ]},
+  { label: '售后', steps: [
+    { label: '联系客服', score: 2 },
+    { label: '退换货', score: 1 }
+  ]}
+];
+// ===== 数据结束 =====
+
+// 主题色（layers 循环）
+var headerColors = [
+  '#3B82F6',  // C-1
+  '#10B981',  // C-2
+  '#F59E0B',  // C-3
+  '#8B5CF6',  // C-5
+  '#06B6D4',  // C-6
+  '#F43F5E'   // C-4
+];
+
+// 分数对应的 emoji 和颜色
+var scoreMap = {
+  5: { emoji: '\uD83D\uDE04', color: '#10B981' },  // 非常满意
+  4: { emoji: '\uD83D\uDE42', color: '#3B82F6' },  // 满意
+  3: { emoji: '\uD83D\uDE10', color: '#F59E0B' },  // 一般
+  2: { emoji: '\uD83D\uDE1F', color: '#F97316' },  // 不满
+  1: { emoji: '\uD83D\uDE23', color: '#EF4444' }   // 很差
+};
+
+// 收集所有步骤的分数点用于绘制曲线
+var allPoints = [];
+var stepIndex = 0;
+phases.forEach(function(phase) {
+  phase.steps.forEach(function(step) {
+    allPoints.push({ score: step.score, index: stepIndex++ });
+  });
+});
+
+var totalSteps = allPoints.length;
+
+// 计算曲线 SVG 尺寸
+var CURVE_H = 100;
+var CURVE_PAD_X = 40;
+var CURVE_PAD_Y = 16;
+// 宽度根据阶段数量计算：每个阶段至少 130px
+var phaseWidths = phases.map(function(p) { return Math.max(130, p.steps.length * 50 + 40); });
+var totalW = 0;
+phaseWidths.forEach(function(w) { totalW += w + 2; }); // +2 for gap
+
+var curveSvg = document.getElementById('curve');
+curveSvg.setAttribute('width', totalW);
+curveSvg.setAttribute('height', CURVE_H);
+curveSvg.setAttribute('viewBox', '0 0 ' + totalW + ' ' + CURVE_H);
+curveSvg.style.display = 'block';
+
+// 绘制背景参考线
+var svgNS = 'http://www.w3.org/2000/svg';
+function el(tag, attrs) {
+  var e = document.createElementNS(svgNS, tag);
+  for (var k in attrs) e.setAttribute(k, attrs[k]);
+  return e;
+}
+
+// 水平参考线（得分刻度）
+for (var s = 1; s <= 5; s++) {
+  var ly = CURVE_PAD_Y + (5 - s) * (CURVE_H - 2 * CURVE_PAD_Y) / 4;
+  curveSvg.appendChild(el('line', {
+    x1: '0', y1: ly, x2: totalW, y2: ly,
+    stroke: '#F1F5F9', 'stroke-width': '1'
+  }));
+}
+
+// 计算每个点在曲线上的 x 位置
+var cumX = 0;
+var pointIdx = 0;
+var pointCoords = [];
+
+phases.forEach(function(phase, pi) {
+  var pw = phaseWidths[pi];
+  var nSteps = phase.steps.length;
+  phase.steps.forEach(function(step, si) {
+    var x = cumX + (si + 0.5) * pw / nSteps;
+    var y = CURVE_PAD_Y + (5 - step.score) * (CURVE_H - 2 * CURVE_PAD_Y) / 4;
+    pointCoords.push({ x: x, y: y, score: step.score });
+  });
+  cumX += pw + 2;
+});
+
+// 绘制平滑曲线（贝塞尔）
+if (pointCoords.length > 1) {
+  var pathD = 'M ' + pointCoords[0].x + ' ' + pointCoords[0].y;
+  for (var i = 1; i < pointCoords.length; i++) {
+    var prev = pointCoords[i - 1];
+    var curr = pointCoords[i];
+    var cpx = (prev.x + curr.x) / 2;
+    pathD += ' C ' + cpx + ' ' + prev.y + ' ' + cpx + ' ' + curr.y + ' ' + curr.x + ' ' + curr.y;
+  }
+
+  // 渐变填充
+  var defs = el('defs', {});
+  var grad = el('linearGradient', { id: 'curveFill', x1: '0', y1: '0', x2: '0', y2: '1' });
+  var stop1 = el('stop', { offset: '0%', 'stop-color': '#3B82F6', 'stop-opacity': '0.15' });
+  var stop2 = el('stop', { offset: '100%', 'stop-color': '#3B82F6', 'stop-opacity': '0' });
+  grad.appendChild(stop1); grad.appendChild(stop2);
+  defs.appendChild(grad);
+  curveSvg.appendChild(defs);
+
+  // 填充区域
+  var fillD = pathD + ' L ' + pointCoords[pointCoords.length - 1].x + ' ' + CURVE_H + ' L ' + pointCoords[0].x + ' ' + CURVE_H + ' Z';
+  curveSvg.appendChild(el('path', {
+    d: fillD, fill: 'url(#curveFill)'
+  }));
+
+  // 曲线
+  curveSvg.appendChild(el('path', {
+    d: pathD, fill: 'none', stroke: '#3B82F6',
+    'stroke-width': '2.5', 'stroke-linecap': 'round', 'stroke-linejoin': 'round'
+  }));
+}
+
+// 绘制得分点
+pointCoords.forEach(function(pt) {
+  var sc = scoreMap[pt.score] || scoreMap[3];
+  curveSvg.appendChild(el('circle', {
+    cx: pt.x, cy: pt.y, r: '5',
+    fill: sc.color, stroke: '#fff', 'stroke-width': '2'
+  }));
+});
+
+// 渲染阶段卡片
+var phasesEl = document.getElementById('phases');
+
+phases.forEach(function(phase, pi) {
+  var color = headerColors[pi % headerColors.length];
+
+  var phaseDiv = document.createElement('div');
+  phaseDiv.className = 'phase';
+  phaseDiv.style.minWidth = phaseWidths[pi] + 'px';
+
+  var header = document.createElement('div');
+  header.className = 'phase-header';
+  header.style.background = color;
+  header.textContent = phase.label;
+
+  var body = document.createElement('div');
+  body.className = 'phase-body';
+
+  phase.steps.forEach(function(step) {
+    var card = document.createElement('div');
+    card.className = 'step-card';
+
+    var label = document.createElement('span');
+    label.className = 'step-label';
+    label.textContent = step.label;
+
+    var scoreSpan = document.createElement('span');
+    scoreSpan.className = 'step-score';
+    var sc = scoreMap[step.score] || scoreMap[3];
+    scoreSpan.textContent = sc.emoji;
+
+    card.appendChild(label);
+    card.appendChild(scoreSpan);
+    body.appendChild(card);
+  });
+
+  phaseDiv.appendChild(header);
+  phaseDiv.appendChild(body);
+  phasesEl.appendChild(phaseDiv);
+});
+</script>
+</body>
+</html>

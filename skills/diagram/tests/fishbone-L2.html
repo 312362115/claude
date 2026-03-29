@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>鱼骨图</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    display: inline-block; padding: 24px; background: #fff;
+    font-family: -apple-system, system-ui, 'PingFang SC', sans-serif;
+  }
+  .title { font-size: 16px; font-weight: 700; color: #1a1a2e; }
+  .subtitle { font-size: 12px; color: #888; margin-top: 2px; }
+</style>
+</head>
+<body>
+
+<div class="title">鱼骨图（因果分析）</div>
+<div class="subtitle">根因分析 - Ishikawa Diagram</div>
+<svg id="canvas"></svg>
+
+<script>
+// ===== 数据 =====
+var problem = '用户留存率下降';
+var causes = [
+  { category: '产品', items: ['功能复杂', '性能慢', 'Bug 多'] },
+  { category: '运营', items: ['活动少', '推送不精准'] },
+  { category: '技术', items: ['加载慢', '兼容性差', '崩溃率高'] },
+  { category: '市场', items: ['竞品强', '获客成本高'] },
+  { category: '人员', items: ['团队不足', '经验欠缺'] },
+  { category: '流程', items: ['迭代慢', '需求不清'] }
+];
+// ===== 数据结束 =====
+
+var svgNS = 'http://www.w3.org/2000/svg';
+var svg = document.getElementById('canvas');
+
+// 主题色循环（C-1 ~ C-6）
+var boneColors = ['#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#06B6D4', '#F43F5E'];
+
+// 布局参数
+var SPINE_Y = 0;         // 将在计算后确定
+var BONE_ANGLE = 55;     // 骨头角度（度）
+var BONE_SPACING = 160;  // 骨头之间的水平间距
+var SUB_SPACING = 28;    // 子原因之间的垂直间距
+var SUB_LINE_LEN = 70;   // 子原因线长度
+var CAT_LABEL_W = 72;    // 类别标签宽度
+var CAT_LABEL_H = 30;    // 类别标签高度
+var HEAD_W = 120;        // 问题头宽度
+var HEAD_H = 50;         // 问题头高度
+var MARGIN_LEFT = 60;
+var MARGIN_TOP = 20;
+var MARGIN_BOTTOM = 20;
+
+function el(tag, attrs) {
+  var e = document.createElementNS(svgNS, tag);
+  for (var k in attrs) e.setAttribute(k, attrs[k]);
+  return e;
+}
+
+function addText(parent, x, y, text, attrs) {
+  var t = el('text', Object.assign({ x: x, y: y }, attrs || {}));
+  t.textContent = text;
+  parent.appendChild(t);
+  return t;
+}
+
+// 分为上下两组
+var topCauses = [];
+var bottomCauses = [];
+causes.forEach(function(c, i) {
+  if (i % 2 === 0) topCauses.push({ data: c, idx: i });
+  else bottomCauses.push({ data: c, idx: i });
+});
+
+// 计算需要的垂直空间
+var maxTopItems = 0, maxBottomItems = 0;
+topCauses.forEach(function(c) { maxTopItems = Math.max(maxTopItems, c.data.items.length); });
+bottomCauses.forEach(function(c) { maxBottomItems = Math.max(maxBottomItems, c.data.items.length); });
+
+var topHeight = maxTopItems * SUB_SPACING + CAT_LABEL_H + 40;
+var bottomHeight = maxBottomItems * SUB_SPACING + CAT_LABEL_H + 40;
+SPINE_Y = MARGIN_TOP + topHeight;
+
+var totalBones = Math.max(topCauses.length, bottomCauses.length);
+var spineLength = totalBones * BONE_SPACING + 80;
+var totalWidth = MARGIN_LEFT + spineLength + HEAD_W + 40;
+var totalHeight = SPINE_Y + bottomHeight + MARGIN_BOTTOM;
+
+svg.setAttribute('width', totalWidth);
+svg.setAttribute('height', totalHeight);
+svg.setAttribute('viewBox', '0 0 ' + totalWidth + ' ' + totalHeight);
+
+// 画 defs (阴影)
+var defs = el('defs', {});
+var filter = el('filter', { id: 'shadow', x: '-10%', y: '-10%', width: '130%', height: '140%' });
+var fds = el('feDropShadow', { dx: '0', dy: '2', stdDeviation: '3', 'flood-opacity': '0.1' });
+filter.appendChild(fds);
+defs.appendChild(filter);
+svg.appendChild(defs);
+
+// 画主干线
+var spineStartX = MARGIN_LEFT;
+var spineEndX = MARGIN_LEFT + spineLength;
+svg.appendChild(el('line', {
+  x1: spineStartX, y1: SPINE_Y, x2: spineEndX, y2: SPINE_Y,
+  stroke: '#475569', 'stroke-width': '3'
+}));
+
+// 画箭头
+svg.appendChild(el('polygon', {
+  points: [spineEndX, SPINE_Y, spineEndX - 12, SPINE_Y - 8, spineEndX - 12, SPINE_Y + 8].join(','),
+  fill: '#475569'
+}));
+
+// 画问题头
+var headX = spineEndX + 4;
+var headY = SPINE_Y - HEAD_H / 2;
+svg.appendChild(el('rect', {
+  x: headX, y: headY, width: HEAD_W, height: HEAD_H,
+  rx: '12', ry: '12', fill: '#EF4444', filter: 'url(#shadow)'
+}));
+addText(svg, headX + HEAD_W / 2, SPINE_Y + 5, problem, {
+  'text-anchor': 'middle', 'font-size': '14', 'font-weight': '700', fill: '#fff',
+  'font-family': "-apple-system, system-ui, 'PingFang SC', sans-serif"
+});
+
+// 画骨头函数
+function drawBone(causeObj, boneIndex, isTop) {
+  var c = causeObj.data;
+  var colorIdx = causeObj.idx % boneColors.length;
+  var color = boneColors[colorIdx];
+
+  // 骨头根部在主干上的 x 位置
+  var rootX = MARGIN_LEFT + 80 + boneIndex * BONE_SPACING;
+  var direction = isTop ? -1 : 1;
+
+  // 骨头端点（类别标签位置）
+  var boneLen = (c.items.length * SUB_SPACING + CAT_LABEL_H + 20);
+  var tipX = rootX + boneLen * 0.4;
+  var tipY = SPINE_Y + direction * boneLen;
+
+  // 画主骨
+  svg.appendChild(el('line', {
+    x1: rootX, y1: SPINE_Y, x2: tipX, y2: tipY,
+    stroke: color, 'stroke-width': '2.5'
+  }));
+
+  // 画类别标签
+  var labelX = tipX - CAT_LABEL_W / 2;
+  var labelY = isTop ? tipY - CAT_LABEL_H - 4 : tipY + 4;
+  svg.appendChild(el('rect', {
+    x: labelX, y: labelY, width: CAT_LABEL_W, height: CAT_LABEL_H,
+    rx: '8', fill: color, filter: 'url(#shadow)'
+  }));
+  addText(svg, tipX, labelY + CAT_LABEL_H / 2 + 5, c.category, {
+    'text-anchor': 'middle', 'font-size': '13', 'font-weight': '700', fill: '#fff',
+    'font-family': "-apple-system, system-ui, 'PingFang SC', sans-serif"
+  });
+
+  // 画子原因（沿骨头均匀分布）
+  c.items.forEach(function(item, j) {
+    var t = (j + 1) / (c.items.length + 1);
+    var sx = rootX + (tipX - rootX) * t;
+    var sy = SPINE_Y + (tipY - SPINE_Y) * t;
+
+    // 子原因线：水平方向向右延伸
+    var endX = sx + SUB_LINE_LEN;
+    svg.appendChild(el('line', {
+      x1: sx, y1: sy, x2: endX, y2: sy,
+      stroke: '#94A3B8', 'stroke-width': '1.5'
+    }));
+    addText(svg, endX + 4, sy + 4, item, {
+      'font-size': '12', fill: '#475569',
+      'font-family': "-apple-system, system-ui, 'PingFang SC', sans-serif"
+    });
+  });
+}
+
+// 画上方骨头
+topCauses.forEach(function(c, i) { drawBone(c, i, true); });
+// 画下方骨头
+bottomCauses.forEach(function(c, i) { drawBone(c, i, false); });
+</script>
+</body>
+</html>

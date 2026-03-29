@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, system-ui, 'PingFang SC', sans-serif;
+    background: #ffffff;
+    padding: 24px;
+    display: inline-block;
+  }
+</style>
+<script src="lib/elk.bundled.js"></script>
+</head>
+<body>
+<svg id="canvas"></svg>
+
+<script>
+(function() {
+  var NS = 'http://www.w3.org/2000/svg';
+  var svg = document.getElementById('canvas');
+
+
+  var title = '博客系统 ER 图';
+  var subtitle = 'L1 简单 · 3 表 · 2 关系';
+
+  var tables = [
+    { id: 'users', label: '用户表 users', type: 'core', fields: [
+      { name: 'id', dtype: 'INT', pk: true },
+      { name: 'username', dtype: 'VARCHAR(50)' },
+      { name: 'email', dtype: 'VARCHAR(100)' }
+    ]},
+    { id: 'posts', label: '文章表 posts', type: 'core', fields: [
+      { name: 'id', dtype: 'INT', pk: true },
+      { name: 'user_id', dtype: 'INT', fk: true },
+      { name: 'title', dtype: 'VARCHAR(200)' },
+      { name: 'content', dtype: 'TEXT' }
+    ]},
+    { id: 'comments', label: '评论表 comments', type: 'normal', fields: [
+      { name: 'id', dtype: 'INT', pk: true },
+      { name: 'post_id', dtype: 'INT', fk: true },
+      { name: 'content', dtype: 'TEXT' }
+    ]}
+  ];
+
+  var relations = [
+    { from: 'users', to: 'posts', label: '1 : N' },
+    { from: 'posts', to: 'comments', label: '1 : N' }
+  ];
+
+  // ========== 主题 ==========
+  var theme = {
+    title: { color: '#1a1a2e', size: 22 },
+    subtitle: { color: '#888888', size: 14 },
+    tableTypes: {
+      core:     { headerBg: '#3B82F6', headerText: '#FFFFFF', pkColor: '#3B82F6' },
+      normal:   { headerBg: '#10B981', headerText: '#FFFFFF', pkColor: '#10B981' },
+      junction: { headerBg: '#64748B', headerText: '#FFFFFF', pkColor: '#64748B' }
+    },
+    field: { text: '#1E293B', type: '#94A3B8', fk: '#8B5CF6', divider: '#F1F5F9' },
+    table: { bg: '#FFFFFF', border: '#E2E8F0' },
+    line: { color: '#94A3B8', width: 1.5, label: '#64748B' }
+  };
+
+  // ========== 工具函数 ==========
+  function el(tag, attrs) {
+    var e = document.createElementNS(NS, tag);
+    if (attrs) for (var k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+  function measureText(str, fontSize) {
+    var w = 0;
+    for (var i = 0; i < str.length; i++) w += str.charCodeAt(i) > 127 ? fontSize : fontSize * 0.62;
+    return w;
+  }
+
+  // ========== 布局参数 ==========
+  var HEADER_H = 32;
+  var HEADER_BRIDGE = 6;        // 表头下方色块延伸
+  var FIELD_H = 23;
+  var FIELD_PAD_X = 12;
+  var TABLE_PAD_X = 0;
+  var TABLE_MIN_W = 180;
+  var TITLE_H = 56;             // 标题区高度（标题+副标题+间距）
+  var LEGEND_H = 40;            // 底部图例高度
+
+  // ========== 第一遍：计算每个表的尺寸 ==========
+  var tableMap = {};
+
+  // 先算统一表宽（所有表中最宽的）
+  var maxTableW = TABLE_MIN_W;
+  tables.forEach(function(t) {
+    var labelW = measureText(t.label, 13) + 24;
+    if (labelW > maxTableW) maxTableW = labelW;
+    t.fields.forEach(function(f) {
+      var fieldW = measureText(f.name, 12) + measureText(f.dtype + (f.pk ? ' · PK' : f.fk ? ' · FK' : ''), 11) + FIELD_PAD_X * 2 + 20;
+      if (fieldW > maxTableW) maxTableW = fieldW;
+    });
+  });
+
+  tables.forEach(function(t) {
+    var h = HEADER_H + HEADER_BRIDGE + t.fields.length * FIELD_H + 4;
+    tableMap[t.id] = { id: t.id, label: t.label, type: t.type, fields: t.fields, w: maxTableW, h: h };
+  });
+
+  // ========== ELKjs 布局 ==========
+  var elk = new ELK();
+
+  var elkGraph = {
+    id: 'root',
+    layoutOptions: {
+      'elk.algorithm': 'layered',
+      'elk.direction': 'DOWN',
+      'elk.spacing.nodeNode': '80',
+      'elk.layered.spacing.nodeNodeBetweenLayers': '60',
+      'elk.spacing.edgeNode': '20',
+      'elk.spacing.edgeEdge': '15',
+      'elk.layered.crossingMinimization.strategy': 'LAYER_SWEEP'
+    },
+    children: [],
+    edges: []
+  };
+
+  // 添加节点
+  tables.forEach(function(t) {
+    var n = tableMap[t.id];
+    elkGraph.children.push({ id: t.id, width: n.w, height: n.h });
+  });
+
+  // 添加边
+  relations.forEach(function(r, i) {
+    elkGraph.edges.push({ id: 'e' + i, sources: [r.from], targets: [r.to] });
+  });
+
+  // 执行布局（异步）
+  elk.layout(elkGraph).then(function(result) {
+
+  // 读取布局结果（ELK 返回左上角坐标）
+  result.children.forEach(function(child) {
+    var n = tableMap[child.id];
+    n.x = child.x;
+    n.y = child.y + TITLE_H;
+    n.cx = n.x + n.w / 2;
+    n.cy = n.y + n.h / 2;
+  });
+
+  // ========== 画布自适应 ==========
+  var maxX = 0, maxY = 0;
+  tables.forEach(function(t) {
+    var node = tableMap[t.id];
+    if (node.x + node.w > maxX) maxX = node.x + node.w;
+    if (node.y + node.h > maxY) maxY = node.y + node.h;
+  });
+
+  var svgW = maxX + 40;
+  var svgH = maxY + LEGEND_H + 40;
+
+  svg.setAttribute('width', svgW);
+  svg.setAttribute('height', svgH);
+  svg.setAttribute('viewBox', '0 0 ' + svgW + ' ' + svgH);
+
+  // ========== SVG Defs ==========
+  var defs = el('defs');
+  var arrow = el('marker', { id: 'arrow', markerWidth: 8, markerHeight: 6, refX: 8, refY: 3, orient: 'auto' });
+  arrow.appendChild(el('path', { d: 'M0,0.5 L7,3 L0,5.5', fill: 'none', stroke: theme.line.color, 'stroke-width': 1.2, 'stroke-linecap': 'round' }));
+  defs.appendChild(arrow);
+  svg.appendChild(defs);
+
+  // ========== 渲染层 ==========
+  var lineGroup = el('g'); svg.appendChild(lineGroup);
+  var nodeGroup = el('g'); svg.appendChild(nodeGroup);
+  var labelLayer = el('g'); svg.appendChild(labelLayer);  // 标签层（在节点之上）
+
+  // ========== 标题（左上角） ==========
+  if (title) {
+    var tEl = el('text', { x: 0, y: 18, 'font-size': 16, 'font-weight': 700, fill: theme.title.color, 'font-family': "-apple-system,system-ui,'PingFang SC',sans-serif" });
+    tEl.textContent = title; nodeGroup.appendChild(tEl);
+  }
+  if (subtitle) {
+    var stEl = el('text', { x: 0, y: 36, 'font-size': 12, fill: theme.subtitle.color, 'font-family': "-apple-system,system-ui,'PingFang SC',sans-serif" });
+    stEl.textContent = subtitle; nodeGroup.appendChild(stEl);
+  }
+
+  // ========== 绘制关系连线（使用 ELK 计算的边路由） ==========
+  (result.edges || []).forEach(function(edge, ei) {
+    var rel = relations[ei];
+    if (!rel) return;
+
+    var sec = edge.sections && edge.sections[0];
+    if (!sec) return;
+
+    // 构建路径
+    var d = 'M' + sec.startPoint.x + ',' + (sec.startPoint.y + TITLE_H);
+    if (sec.bendPoints) {
+      sec.bendPoints.forEach(function(bp) {
+        d += ' L' + bp.x + ',' + (bp.y + TITLE_H);
+      });
+    }
+    d += ' L' + sec.endPoint.x + ',' + (sec.endPoint.y + TITLE_H);
+
+    lineGroup.appendChild(el('path', {
+      d: d, stroke: theme.line.color, 'stroke-width': theme.line.width,
+      fill: 'none', 'marker-end': 'url(#arrow)'
+    }));
+
+    // 计算边路径中点位置，用于放置标签
+    var allPts = [sec.startPoint];
+    if (sec.bendPoints) {
+      sec.bendPoints.forEach(function(bp) { allPts.push(bp); });
+    }
+    allPts.push(sec.endPoint);
+
+    var midIdx = Math.floor(allPts.length / 2);
+    var labelX, labelY;
+    if (allPts.length % 2 === 1) {
+      labelX = allPts[midIdx].x;
+      labelY = allPts[midIdx].y + TITLE_H;
+    } else {
+      labelX = (allPts[midIdx - 1].x + allPts[midIdx].x) / 2;
+      labelY = (allPts[midIdx - 1].y + allPts[midIdx].y) / 2 + TITLE_H;
+    }
+
+    // 绘制关系标签（白底 + 文字，放在 labelLayer 上层）
+    var lw = measureText(rel.label, 10) + 10;
+    labelLayer.appendChild(el('rect', {
+      x: labelX - lw / 2, y: labelY - 8, width: lw, height: 14,
+      rx: 3, fill: '#ffffff'
+    }));
+    var lt = el('text', {
+      x: labelX, y: labelY, 'text-anchor': 'middle',
+      'font-size': 10, fill: theme.line.label,
+      'font-family': "-apple-system,system-ui,'PingFang SC',sans-serif"
+    });
+    lt.textContent = rel.label; labelLayer.appendChild(lt);
+  });
+
+  // ========== 绘制表 ==========
+  tables.forEach(function(t) {
+    var node = tableMap[t.id];
+    var x = node.x, y = node.y, w = node.w, h = node.h;
+    var ts = theme.tableTypes[node.type] || theme.tableTypes.junction;
+
+    // 外边框
+    nodeGroup.appendChild(el('rect', {
+      x: x, y: y, width: w, height: h,
+      rx: 6, fill: theme.table.bg, stroke: theme.table.border, 'stroke-width': 1
+    }));
+
+    // 表头背景
+    nodeGroup.appendChild(el('rect', {
+      x: x, y: y, width: w, height: HEADER_H,
+      rx: 6, fill: ts.headerBg
+    }));
+    // 表头下方色块延伸（填补圆角间隙）
+    nodeGroup.appendChild(el('rect', {
+      x: x, y: y + HEADER_H - 4, width: w, height: HEADER_BRIDGE + 4,
+      fill: ts.headerBg
+    }));
+
+    // 表头文字
+    var headerText = el('text', {
+      x: x + w / 2, y: y + HEADER_H / 2 + 2,
+      'text-anchor': 'middle', 'dominant-baseline': 'central',
+      'font-size': 13, 'font-weight': 700, fill: ts.headerText,
+      'font-family': "-apple-system,system-ui,'PingFang SC',sans-serif"
+    });
+    headerText.textContent = node.label; nodeGroup.appendChild(headerText);
+
+    // 字段列表
+    var fieldStartY = y + HEADER_H + HEADER_BRIDGE;
+    node.fields.forEach(function(f, fi) {
+      var fy = fieldStartY + fi * FIELD_H;
+
+      // 字段名
+      var nameColor = f.pk ? ts.pkColor : f.fk ? theme.field.fk : theme.field.text;
+      var nameWeight = (f.pk || f.fk) ? 600 : 400;
+      var nameEl = el('text', {
+        x: x + FIELD_PAD_X, y: fy + FIELD_H / 2 + 1,
+        'dominant-baseline': 'central',
+        'font-size': 12, 'font-weight': nameWeight, fill: nameColor,
+        'font-family': "-apple-system,system-ui,'PingFang SC',sans-serif"
+      });
+      nameEl.textContent = f.name; nodeGroup.appendChild(nameEl);
+
+      // 类型
+      var typeStr = f.dtype + (f.pk ? ' · PK' : f.fk ? ' · FK' : '');
+      var typeEl = el('text', {
+        x: x + w - FIELD_PAD_X, y: fy + FIELD_H / 2 + 1,
+        'text-anchor': 'end', 'dominant-baseline': 'central',
+        'font-size': 11, fill: theme.field.type,
+        'font-family': "-apple-system,system-ui,'PingFang SC',sans-serif"
+      });
+      typeEl.textContent = typeStr; nodeGroup.appendChild(typeEl);
+
+      // 分隔线（最后一行不加）
+      if (fi < node.fields.length - 1) {
+        nodeGroup.appendChild(el('line', {
+          x1: x + FIELD_PAD_X, y1: fy + FIELD_H,
+          x2: x + w - FIELD_PAD_X, y2: fy + FIELD_H,
+          stroke: theme.field.divider, 'stroke-width': 1
+        }));
+      }
+    });
+  });
+
+  // ========== 图例 ==========
+  var legendY = maxY + 24;
+  var legendItems = [
+    { color: theme.tableTypes.core.headerBg, label: '核心表' },
+    { color: theme.tableTypes.normal.headerBg, label: '业务表' },
+    { color: theme.tableTypes.junction.headerBg, label: '关联/辅助表' }
+  ];
+  var lx = 0;
+  legendItems.forEach(function(item) {
+    nodeGroup.appendChild(el('rect', { x: lx, y: legendY, width: 16, height: 12, rx: 3, fill: item.color }));
+    var lt = el('text', { x: lx + 22, y: legendY + 10, 'font-size': 11, fill: '#64748B', 'font-family': "-apple-system,system-ui,'PingFang SC',sans-serif" });
+    lt.textContent = item.label; nodeGroup.appendChild(lt);
+    lx += measureText(item.label, 11) + 42;
+  });
+  // FK 标注说明
+  var fkLabel = el('text', { x: lx, y: legendY + 10, 'font-size': 12, 'font-weight': 500, fill: theme.field.fk, 'font-family': "-apple-system,system-ui,'PingFang SC',sans-serif" });
+  fkLabel.textContent = 'FK字段'; nodeGroup.appendChild(fkLabel);
+  var fkDesc = el('text', { x: lx + measureText('FK字段', 12) + 8, y: legendY + 10, 'font-size': 11, fill: '#64748B', 'font-family': "-apple-system,system-ui,'PingFang SC',sans-serif" });
+  fkDesc.textContent = '外键用紫色标注'; nodeGroup.appendChild(fkDesc);
+
+  }); // end elk.layout().then()
+})();
+</script>
+</body>
+</html>
