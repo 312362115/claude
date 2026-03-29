@@ -317,11 +317,7 @@
     nodeGroup.appendChild(el('rect', { x: x, y: y, width: w, height: HEADER_H, rx: 8, fill: tc.header }));
     nodeGroup.appendChild(el('rect', { x: x, y: y + HEADER_H - 4, width: w, height: HEADER_BRIDGE + 4, fill: tc.header }));
 
-    if (n.type === 'interface' || n.type === 'abstract') {
-      nodeGroup.appendChild(el('text', { x: x + w / 2, y: y + 12, 'text-anchor': 'middle', 'font-size': 9, fill: 'rgba(255,255,255,0.7)', 'font-family': SANS })).textContent = '<<' + n.type + '>>';
-    }
-
-    var nameY = (n.type === 'interface' || n.type === 'abstract') ? y + HEADER_H / 2 + 6 : y + HEADER_H / 2 + 2;
+    var nameY = y + HEADER_H / 2 + 2;
     nodeGroup.appendChild(el('text', { x: x + w / 2, y: nameY, 'text-anchor': 'middle', 'dominant-baseline': 'central', 'font-size': 14, 'font-weight': 700, fill: '#FFFFFF', 'font-family': SANS })).textContent = n.label;
 
     var bodyY = y + HEADER_H + HEADER_BRIDGE;

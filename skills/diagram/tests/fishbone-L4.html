@@ -172,10 +172,25 @@ function drawBone(causeObj, boneIndex, isTop) {
       x1: sx, y1: sy, x2: endX, y2: sy,
       stroke: '#94A3B8', 'stroke-width': '1.5'
     }));
-    addText(svg, endX + 4, sy + 4, item, {
-      'font-size': '12', fill: '#475569',
-      'font-family': "-apple-system, system-ui, 'PingFang SC', sans-serif"
-    });
+    // 长文本折行处理（超过 MAX_CHAR_PER_LINE 个字符时折行）
+    var MAX_CHAR_PER_LINE = 10;
+    if (item.length > MAX_CHAR_PER_LINE) {
+      var lines = [];
+      for (var ci = 0; ci < item.length; ci += MAX_CHAR_PER_LINE) {
+        lines.push(item.slice(ci, ci + MAX_CHAR_PER_LINE));
+      }
+      lines.forEach(function(line, li) {
+        addText(svg, endX + 4, sy + 4 + li * 16, line, {
+          'font-size': '12', fill: '#475569',
+          'font-family': "-apple-system, system-ui, 'PingFang SC', sans-serif"
+        });
+      });
+    } else {
+      addText(svg, endX + 4, sy + 4, item, {
+        'font-size': '12', fill: '#475569',
+        'font-family': "-apple-system, system-ui, 'PingFang SC', sans-serif"
+      });
+    }
   });
 }
 

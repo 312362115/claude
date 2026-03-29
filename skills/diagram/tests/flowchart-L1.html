@@ -187,6 +187,10 @@
 
   // 侧分支：在对应 decision 的右侧，与下一个主步骤同行
   var mainPathRight = mainRectMaxW / 2;
+  // 有分组时，侧分支要在分组背景右边缘之外
+  if (hasGroups) {
+    mainPathRight = Math.max(mainPathRight, mainPathRight + GROUP_PAD_X);
+  }
   var sideColLeft = mainPathRight + SIDE_GAP;
 
   steps.forEach(function(step) {
