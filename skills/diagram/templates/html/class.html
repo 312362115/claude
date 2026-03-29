@@ -343,6 +343,19 @@
     lx += mt(le.label, 11) + 56;
   });
 
+  // 图例可能超出画布，更新 SVG 尺寸
+  var legendRight = lx + 10;
+  var legendBottom = legendY + 30;
+  if (legendRight > svgW) {
+    svgW = legendRight;
+    svg.setAttribute('width', svgW);
+  }
+  if (legendBottom > svgH) {
+    svgH = legendBottom;
+    svg.setAttribute('height', svgH);
+  }
+  svg.setAttribute('viewBox', '0 0 ' + svgW + ' ' + svgH);
+
   }); // end elk.layout().then()
 })();
 </script>

@@ -186,8 +186,8 @@
     if (node.y + node.h > maxY) maxY = node.y + node.h;
   });
 
-  var svgW = maxX + 40;
-  var svgH = maxY + LEGEND_H + 40;
+  var svgW = maxX + 60;
+  var svgH = maxY + LEGEND_H + 60;
 
   svg.setAttribute('width', svgW);
   svg.setAttribute('height', svgH);
@@ -367,6 +367,20 @@
   fkLabel.textContent = 'FK字段'; nodeGroup.appendChild(fkLabel);
   var fkDesc = el('text', { x: lx + measureText('FK字段', 12) + 8, y: legendY + 10, 'font-size': 11, fill: '#64748B', 'font-family': "-apple-system,system-ui,'PingFang SC',sans-serif" });
   fkDesc.textContent = '外键用紫色标注'; nodeGroup.appendChild(fkDesc);
+  lx += measureText('FK字段', 12) + 8 + measureText('外键用紫色标注', 11) + 10;
+
+  // 图例可能超出画布，更新 SVG 尺寸
+  var legendRight = lx + 10;
+  var legendBottom = legendY + 30;
+  if (legendRight > svgW) {
+    svgW = legendRight;
+    svg.setAttribute('width', svgW);
+  }
+  if (legendBottom > svgH) {
+    svgH = legendBottom;
+    svg.setAttribute('height', svgH);
+  }
+  svg.setAttribute('viewBox', '0 0 ' + svgW + ' ' + svgH);
 
   }); // end elk.layout().then()
 })();
