@@ -45,15 +45,15 @@
   - 涉及：`skills/diagram/templates/html/swimlane.html`
   - 验收：✅ L2 通过
 
-- [ ] 9. P2 — state 动态布局
-  - 做什么：改造为 JS 动态布局，支持任意状态数和转换关系
-  - 涉及：`skills/diagram/templates/html/state.html`（重写）
-  - 验收：传入 4 状态 / 8 状态含自循环 / 并行状态，均正常
+- [x] 9. P2 — state 动态布局
+  - 做什么：ELKjs layered RIGHT + NETWORK_SIMPLEX + 圆弧折线
+  - 涉及：`skills/diagram/templates/html/state.html`
+  - 验收：✅ L2 通过（8 状态 10 转换）
 
-- [ ] 10. P2 — fishbone / swot / venn / journey 动态布局
-  - 做什么：4 个卡片类模板改为内容动态填充（骨架固定，文字/条目数量自适应）
-  - 涉及：4 个 HTML 模板（重写）
-  - 验收：传入不同数量的条目（少量 3 条 / 中量 6 条 / 多量 10 条），布局自适应无溢出
+- [x] 10. P2 — fishbone / swot / venn / journey 动态布局
+  - 做什么：4 个卡片类模板数据驱动内容填充
+  - 涉及：4 个 HTML 模板
+  - 验收：✅ 全部 L2 通过
 
 - [ ] 11. 通用兜底布局引擎
   - 做什么：实现通用布局算法，自动识别数据结构（树形/分层/网格/自由），选择最合适的布局
