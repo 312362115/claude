@@ -15,12 +15,10 @@
   - 涉及：`skills/diagram/references/design-system.md`（更新配色章节），`skills/diagram/references/themes.md`（新建）
   - 验收：theme 对象结构定义完成，default 主题覆盖所有组件颜色
 
-- [ ] 3. P0 — flowchart 动态布局
-  - 做什么：ELKjs compound graph 布局，支持分组/侧分支/判断
-  - 涉及：`skills/diagram/templates/html/flowchart.html`（重写）
-  - 验收：❌ ELK compound graph 分组顺序错乱（用户端/订单服务/通知服务位置颠倒）
-  - 问题：ELK 没有保持组间的顺序约束，需要添加层级约束或组间边
-  - 注：无分组模式（flat steps）+ ELK 应该能正常工作，待验证
+- [x] 3. P0 — flowchart 动态布局
+  - 做什么：手动布局（主路径向下+否分支右侧）+ 分组背景overlay
+  - 涉及：`skills/diagram/templates/html/flowchart.html`
+  - 验收：✅ L2 通过
 
 - [x] 4. P0 — sequence 动态布局
   - 做什么：改造为 JS 动态布局，支持任意数量参与者和消息，含 fragment（loop/alt/opt/par/break）
@@ -37,17 +35,15 @@
   - 涉及：`skills/diagram/templates/html/class.html`（重写）
   - 验收：✅ L2 通过（6 类 3 枚举 8 关系）
 
-- [ ] 7. P1 — architecture 动态布局
-  - 做什么：ELKjs partitioning 布局，支持预定义层级
-  - 涉及：`skills/diagram/templates/html/architecture.html`（重写）
-  - 验收：❌ ELK partitioning 层级顺序错乱，需要修正 ELK 参数配置
-  - 问题：ELK 的 partition 索引没有正确约束层的上下顺序
+- [x] 7. P1 — architecture 动态布局
+  - 做什么：手动层堆叠（预定义层序），无箭头，间距紧凑
+  - 涉及：`skills/diagram/templates/html/architecture.html`
+  - 验收：✅ L2 通过
 
-- [ ] 8. P1 — swimlane 动态布局
-  - 做什么：ELKjs compound nodes 布局，泳道为父节点
-  - 涉及：`skills/diagram/templates/html/swimlane.html`（重写）
-  - 验收：❌ 泳道缺失（用户/后端泳道消失），compound nodes 配置有问题
-  - 问题：ELK hierarchyHandling + compound layout 参数需要调整
+- [x] 8. P1 — swimlane 动态布局
+  - 做什么：手动网格布局（列×行），泳道高度独立，箭头缩小
+  - 涉及：`skills/diagram/templates/html/swimlane.html`
+  - 验收：✅ L2 通过
 
 - [ ] 9. P2 — state 动态布局
   - 做什么：改造为 JS 动态布局，支持任意状态数和转换关系
