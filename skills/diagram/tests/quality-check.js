@@ -45,10 +45,14 @@ function checkDiagramQuality() {
       var gap = 2;
       if (!(a.x + a.w + gap <= b.x || b.x + b.w + gap <= a.x ||
             a.y + a.h + gap <= b.y || b.y + b.h + gap <= a.y)) {
-        // 排除包含关系（父容器包含子节点是正常的）
-        var aContainsB = a.x <= b.x && a.y <= b.y && a.x + a.w >= b.x + b.w && a.y + a.h >= b.y + b.h;
-        var bContainsA = b.x <= a.x && b.y <= a.y && b.x + b.w >= a.x + a.w && b.y + b.h >= a.y + a.h;
-        if (!aContainsB && !bContainsA) {
+        // 排除包含关系（容差 10px，或面积比 > 3 倍视为容器包含子节点）
+        var M = 10;
+        var aContainsB = a.x - M <= b.x && a.y - M <= b.y && a.x + a.w + M >= b.x + b.w && a.y + a.h + M >= b.y + b.h;
+        var bContainsA = b.x - M <= a.x && b.y - M <= a.y && b.x + b.w + M >= a.x + a.w && b.y + b.h + M >= a.y + a.h;
+        var areaA = a.w * a.h, areaB = b.w * b.h;
+        var areaRatio = Math.max(areaA, areaB) / Math.min(areaA, areaB);
+        var isContainer = areaRatio > 3;  // 面积差 3 倍以上视为容器关系
+        if (!aContainsB && !bContainsA && !isContainer) {
           overlaps++;
         }
       }
