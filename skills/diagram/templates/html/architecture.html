@@ -9,10 +9,8 @@
     background: #fff;
     padding: 24px;
     display: inline-block;
-    -webkit-font-smoothing: antialiased;
   }
 </style>
-<script src="lib/elk.bundled.js"></script>
 </head>
 <body>
 <svg id="canvas"></svg>
@@ -51,7 +49,6 @@
 
   // ========== 主题 ==========
   var theme = {
-    title: { color: '#0F172A', size: 16 },
     layers: [
       { bg: 'rgba(59,130,246,0.08)',  border: 'rgba(59,130,246,0.2)',  color: '#1E40AF' },
       { bg: 'rgba(6,182,212,0.08)',   border: 'rgba(6,182,212,0.2)',   color: '#155E75' },
@@ -60,257 +57,99 @@
       { bg: 'rgba(139,92,246,0.08)',  border: 'rgba(139,92,246,0.2)',  color: '#5B21B6' },
       { bg: 'rgba(244,63,94,0.08)',   border: 'rgba(244,63,94,0.2)',   color: '#9F1239' }
     ],
-    node: { bg: '#FFFFFF', border: '#E2E8F0', text: '#1E293B', desc: '#64748B' },
-    arrow: { color: '#94A3B8', width: 1.2 }
+    node: { bg: '#FFFFFF', border: '#E2E8F0', text: '#1E293B', desc: '#64748B' }
   };
 
-  // ========== 布局参数 ==========
-  var FONT = "-apple-system, system-ui, 'PingFang SC', sans-serif";
-  var TITLE_FONT_SIZE = theme.title.size;
-  var LABEL_FONT_SIZE = 13;
-  var NODE_LABEL_SIZE = 13;
-  var NODE_DESC_SIZE = 11;
-  var CANVAS_PAD = 24;
-  var LAYER_GAP = 20;           // 层间距
-  var LAYER_PAD_X = 20;         // 层内左右 padding
-  var LAYER_PAD_Y = 16;         // 层内上下 padding
-  var LAYER_LABEL_W = 72;       // 层标签宽度
-  var LAYER_LABEL_GAP = 12;     // 层标签和节点区域间距
-  var NODE_GAP = 16;            // 节点间距
-  var NODE_PAD_X = 20;          // 节点内左右 padding
-  var NODE_H = 48;              // 节点高度
-  var NODE_RX = 6;              // 节点圆角
-  var LAYER_RX = 8;             // 层背景圆角
-
   // ========== 工具函数 ==========
-  function measureText(str, fontSize) {
-    var w = 0;
-    for (var i = 0; i < str.length; i++) {
-      w += str.charCodeAt(i) > 127 ? fontSize : fontSize * 0.6;
-    }
-    return w;
-  }
-
+  var FONT = "-apple-system, system-ui, 'PingFang SC', sans-serif";
   function el(tag, attrs, text) {
     var e = document.createElementNS(NS, tag);
-    if (attrs) {
-      for (var k in attrs) {
-        if (attrs.hasOwnProperty(k)) e.setAttribute(k, attrs[k]);
-      }
-    }
+    if (attrs) for (var k in attrs) e.setAttribute(k, attrs[k]);
     if (text !== undefined) e.textContent = text;
     return e;
   }
-
-  // ========== 计算节点宽度 ==========
-  // 同一层内所有节点等宽（取最大宽度）
-  function calcLayerNodeWidth(nodes) {
-    var maxW = 0;
-    for (var i = 0; i < nodes.length; i++) {
-      var labelW = measureText(nodes[i].label, NODE_LABEL_SIZE);
-      var descW = measureText(nodes[i].desc, NODE_DESC_SIZE);
-      var w = Math.max(labelW, descW) + NODE_PAD_X * 2;
-      if (w > maxW) maxW = w;
-    }
-    return Math.max(maxW, 80);
+  function mt(str, fs) {
+    var w = 0;
+    for (var i = 0; i < str.length; i++) w += str.charCodeAt(i) > 127 ? fs : fs * 0.6;
+    return w;
   }
 
-  // ========== ELKjs 布局 ==========
-  var elk = new ELK();
-  var titleH = 52;
+  // ========== 布局参数 ==========
+  var TITLE_H = 52;
+  var LAYER_GAP = 16;
+  var LAYER_PAD_X = 20;
+  var LAYER_PAD_Y = 16;
+  var LAYER_LABEL_W = 72;
+  var LAYER_LABEL_GAP = 12;
+  var NODE_GAP = 16;
+  var NODE_PAD_X = 20;
+  var NODE_H = 48;
 
-  // 为每个层的每个节点生成唯一 ID，并计算宽高
-  var nodeIdMap = {};  // nodeId → { layerIdx, nodeIdx, label, desc }
-  var layerNodeWidths = [];
-
-  for (var li = 0; li < layers.length; li++) {
-    var nodeW = calcLayerNodeWidth(layers[li].nodes);
-    layerNodeWidths.push(nodeW);
-    for (var ni = 0; ni < layers[li].nodes.length; ni++) {
-      var nodeId = 'L' + li + '_N' + ni;
-      nodeIdMap[nodeId] = { layerIdx: li, nodeIdx: ni, label: layers[li].nodes[ni].label, desc: layers[li].nodes[ni].desc, w: nodeW };
-    }
-  }
-
-  // 构建 ELK 图：使用分区（partitioning）实现分层
-  var elkGraph = {
-    id: 'root',
-    layoutOptions: {
-      'elk.algorithm': 'layered',
-      'elk.direction': 'DOWN',
-      'elk.partitioning.activate': 'true',
-      'elk.spacing.nodeNode': String(NODE_GAP),
-      'elk.layered.spacing.nodeNodeBetweenLayers': String(LAYER_GAP + LAYER_PAD_Y * 2 + NODE_H),
-      'elk.spacing.edgeNode': '10',
-      'elk.spacing.edgeEdge': '10'
-    },
-    children: [],
-    edges: []
-  };
-
-  for (var li = 0; li < layers.length; li++) {
-    var nodeW = layerNodeWidths[li];
-    for (var ni = 0; ni < layers[li].nodes.length; ni++) {
-      var nodeId = 'L' + li + '_N' + ni;
-      elkGraph.children.push({
-        id: nodeId,
-        width: nodeW,
-        height: NODE_H,
-        layoutOptions: {
-          'elk.partitioning.partition': String(li)
-        }
-      });
-    }
-  }
-
-  // 执行布局（异步）
-  elk.layout(elkGraph).then(function(result) {
-
-  // 读取 ELK 布局结果
-  var elkPositions = {};
-  result.children.forEach(function(child) {
-    elkPositions[child.id] = { x: child.x, y: child.y };
-  });
-
-  // 计算每层的节点位置及层边界
-  var layoutLayers = [];
-  for (var li = 0; li < layers.length; li++) {
-    var layer = layers[li];
-    var nodeW = layerNodeWidths[li];
-    var nodePositions = [];
-    var layerMinX = Infinity, layerMaxX = -Infinity;
-    var layerMinY = Infinity, layerMaxY = -Infinity;
-
-    for (var ni = 0; ni < layer.nodes.length; ni++) {
-      var nodeId = 'L' + li + '_N' + ni;
-      var pos = elkPositions[nodeId];
-      var nx = pos.x + CANVAS_PAD;
-      var ny = pos.y + CANVAS_PAD + titleH;
-      nodePositions.push({ x: nx, y: ny, w: nodeW, h: NODE_H });
-
-      if (nx < layerMinX) layerMinX = nx;
-      if (nx + nodeW > layerMaxX) layerMaxX = nx + nodeW;
-      if (ny < layerMinY) layerMinY = ny;
-      if (ny + NODE_H > layerMaxY) layerMaxY = ny + NODE_H;
-    }
-
-    // 层背景边界（包裹所有节点 + padding + 左侧标签空间）
-    var lx = layerMinX - LAYER_PAD_X - LAYER_LABEL_W - LAYER_LABEL_GAP;
-    var ly = layerMinY - LAYER_PAD_Y;
-    var lw = layerMaxX - layerMinX + LAYER_PAD_X * 2 + LAYER_LABEL_W + LAYER_LABEL_GAP;
-    var lh = layerMaxY - layerMinY + LAYER_PAD_Y * 2;
-
-    layoutLayers.push({
-      data: layer,
-      nodeW: nodeW,
-      nodePositions: nodePositions,
-      x: lx, y: ly, w: lw, h: lh
-    });
-  }
-
-  // 统一层宽度（取最大层宽，使所有层等宽）
+  // ========== 计算布局 ==========
+  // 每层节点等宽（取该层最大宽度）
+  var layerData = [];
   var maxLayerW = 0;
-  for (var li = 0; li < layoutLayers.length; li++) {
-    if (layoutLayers[li].w > maxLayerW) maxLayerW = layoutLayers[li].w;
-  }
-  // 居中调整：对齐所有层的 x 和 w
-  var minLayerX = Infinity;
-  for (var li = 0; li < layoutLayers.length; li++) {
-    if (layoutLayers[li].x < minLayerX) minLayerX = layoutLayers[li].x;
-  }
-  for (var li = 0; li < layoutLayers.length; li++) {
-    layoutLayers[li].x = minLayerX;
-    layoutLayers[li].w = maxLayerW;
-  }
 
-  // ========== 设置画布尺寸 ==========
-  var canvasW = minLayerX + maxLayerW + CANVAS_PAD;
-  var canvasH = layoutLayers[layoutLayers.length - 1].y + layoutLayers[layoutLayers.length - 1].h + CANVAS_PAD;
-
-  svg.setAttribute('width', canvasW);
-  svg.setAttribute('height', canvasH);
-  svg.setAttribute('viewBox', '0 0 ' + canvasW + ' ' + canvasH);
-  svg.style.fontFamily = FONT;
-
-  // ========== 箭头标记 ==========
-  var defs = el('defs');
-  var marker = el('marker', {
-    id: 'arrowhead', markerWidth: '8', markerHeight: '6',
-    refX: '7', refY: '3', orient: 'auto', markerUnits: 'strokeWidth'
+  layers.forEach(function(layer, li) {
+    var nodeW = 80;
+    layer.nodes.forEach(function(n) {
+      var w = Math.max(mt(n.label, 13), mt(n.desc, 11)) + NODE_PAD_X * 2;
+      if (w > nodeW) nodeW = w;
+    });
+    var nodesW = layer.nodes.length * nodeW + (layer.nodes.length - 1) * NODE_GAP;
+    var totalW = LAYER_LABEL_W + LAYER_LABEL_GAP + nodesW + LAYER_PAD_X * 2;
+    if (totalW > maxLayerW) maxLayerW = totalW;
+    layerData.push({ label: layer.label, nodes: layer.nodes, nodeW: nodeW, nodesW: nodesW });
   });
-  marker.appendChild(el('path', {
-    d: 'M0,0.5 L7,3 L0,5.5', fill: 'none', stroke: theme.arrow.color,
-    'stroke-width': '1.2', 'stroke-linecap': 'round'
-  }));
-  defs.appendChild(marker);
-  svg.appendChild(defs);
 
-  // ========== 绘制标题 ==========
-  svg.appendChild(el('text', {
-    x: 0, y: 18,
-    'font-size': TITLE_FONT_SIZE, 'font-weight': '700',
-    fill: theme.title.color, 'font-family': FONT
-  }, title));
+  // 分配坐标
+  var curY = TITLE_H;
+  layerData.forEach(function(ld, li) {
+    ld.x = 0;
+    ld.y = curY;
+    ld.w = maxLayerW;
+    ld.h = NODE_H + LAYER_PAD_Y * 2;
+    curY += ld.h + LAYER_GAP;
+  });
 
-  svg.appendChild(el('text', {
-    x: 0, y: 36,
-    'font-size': 12, 'font-weight': '400',
-    fill: '#888', 'font-family': FONT
-  }, subtitle));
+  // ========== 画布 ==========
+  var svgW = maxLayerW + 48;
+  var svgH = curY - LAYER_GAP + 24;
+  svg.setAttribute('width', svgW);
+  svg.setAttribute('height', svgH);
+  svg.setAttribute('viewBox', '0 0 ' + svgW + ' ' + svgH);
+
+  // ========== 标题 ==========
+  svg.appendChild(el('text', { x: 0, y: 18, 'font-size': 16, 'font-weight': 700, fill: '#0F172A', 'font-family': FONT }, title));
+  svg.appendChild(el('text', { x: 0, y: 36, 'font-size': 12, fill: '#888', 'font-family': FONT }, subtitle));
 
   // ========== 绘制层 ==========
-  for (var li = 0; li < layoutLayers.length; li++) {
-    var ll = layoutLayers[li];
-    var layerTheme = theme.layers[li % theme.layers.length];
+  layerData.forEach(function(ld, li) {
+    var lt = theme.layers[li % theme.layers.length];
 
     // 层背景
-    svg.appendChild(el('rect', {
-      x: ll.x, y: ll.y, width: ll.w, height: ll.h,
-      rx: LAYER_RX, fill: layerTheme.bg,
-      stroke: layerTheme.border, 'stroke-width': '1'
-    }));
+    svg.appendChild(el('rect', { x: ld.x, y: ld.y, width: ld.w, height: ld.h, rx: 8, fill: lt.bg, stroke: lt.border, 'stroke-width': 1 }));
 
-    // 层标签（左侧垂直居中）
-    var labelX = ll.x + LAYER_PAD_X;
-    var labelY = ll.y + ll.h / 2;
-    svg.appendChild(el('text', {
-      x: labelX, y: labelY,
-      'font-size': LABEL_FONT_SIZE, 'font-weight': '600',
-      fill: layerTheme.color, 'font-family': FONT,
-      'dominant-baseline': 'central'
-    }, ll.data.label));
+    // 层标签
+    svg.appendChild(el('text', { x: ld.x + LAYER_PAD_X, y: ld.y + ld.h / 2, 'font-size': 13, 'font-weight': 600, fill: lt.color, 'font-family': FONT, 'dominant-baseline': 'central' }, ld.label));
 
-    // 绘制节点
-    for (var ni = 0; ni < ll.nodePositions.length; ni++) {
-      var np = ll.nodePositions[ni];
-      var node = ll.data.nodes[ni];
+    // 节点区域起始 X
+    var nodesStartX = ld.x + LAYER_PAD_X + LAYER_LABEL_W + LAYER_LABEL_GAP;
+    var availW = ld.w - LAYER_PAD_X * 2 - LAYER_LABEL_W - LAYER_LABEL_GAP;
+    // 节点居中
+    var totalNodesW = ld.nodes.length * ld.nodeW + (ld.nodes.length - 1) * NODE_GAP;
+    var startX = nodesStartX + (availW - totalNodesW) / 2;
 
-      // 节点背景
-      svg.appendChild(el('rect', {
-        x: np.x, y: np.y, width: np.w, height: np.h,
-        rx: NODE_RX, fill: theme.node.bg,
-        stroke: theme.node.border, 'stroke-width': '1'
-      }));
+    ld.nodes.forEach(function(node, ni) {
+      var nx = startX + ni * (ld.nodeW + NODE_GAP);
+      var ny = ld.y + LAYER_PAD_Y;
 
-      // 节点标签
-      svg.appendChild(el('text', {
-        x: np.x + np.w / 2, y: np.y + 19,
-        'font-size': NODE_LABEL_SIZE, 'font-weight': '600',
-        fill: theme.node.text, 'font-family': FONT,
-        'text-anchor': 'middle'
-      }, node.label));
+      svg.appendChild(el('rect', { x: nx, y: ny, width: ld.nodeW, height: NODE_H, rx: 6, fill: theme.node.bg, stroke: theme.node.border, 'stroke-width': 1 }));
+      svg.appendChild(el('text', { x: nx + ld.nodeW / 2, y: ny + 19, 'font-size': 13, 'font-weight': 600, fill: theme.node.text, 'font-family': FONT, 'text-anchor': 'middle' }, node.label));
+      svg.appendChild(el('text', { x: nx + ld.nodeW / 2, y: ny + 35, 'font-size': 11, fill: theme.node.desc, 'font-family': FONT, 'text-anchor': 'middle' }, node.desc));
+    });
+  });
 
-      // 节点描述
-      svg.appendChild(el('text', {
-        x: np.x + np.w / 2, y: np.y + 35,
-        'font-size': NODE_DESC_SIZE, 'font-weight': '400',
-        fill: theme.node.desc, 'font-family': FONT,
-        'text-anchor': 'middle'
-      }, node.desc));
-    }
-  }
-
-  }); // end elk.layout().then()
 })();
 </script>
 </body>

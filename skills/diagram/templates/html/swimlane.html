@@ -11,7 +11,6 @@
     display: inline-block;
   }
 </style>
-<script src="lib/elk.bundled.js"></script>
 </head>
 <body>
 <svg id="canvas"></svg>
@@ -59,9 +58,9 @@
     datastore: { bg: '#F5F3FF', border: '#C4B5FD', text: '#5B21B6' },
     start:     { bg: '#ECFDF5', border: '#6EE7B7', text: '#065F46' },
     end:       { bg: '#ECFDF5', border: '#6EE7B7', text: '#065F46' },
-    line: { color: '#94A3B8', width: 1.5 },
-    lineYes: { color: '#10B981', width: 2 },
-    lineNo:  { color: '#F43F5E', width: 2 },
+    line: { color: '#94A3B8', width: 1.2 },
+    lineYes: { color: '#10B981', width: 1.5 },
+    lineNo:  { color: '#F43F5E', width: 1.5 },
     laneHeaders: [
       { bg: '#3B82F6', text: '#FFFFFF' },
       { bg: '#10B981', text: '#FFFFFF' },
@@ -76,6 +75,7 @@
   function getStyle(type) { return theme[type] || theme.node; }
 
   // ========== 工具函数 ==========
+  var SANS = "-apple-system, system-ui, 'PingFang SC', sans-serif";
   function el(tag, attrs) {
     var e = document.createElementNS(NS, tag);
     if (attrs) for (var k in attrs) e.setAttribute(k, attrs[k]);
@@ -88,14 +88,15 @@
   }
 
   // ========== 布局参数 ==========
-  var SANS = "-apple-system, system-ui, 'PingFang SC', sans-serif";
   var LANE_HEADER_W = 48;
   var NODE_H = 36;
-  var DIAMOND_R = 28;
+  var DIAMOND_R = 26;
+  var COL_GAP = 44;         // 列间距增大
+  var LANE_H = 110;         // 基础泳道高度
   var TITLE_H = 52;
-  var R = 10;
+  var R = 8;
 
-  // ========== 计算列宽 ==========
+  // ========== 计算节点宽度 ==========
   var nodeMaxW = 100;
   steps.concat(sideNodes).forEach(function(s) {
     if (s.type !== 'decision') {
@@ -109,111 +110,63 @@
   var laneIdx = {};
   lanes.forEach(function(l, i) { laneIdx[l.id] = i; });
 
-  // ========== 计算节点尺寸 ==========
-  var nodeMap = {};
-  steps.forEach(function(s) {
-    var isDiamond = s.type === 'decision';
-    var w = isDiamond ? DIAMOND_R * 2 : colW;
-    var h = isDiamond ? DIAMOND_R * 2 : NODE_H;
-    nodeMap[s.id] = { id: s.id, label: s.label, type: s.type, no: s.no, lane: s.lane, w: w, h: h, laneIdx: laneIdx[s.lane] };
-  });
+  // ========== 计算泳道高度 ==========
+  var laneHeights = [];
+  lanes.forEach(function() { laneHeights.push(LANE_H); });
+  // 有决策侧节点的泳道需要更高
   sideNodes.forEach(function(sn) {
-    nodeMap[sn.id] = { id: sn.id, label: sn.label, type: sn.type, lane: sn.lane, w: colW, h: NODE_H, isSide: true, laneIdx: laneIdx[sn.lane] };
-  });
-
-  // ========== ELKjs 布局（compound nodes: lanes as parents） ==========
-  var elk = new ELK();
-
-  var elkGraph = {
-    id: 'root',
-    layoutOptions: {
-      'elk.algorithm': 'layered',
-      'elk.direction': 'RIGHT',
-      'elk.hierarchyHandling': 'INCLUDE_CHILDREN',
-      'elk.spacing.nodeNode': '30',
-      'elk.layered.spacing.nodeNodeBetweenLayers': '50',
-      'elk.layered.crossingMinimization.semiInteractive': 'true'
-    },
-    children: [],
-    edges: []
-  };
-
-  // 每个泳道 = 父节点，步骤/侧节点 = 子节点
-  lanes.forEach(function(l) {
-    var laneChildren = [];
-    steps.forEach(function(s) {
-      if (s.lane === l.id) {
-        var n = nodeMap[s.id];
-        laneChildren.push({ id: s.id, width: n.w, height: n.h });
-      }
-    });
-    sideNodes.forEach(function(sn) {
-      if (sn.lane === l.id) {
-        laneChildren.push({ id: sn.id, width: colW, height: NODE_H });
-      }
-    });
-
-    elkGraph.children.push({
-      id: 'lane_' + l.id,
-      layoutOptions: {
-        'elk.padding': '[top=20,left=20,bottom=20,right=20]',
-        'elk.algorithm': 'layered',
-        'elk.direction': 'RIGHT',
-        'elk.spacing.nodeNode': '20',
-        'elk.layered.spacing.nodeNodeBetweenLayers': '40'
-      },
-      children: laneChildren
-    });
-  });
-
-  // 边（顺序流 + 决策"否"分支），放在顶层
-  for (var i = 0; i < steps.length - 1; i++) {
-    elkGraph.edges.push({
-      id: 'e' + i,
-      sources: [steps[i].id],
-      targets: [steps[i + 1].id]
-    });
-  }
-  steps.forEach(function(s, i) {
-    if (s.type === 'decision' && s.no) {
-      elkGraph.edges.push({
-        id: 'eno_' + i,
-        sources: [s.id],
-        targets: [s.no]
-      });
+    var li = laneIdx[sn.lane];
+    if (li !== undefined) {
+      var needed = DIAMOND_R * 2 + 28 + NODE_H + 32;
+      if (needed > laneHeights[li]) laneHeights[li] = needed;
     }
   });
 
-  // 执行布局（异步）
-  elk.layout(elkGraph).then(function(result) {
+  // ========== 泳道 Y 位置 ==========
+  var laneY = [], laneCY = [];
+  var curY = TITLE_H;
+  lanes.forEach(function(l, i) {
+    laneY.push(curY);
+    laneCY.push(curY + laneHeights[i] / 2);
+    curY += laneHeights[i];
+  });
+  var totalLaneH = curY - TITLE_H;
 
-  // ========== 读取布局结果 ==========
-  // 建立泳道位置映射
-  var laneLayout = {};
-  result.children.forEach(function(laneNode) {
-    laneLayout[laneNode.id] = laneNode;
-    // 子节点位置是相对于父节点的，需要加上父节点偏移
-    (laneNode.children || []).forEach(function(child) {
-      var n = nodeMap[child.id];
-      if (n) {
-        n.x = child.x + laneNode.x + LANE_HEADER_W;
-        n.y = child.y + laneNode.y + TITLE_H;
-        n.cx = n.x + n.w / 2;
-        n.cy = n.y + n.h / 2;
-      }
-    });
+  // ========== 列位置（每步一列） ==========
+  var colX = [];
+  var startX = LANE_HEADER_W + 20;
+  for (var i = 0; i < steps.length; i++) {
+    colX.push(startX + i * (colW + COL_GAP) + colW / 2);
+  }
+
+  // ========== 放置节点 ==========
+  var nodeMap = {};
+  steps.forEach(function(s, i) {
+    var li = laneIdx[s.lane];
+    var isDiamond = s.type === 'decision';
+    var w = isDiamond ? DIAMOND_R * 2 : colW;
+    var h = isDiamond ? DIAMOND_R * 2 : NODE_H;
+    var cy = (isDiamond && laneHeights[li] > LANE_H) ? laneY[li] + LANE_H / 2 - 6 : laneCY[li];
+    nodeMap[s.id] = { id: s.id, label: s.label, type: s.type, no: s.no, lane: s.lane,
+      cx: colX[i], cy: cy, w: w, h: h, x: colX[i] - w / 2, y: cy - h / 2, col: i, laneIdx: li };
   });
 
-  // ========== 画布尺寸 ==========
-  var maxX = 0, maxLaneBottom = 0;
-  result.children.forEach(function(laneNode) {
-    var right = laneNode.x + laneNode.width + LANE_HEADER_W;
-    if (right > maxX) maxX = right;
-    var bottom = laneNode.y + laneNode.height + TITLE_H;
-    if (bottom > maxLaneBottom) maxLaneBottom = bottom;
+  // 侧节点（决策下方）
+  steps.forEach(function(s) {
+    if (s.type === 'decision' && s.no) {
+      var dn = nodeMap[s.id];
+      var sn = sideNodes.find(function(x) { return x.id === s.no; });
+      if (!sn) return;
+      var cy = dn.cy + DIAMOND_R + 18 + NODE_H / 2;
+      nodeMap[sn.id] = { id: sn.id, label: sn.label, type: sn.type, isSide: true, lane: sn.lane,
+        cx: dn.cx, cy: cy, w: colW, h: NODE_H, x: dn.cx - colW / 2, y: cy - NODE_H / 2, col: dn.col, laneIdx: dn.laneIdx };
+    }
   });
-  var svgW = maxX + 24;
-  var svgH = maxLaneBottom + 16;
+
+  // ========== 画布 ==========
+  var lastColX = colX[steps.length - 1] + colW / 2 + 24;
+  var svgW = lastColX;
+  var svgH = curY + 16;
   svg.setAttribute('width', svgW);
   svg.setAttribute('height', svgH);
   svg.setAttribute('viewBox', '0 0 ' + svgW + ' ' + svgH);
@@ -221,8 +174,8 @@
   // ========== SVG Defs ==========
   var defs = el('defs');
   function addArrow(id, color) {
-    var m = el('marker', { id: id, markerWidth: 8, markerHeight: 6, refX: 8, refY: 3, orient: 'auto' });
-    m.appendChild(el('path', { d: 'M0,0.5 L7,3 L0,5.5', fill: 'none', stroke: color, 'stroke-width': 1.2, 'stroke-linecap': 'round' }));
+    var m = el('marker', { id: id, markerWidth: 7, markerHeight: 5, refX: 7, refY: 2.5, orient: 'auto', markerUnits: 'userSpaceOnUse' });
+    m.appendChild(el('path', { d: 'M0,0.4 L6,2.5 L0,4.6', fill: 'none', stroke: color, 'stroke-width': 1, 'stroke-linecap': 'round' }));
     defs.appendChild(m);
   }
   addArrow('arrow', theme.line.color);
@@ -238,19 +191,14 @@
   nodeGroup.appendChild(el('text', { x: 0, y: 18, 'font-size': 16, 'font-weight': 700, fill: theme.title.color, 'font-family': SANS })).textContent = title;
   nodeGroup.appendChild(el('text', { x: 0, y: 36, 'font-size': 12, fill: theme.subtitle.color, 'font-family': SANS })).textContent = subtitle;
 
-  // ========== 绘制泳道背景 ==========
-  var totalLaneH = maxLaneBottom - TITLE_H;
+  // ========== 泳道背景 ==========
   bgGroup.appendChild(el('rect', { x: 0, y: TITLE_H, width: svgW, height: totalLaneH, rx: 8, fill: 'none', stroke: '#E2E8F0', 'stroke-width': 1 }));
 
   lanes.forEach(function(l, i) {
-    var laneNode = laneLayout['lane_' + l.id];
-    var y = laneNode.y + TITLE_H;
-    var h = laneNode.height;
+    var y = laneY[i], h = laneHeights[i];
     var hc = theme.laneHeaders[i % theme.laneHeaders.length];
 
-    // 背景
     bgGroup.appendChild(el('rect', { x: LANE_HEADER_W, y: y, width: svgW - LANE_HEADER_W, height: h, fill: theme.laneBg[i % 2] }));
-    // 分割线
     if (i < lanes.length - 1) bgGroup.appendChild(el('line', { x1: 0, y1: y + h, x2: svgW, y2: y + h, stroke: '#E2E8F0', 'stroke-width': 1 }));
 
     // 标题栏
@@ -258,7 +206,7 @@
     if (i === 0) { bgGroup.appendChild(el('rect', { x: 0, y: y, width: LANE_HEADER_W, height: 10, rx: 8, fill: hc.bg })); bgGroup.appendChild(el('rect', { x: 0, y: y + 6, width: LANE_HEADER_W, height: h - 6, fill: hc.bg })); }
     if (i === lanes.length - 1) { bgGroup.appendChild(el('rect', { x: 0, y: y + h - 10, width: LANE_HEADER_W, height: 10, rx: 8, fill: hc.bg })); bgGroup.appendChild(el('rect', { x: 0, y: y, width: LANE_HEADER_W, height: h - 6, fill: hc.bg })); }
 
-    // 标签（逐字纵排）
+    // 标签
     var chars = l.label.split('');
     var charH = 18;
     var textStartY = y + (h - chars.length * charH) / 2 + charH / 2 + 2;
@@ -267,111 +215,41 @@
     });
   });
 
-  // ========== 绘制连线 ==========
-  // 分离主流程边和侧分支边
-  var mainEdges = [];
-  var sideEdges = [];
-  (result.edges || []).forEach(function(edge) {
-    // 检查是否为侧分支边
-    var isSideEdge = false;
-    steps.forEach(function(s) {
-      if (s.type === 'decision' && s.no && edge.sources[0] === s.id && edge.targets[0] === s.no) {
-        isSideEdge = true;
-      }
-    });
-    if (isSideEdge) {
-      sideEdges.push(edge);
-    } else {
-      mainEdges.push(edge);
-    }
-  });
-
-  // 主流程连线
-  mainEdges.forEach(function(edge) {
-    var srcId = edge.sources[0], tgtId = edge.targets[0];
-    var curr = nodeMap[srcId], next = nodeMap[tgtId];
-    if (!curr || !next) return;
-
+  // ========== 连线 ==========
+  for (var i = 0; i < steps.length - 1; i++) {
+    var curr = nodeMap[steps[i].id], next = nodeMap[steps[i + 1].id];
     var isAfterDec = curr.type === 'decision';
     var lc = isAfterDec ? theme.lineYes.color : theme.line.color;
     var lw = isAfterDec ? theme.lineYes.width : theme.line.width;
     var aid = isAfterDec ? 'arrow-g' : 'arrow';
+    var x1 = curr.cx + curr.w / 2, y1 = curr.cy;
+    var x2 = next.cx - next.w / 2, y2 = next.cy;
 
-    // 使用 ELK 边路由（如有）
-    var sec = edge.sections && edge.sections[0];
-    if (sec) {
-      var d = 'M' + (sec.startPoint.x + LANE_HEADER_W) + ',' + (sec.startPoint.y + TITLE_H);
-      if (sec.bendPoints) {
-        sec.bendPoints.forEach(function(bp) {
-          d += ' L' + (bp.x + LANE_HEADER_W) + ',' + (bp.y + TITLE_H);
-        });
-      }
-      d += ' L' + (sec.endPoint.x + LANE_HEADER_W) + ',' + (sec.endPoint.y + TITLE_H);
-      lineGroup.appendChild(el('path', { d: d, stroke: lc, 'stroke-width': lw, fill: 'none', 'marker-end': 'url(#' + aid + ')' }));
+    if (Math.abs(y1 - y2) < 2) {
+      lineGroup.appendChild(el('line', { x1: x1, y1: y1, x2: x2, y2: y2, stroke: lc, 'stroke-width': lw, 'marker-end': 'url(#' + aid + ')' }));
     } else {
-      // 后备：直连
-      var x1 = curr.cx + curr.w / 2, y1 = curr.cy;
-      var x2 = next.cx - next.w / 2, y2 = next.cy;
-      if (Math.abs(y1 - y2) < 2) {
-        lineGroup.appendChild(el('line', { x1: x1, y1: y1, x2: x2, y2: y2, stroke: lc, 'stroke-width': lw, 'marker-end': 'url(#' + aid + ')' }));
-      } else {
-        var midX = (x1 + x2) / 2;
-        var sy = y2 > y1 ? 1 : -1;
-        lineGroup.appendChild(el('path', {
-          d: 'M' + x1 + ',' + y1 + ' L' + (midX - R) + ',' + y1 + ' Q' + midX + ',' + y1 + ' ' + midX + ',' + (y1 + R * sy) + ' L' + midX + ',' + (y2 - R * sy) + ' Q' + midX + ',' + y2 + ' ' + (midX + R) + ',' + y2 + ' L' + x2 + ',' + y2,
-          stroke: lc, 'stroke-width': lw, fill: 'none', 'marker-end': 'url(#' + aid + ')'
-        }));
-      }
+      var midX = (x1 + x2) / 2;
+      var sy = y2 > y1 ? 1 : -1;
+      lineGroup.appendChild(el('path', {
+        d: 'M' + x1 + ',' + y1 + ' L' + (midX - R) + ',' + y1 + ' Q' + midX + ',' + y1 + ' ' + midX + ',' + (y1 + R * sy) + ' L' + midX + ',' + (y2 - R * sy) + ' Q' + midX + ',' + y2 + ' ' + (midX + R) + ',' + y2 + ' L' + x2 + ',' + y2,
+        stroke: lc, 'stroke-width': lw, fill: 'none', 'marker-end': 'url(#' + aid + ')'
+      }));
     }
-
-    // "是" 标签
     if (isAfterDec) {
-      var labelX, labelY;
-      if (sec && sec.startPoint) {
-        labelX = sec.startPoint.x + LANE_HEADER_W + 15;
-        labelY = sec.startPoint.y + TITLE_H - 8;
-      } else {
-        labelX = (curr.cx + next.cx) / 2;
-        labelY = Math.min(curr.cy, next.cy) - 8;
-      }
-      nodeGroup.appendChild(el('text', { x: labelX, y: labelY, 'text-anchor': 'middle', 'font-size': 11, 'font-weight': 500, fill: theme.lineYes.color, 'font-family': SANS })).textContent = '是';
+      nodeGroup.appendChild(el('text', { x: (x1 + x2) / 2, y: Math.min(y1, y2) - 8, 'text-anchor': 'middle', 'font-size': 11, 'font-weight': 500, fill: theme.lineYes.color, 'font-family': SANS })).textContent = '是';
     }
-  });
+  }
 
-  // 侧分支连线（决策 → 侧节点）
-  sideEdges.forEach(function(edge) {
-    var srcId = edge.sources[0], tgtId = edge.targets[0];
-    var dn = nodeMap[srcId], sn = nodeMap[tgtId];
-    if (!dn || !sn) return;
-
-    var sec = edge.sections && edge.sections[0];
-    if (sec) {
-      var d = 'M' + (sec.startPoint.x + LANE_HEADER_W) + ',' + (sec.startPoint.y + TITLE_H);
-      if (sec.bendPoints) {
-        sec.bendPoints.forEach(function(bp) {
-          d += ' L' + (bp.x + LANE_HEADER_W) + ',' + (bp.y + TITLE_H);
-        });
-      }
-      d += ' L' + (sec.endPoint.x + LANE_HEADER_W) + ',' + (sec.endPoint.y + TITLE_H);
-      lineGroup.appendChild(el('path', { d: d, stroke: theme.lineNo.color, 'stroke-width': theme.lineNo.width, fill: 'none', 'marker-end': 'url(#arrow-r)' }));
-    } else {
-      // 后备：直连
+  // 侧分支连线
+  steps.forEach(function(s) {
+    if (s.type === 'decision' && s.no && nodeMap[s.no]) {
+      var dn = nodeMap[s.id], sn = nodeMap[s.no];
       lineGroup.appendChild(el('line', { x1: dn.cx, y1: dn.cy + DIAMOND_R, x2: sn.cx, y2: sn.y, stroke: theme.lineNo.color, 'stroke-width': theme.lineNo.width, 'marker-end': 'url(#arrow-r)' }));
+      nodeGroup.appendChild(el('text', { x: dn.cx + 10, y: (dn.cy + DIAMOND_R + sn.y) / 2, 'font-size': 11, 'font-weight': 500, fill: theme.lineNo.color, 'font-family': SANS })).textContent = '否';
     }
-
-    // "否" 标签
-    var noLabelX, noLabelY;
-    if (sec && sec.startPoint) {
-      noLabelX = sec.startPoint.x + LANE_HEADER_W + 10;
-      noLabelY = sec.startPoint.y + TITLE_H + 14;
-    } else {
-      noLabelX = dn.cx + 10;
-      noLabelY = (dn.cy + DIAMOND_R + sn.y) / 2;
-    }
-    nodeGroup.appendChild(el('text', { x: noLabelX, y: noLabelY, 'font-size': 11, 'font-weight': 500, fill: theme.lineNo.color, 'font-family': SANS })).textContent = '否';
   });
 
-  // ========== 绘制节点 ==========
+  // ========== 节点 ==========
   function drawNode(n) {
     var st = getStyle(n.type);
     if (n.type === 'decision') {
@@ -386,8 +264,6 @@
   }
   steps.forEach(function(s) { drawNode(nodeMap[s.id]); });
   sideNodes.forEach(function(s) { if (nodeMap[s.id]) drawNode(nodeMap[s.id]); });
-
-  }); // end elk.layout().then()
 })();
 </script>
 </body>
