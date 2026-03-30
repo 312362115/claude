@@ -3,10 +3,11 @@
 /* 重置 */
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
-/* 基础 body — 模板可通过自身 style 覆盖 */
+/* 基础 body — 截图需要 inline-block 紧贴内容 */
 body {
   font-family: -apple-system, system-ui, 'PingFang SC', sans-serif;
   background: #ffffff;
+  display: inline-block;
 }
 
 /* 固定画布模式 */
@@ -16,6 +17,7 @@ body.fixed-1200 {
 }
 body.fixed-1400 {
   width: 1400px; height: 960px;
+  display: inline-block; text-align: center;
 }
 
 /* 自适应模式（结构图用） */

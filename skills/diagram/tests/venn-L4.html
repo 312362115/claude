@@ -3,22 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <title>文氏图</title>
+<link rel="stylesheet" href="lib/base.css">
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    display: inline-block; padding: 24px; background: #fff;
-    font-family: -apple-system, system-ui, 'PingFang SC', sans-serif;
-  }
   .title { font-size: 16px; font-weight: 700; color: #1a1a2e; }
   .subtitle { font-size: 12px; color: #888; margin-top: 2px; }
 </style>
 </head>
-<body>
+<body class="auto-size">
 
 <div class="title">文氏图</div>
 <div class="subtitle">集合关系与交集分析</div>
 <svg id="canvas"></svg>
 
+<script src="lib/utils.js"></script>
 <script>
 // ===== 数据 =====
 var circles = [
@@ -29,8 +26,6 @@ var circles = [
 ];
 var intersection = ['创业核心能力'];
 // ===== 数据结束 =====
-
-var svgNS = 'http://www.w3.org/2000/svg';
 var svg = document.getElementById('canvas');
 
 // 主题色（C-1 Blue, C-2 Emerald, C-3 Amber, C-5 Violet, C-6 Cyan, C-4 Rose）
@@ -42,12 +37,6 @@ var palette = [
   { fill: '#8B5CF6', stroke: '#8B5CF6', textDark: '#5B21B6' },  // C-5 Violet
   { fill: '#06B6D4', stroke: '#06B6D4', textDark: '#0E7490' }   // C-6 Cyan
 ];
-
-function el(tag, attrs) {
-  var e = document.createElementNS(svgNS, tag);
-  for (var k in attrs) e.setAttribute(k, attrs[k]);
-  return e;
-}
 
 function addText(parent, x, y, text, attrs) {
   var t = el('text', Object.assign({

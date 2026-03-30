@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>决策树 - 数据库选型</title>
+<link rel="stylesheet" href="lib/base.css">
+<style>
+  body {
+    padding: 24px;
+  }
+</style>
+</head>
+<body>
+<svg id="canvas"></svg>
+
+<script src="lib/utils.js"></script>
+<script>
+
+(function() {
+  var svg = document.getElementById('canvas');
+
+  // --- 数据定义 ---
+  var tree = {
+    id: 'root', label: '系统架构选型', type: 'root',
+    children: [
+      { id: 'd1', label: '单体还是微服务？', type: 'decision', edgeLabel: '规模评估',
+        children: [
+          { id: 'd1a', label: '团队 < 10人？', type: 'decision', edgeLabel: '单体优先',
+            children: [
+              { id: 'r1', label: 'Spring Boot 单体', type: 'result', edgeLabel: 'Yes', edgeColor: '#10B981' },
+              { id: 'd1a2', label: '需要快速迭代？', type: 'decision', edgeLabel: 'No',
+                children: [
+                  { id: 'r2', label: '模块化单体', type: 'result', edgeLabel: 'Yes', edgeColor: '#10B981' },
+                  { id: 'r3', label: '微服务架构', type: 'result', edgeLabel: 'No' }
+                ]
+              }
+            ]
+          },
+          { id: 'd1b', label: '高并发场景？', type: 'decision', edgeLabel: '微服务优先',
+            children: [
+              { id: 'r4', label: 'K8s + 微服务', type: 'result', edgeLabel: 'Yes', edgeColor: '#10B981' },
+              { id: 'r5', label: 'Serverless', type: 'result', edgeLabel: 'No' }
+            ]
+          }
+        ]
+      },
+      { id: 'd2', label: '前端技术栈？', type: 'decision', edgeLabel: '前端选型',
+        children: [
+          { id: 'd2a', label: 'SEO 重要？', type: 'decision', edgeLabel: '渲染方式',
+            children: [
+              { id: 'r6', label: 'Next.js SSR', type: 'result', edgeLabel: 'Yes', edgeColor: '#10B981' },
+              { id: 'r7', label: 'React SPA', type: 'result', edgeLabel: 'No' }
+            ]
+          },
+          { id: 'd2b', label: '移动端优先？', type: 'decision', edgeLabel: '跨平台',
+            children: [
+              { id: 'r8', label: 'React Native', type: 'result', edgeLabel: 'Yes', edgeColor: '#10B981' },
+              { id: 'r9', label: 'Flutter', type: 'external', edgeLabel: '高性能' }
+            ]
+          }
+        ]
+      },
+      { id: 'd3', label: '数据层选型？', type: 'decision', edgeLabel: '存储选型',
+        children: [
+          { id: 'd3a', label: 'OLTP 为主？', type: 'decision',
+            children: [
+              { id: 'r10', label: 'PostgreSQL', type: 'result', edgeLabel: 'Yes', edgeColor: '#10B981' },
+              { id: 'r11', label: 'ClickHouse', type: 'result', edgeLabel: 'OLAP' }
+            ]
+          },
+          { id: 'r12', label: 'Redis 缓存层', type: 'external', edgeLabel: '缓存' }
+        ]
+      }
+    ]
+  };
+
+  // --- 布局参数 ---
+  var LEVEL_GAP = 100;    // 层级垂直间距
+  var NODE_GAP = 36;      // 同级节点水平间距
+  var NODE_H = 40;        // 节点高度
+  var NODE_PAD = 24;      // 节点左右 padding
+
+  // --- 工具函数 ---
+
+  function textW(str, size) {
+    var w = 0;
+    for (var i = 0; i < str.length; i++) w += str.charCodeAt(i) > 127 ? size : size * 0.6;
+    return w;
+  }
+
+  function nodeWidth(node) {
+    var fontSize = node.type === 'root' ? 15 : 13;
+    return textW(node.label, fontSize) + NODE_PAD * 2;
+  }
+
+  // --- 第一遍：计算子树宽度 ---
+  function calcSubtreeWidth(node) {
+    if (!node.children || node.children.length === 0) {
+      node._width = nodeWidth(node);
+      node._subtreeW = node._width;
+      return node._subtreeW;
+    }
+    var totalChildW = 0;
+    node.children.forEach(function(c, i) {
+      totalChildW += calcSubtreeWidth(c);
+      if (i > 0) totalChildW += NODE_GAP;
+    });
+    node._width = nodeWidth(node);
+    node._subtreeW = Math.max(node._width, totalChildW);
+    return node._subtreeW;
+  }
+
+  // --- 第二遍：分配 x/y ---
+  function layoutNode(node, cx, y) {
+    node._x = cx;
+    node._y = y;
+    node._w = nodeWidth(node);
+    node._h = NODE_H;
+    if (!node.children || node.children.length === 0) return;
+
+    var totalChildW = 0;
+    node.children.forEach(function(c, i) {
+      totalChildW += c._subtreeW;
+      if (i > 0) totalChildW += NODE_GAP;
+    });
+
+    var startX = cx - totalChildW / 2;
+    node.children.forEach(function(c) {
+      var childCx = startX + c._subtreeW / 2;
+      layoutNode(c, childCx, y + LEVEL_GAP);
+      startX += c._subtreeW + NODE_GAP;
+    });
+  }
+
+  calcSubtreeWidth(tree);
+  layoutNode(tree, 0, 60);
+
+  // --- 计算画布尺寸 ---
+  var minX = Infinity, maxX = -Infinity, maxY = 0;
+  function findBounds(node) {
+    var left = node._x - node._w / 2;
+    var right = node._x + node._w / 2;
+    if (left < minX) minX = left;
+    if (right > maxX) maxX = right;
+    if (node._y + node._h > maxY) maxY = node._y + node._h;
+    if (node.children) node.children.forEach(findBounds);
+  }
+  findBounds(tree);
+
+  var pad = 40;
+  var svgW = maxX - minX + pad * 2;
+  var svgH = maxY + pad + 20;
+  var offsetX = -minX + pad;
+  var offsetY = 0;
+
+  svg.setAttribute('width', svgW);
+  svg.setAttribute('height', svgH);
+  svg.setAttribute('viewBox', '0 0 ' + svgW + ' ' + svgH);
+
+  // 标题
+  var titleEl = el('text', {
+    x: svgW / 2, y: 30, 'text-anchor': 'middle',
+    'font-size': 22, 'font-weight': 700, fill: '#1a1a2e'
+  });
+  titleEl.textContent = '系统架构选型决策树';
+  svg.appendChild(titleEl);
+
+  // --- 样式映射 ---
+  var styles = {
+    root:     { fill: '#3B82F6', stroke: 'none',    textFill: '#ffffff', fontSize: 15, fontWeight: 700, rx: 20 },
+    decision: { fill: '#FFFBEB', stroke: '#FCD34D',  textFill: '#92400E', fontSize: 13, fontWeight: 600, rx: 12 },
+    result:   { fill: '#ECFDF5', stroke: '#6EE7B7',  textFill: '#065F46', fontSize: 13, fontWeight: 600, rx: 10 },
+    external: { fill: '#EFF6FF', stroke: '#93C5FD',  textFill: '#1E40AF', fontSize: 13, fontWeight: 600, rx: 10 }
+  };
+
+  // --- 绘制连线（底层）---
+  function drawEdges(node) {
+    if (!node.children) return;
+    node.children.forEach(function(child) {
+      var x1 = node._x + offsetX;
+      var y1 = node._y + offsetY + node._h;
+      var x2 = child._x + offsetX;
+      var y2 = child._y + offsetY;
+
+      var color = child.edgeColor || '#94A3B8';
+
+      // 贝塞尔曲线连线
+      var midY = (y1 + y2) / 2;
+      var path = el('path', {
+        d: 'M' + x1 + ',' + y1 + ' C' + x1 + ',' + midY + ' ' + x2 + ',' + midY + ' ' + x2 + ',' + y2,
+        stroke: color, 'stroke-width': 1.5, fill: 'none'
+      });
+      svg.appendChild(path);
+
+      // 边标签
+      if (child.edgeLabel) {
+        var lx = (x1 + x2) / 2;
+        var ly = midY - 2;
+        // 如果是垂直线偏移标签避免重叠
+        if (Math.abs(x1 - x2) < 10) {
+          lx = x1 + 20;
+        }
+
+        var labelBg = el('rect', {
+          x: lx - textW(child.edgeLabel, 10) / 2 - 4,
+          y: ly - 8,
+          width: textW(child.edgeLabel, 10) + 8,
+          height: 16,
+          rx: 3, fill: '#ffffff', opacity: 0.9
+        });
+        svg.appendChild(labelBg);
+
+        var labelText = el('text', {
+          x: lx, y: ly + 3,
+          'text-anchor': 'middle', 'dominant-baseline': 'central',
+          'font-size': 10, fill: color === '#10B981' ? '#10B981' : '#64748b',
+          'font-weight': 500
+        });
+        labelText.textContent = child.edgeLabel;
+        svg.appendChild(labelText);
+      }
+
+      drawEdges(child);
+    });
+  }
+  drawEdges(tree);
+
+  // --- 绘制节点（顶层）---
+  function drawNodes(node) {
+    var s = styles[node.type];
+    var x = node._x + offsetX;
+    var y = node._y + offsetY;
+    var w = node._w;
+    var h = node._h;
+
+    // 节点背景
+    var rectAttrs = {
+      x: x - w / 2, y: y, width: w, height: h,
+      rx: s.rx, fill: s.fill
+    };
+    if (s.stroke !== 'none') {
+      rectAttrs.stroke = s.stroke;
+      rectAttrs['stroke-width'] = 1.5;
+    }
+    svg.appendChild(el('rect', rectAttrs));
+
+    // 节点文字
+    var txt = el('text', {
+      x: x, y: y + h / 2 + 1,
+      'text-anchor': 'middle', 'dominant-baseline': 'central',
+      'font-size': s.fontSize, 'font-weight': s.fontWeight, fill: s.textFill
+    });
+    txt.textContent = node.label;
+    svg.appendChild(txt);
+
+    if (node.children) node.children.forEach(drawNodes);
+  }
+  drawNodes(tree);
+})();
+</script>
+</body>
+</html>

@@ -156,9 +156,12 @@
     'font-size': 14, fill: '#888'
   }, '2025年1月 — 5月 · 甘特图'));
 
-  // ── 统计行数 ──
+  // ── 统计行数 & 动态高度 ──
   let totalRows = 0;
   sections.forEach(s => { totalRows += 1 + s.tasks.length; }); // section header + tasks
+  const SVG_H = Math.max(800, CHART_TOP + totalRows * ROW_H + 50);
+  svg.setAttribute('height', SVG_H);
+  svg.setAttribute('viewBox', '0 0 1200 ' + SVG_H);
 
   // ── 日期轴（月份 + 周标记）──
   // 月标签
@@ -184,7 +187,7 @@
     // 月分割线
     if (parseDate(m.start) > PROJECT_START) {
       svg.appendChild(el('line', {
-        x1: x1, y1: HEADER_TOP, x2: x1, y2: 800,
+        x1: x1, y1: HEADER_TOP, x2: x1, y2: SVG_H,
         stroke: '#dde1ea', 'stroke-width': 1
       }));
     }
@@ -201,7 +204,7 @@
     const x = dateToX(weekDate);
     if (x > RIGHT_X + 2) {
       svg.appendChild(el('line', {
-        x1: x, y1: HEADER_TOP + 20, x2: x, y2: 800,
+        x1: x, y1: HEADER_TOP + 20, x2: x, y2: SVG_H,
         stroke: '#eef0f5', 'stroke-width': 0.5
       }));
       // 日标签（每两周显示一个日期）
@@ -340,7 +343,7 @@
   // ── 今日线 ──
   const todayX = dateToX(TODAY);
   svg.appendChild(el('line', {
-    x1: todayX, y1: HEADER_TOP, x2: todayX, y2: 800,
+    x1: todayX, y1: HEADER_TOP, x2: todayX, y2: SVG_H,
     stroke: '#e74c3c', 'stroke-width': 1.5,
     'stroke-dasharray': '6,3'
   }));
@@ -356,12 +359,12 @@
 
   // ── 左侧分割线 ──
   svg.appendChild(el('line', {
-    x1: LEFT_W, y1: HEADER_TOP, x2: LEFT_W, y2: 800,
+    x1: LEFT_W, y1: HEADER_TOP, x2: LEFT_W, y2: SVG_H,
     stroke: '#dde1ea', 'stroke-width': 1
   }));
 
   // ── 图例 ──
-  const legendY = 790;
+  const legendY = SVG_H - 10;
   const legendItems = [
     { label: '已完成', type: 'done' },
     { label: '进行中', type: 'active' },

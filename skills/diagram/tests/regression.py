@@ -2,7 +2,7 @@
 一键全量回归 — 生成测试 HTML → 截图 → 质量检测 → 汇总报告
 
 改完模板后跑这一条命令即可：
-  python regression.py                    # 全量 11 图表 × 4 级
+  python regression.py                    # 全量 25 图表 × 4 级
   python regression.py class fishbone     # 只跑指定类型
   python regression.py --skip-generate    # 跳过生成，只截图+检测
   python regression.py --skip-screenshot  # 跳过截图，只生成+检测
@@ -18,10 +18,13 @@ from pathlib import Path
 TESTS_DIR = Path(__file__).parent
 SCRIPTS_DIR = TESTS_DIR / '../scripts'
 
-# 11 种图表类型
+# 25 种图表类型
 ALL_TYPES = [
-    'architecture', 'class', 'er', 'fishbone', 'flowchart',
-    'journey', 'sequence', 'state', 'swimlane', 'swot', 'venn'
+    'architecture', 'c4', 'class', 'dataflow', 'decision-tree',
+    'er', 'fishbone', 'flowchart', 'funnel', 'gantt',
+    'heatmap', 'journey', 'mindmap', 'network', 'orgchart',
+    'pie', 'radar', 'sankey', 'sequence', 'state',
+    'swimlane', 'swot', 'timeline', 'venn', 'waterfall'
 ]
 
 

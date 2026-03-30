@@ -136,6 +136,11 @@
   svg.setAttribute('height', canvasH);
   svg.setAttribute('viewBox', '0 0 ' + canvasW + ' ' + canvasH);
   svg.style.display = 'block';
+
+  function el(tag, attrs) {
+    var e = document.createElementNS('http://www.w3.org/2000/svg', tag);
+    for (var key in attrs || {}) {
+      if (attrs.hasOwnProperty(key)) e.setAttribute(key, attrs[key]);
     }
     return e;
   }

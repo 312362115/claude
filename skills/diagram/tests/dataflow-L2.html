@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="lib/base.css">
+<style>
+  body {
+    padding: 24px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #1a1a2e;
+    text-align: center;
+    margin-bottom: 4px;
+  }
+  .subtitle {
+    font-size: 14px;
+    color: #888;
+    text-align: center;
+    margin-bottom: 24px;
+  }
+  .diagram-wrap {
+    display: flex;
+    justify-content: center;
+  }
+</style>
+</head>
+<body>
+  <div class="title">数据处理管道 — ETL Pipeline</div>
+  <div class="subtitle">从多源数据采集到多目标写入的完整数据流</div>
+  <div class="diagram-wrap">
+    <svg id="df"></svg>
+  </div>
+
+<script src="lib/utils.js"></script>
+<script>
+const svg = document.getElementById('df');
+
+// ─── 布局参数 ───
+const nodeW = 140, nodeH = 38, nodeR = 8;
+const colGap = 90;   // 列间距
+const rowGap = 14;    // 同列节点间距
+const groupPadX = 16, groupPadTop = 34, groupPadBot = 14;
+const monitorY = 40;  // 监控区域与主流程的间距
+
+// ─── 颜色方案 ───
+const C = {
+  srcBg: '#F5F3FF', srcBorder: '#A78BFA',
+  procBg: '#EFF6FF', procBorder: '#93C5FD',
+  dstBg: '#ECFDF5', dstBorder: '#6EE7B7',
+  monBg: '#FFFBEB', monBorder: '#FCD34D',
+  arrow: '#94A3B8',
+  groupLabel: '#64748B',
+  nodeText: '#1E293B',
+  labelText: '#64748B',
+};
+
+// ─── 数据定义 ───
+const sources = [
+  { id: 'src_mysql',   label: 'MySQL 业务库' },
+  { id: 'src_mongo',   label: 'MongoDB 日志库' },
+  { id: 'src_kafka',   label: 'Kafka 实时流' },
+  { id: 'src_csv',     label: 'CSV 文件上传' },
+];
+
+const extract = [
+  { id: 'ext_cdc',      label: 'Debezium CDC' },
+  { id: 'ext_logstash', label: 'Logstash' },
+  { id: 'ext_consumer', label: 'Kafka Consumer' },
+  { id: 'ext_parser',   label: 'File Parser' },
+];
+
+const transform = [
+  { id: 'tfm_clean',  label: '数据清洗' },
+  { id: 'tfm_map',    label: '字段映射' },
+  { id: 'tfm_agg',    label: '数据聚合' },
+];
+
+const load = [
+  { id: 'ld_ch',  label: 'ClickHouse Writer' },
+  { id: 'ld_es',  label: 'Elasticsearch Writer' },
+  { id: 'ld_s3',  label: 'S3 Writer' },
+];
+
+const destinations = [
+  { id: 'dst_ch',  label: 'ClickHouse', sub: 'OLAP 分析' },
+  { id: 'dst_es',  label: 'Elasticsearch', sub: '全文搜索' },
+  { id: 'dst_s3',  label: 'S3', sub: '数据归档' },
+];
+
+const monitors = [
+  { id: 'mon_airflow', label: 'Airflow 调度' },
+  { id: 'mon_grafana', label: 'Grafana 监控' },
+];
+
+// ─── 连线定义 ───
+const links = [
+  { from: 'src_mysql', to: 'ext_cdc',      label: 'binlog' },
+  { from: 'src_mongo', to: 'ext_logstash',  label: 'JSON docs' },
+  { from: 'src_kafka', to: 'ext_consumer',  label: 'events' },
+  { from: 'src_csv',   to: 'ext_parser',    label: 'CSV files' },
+  { from: 'ext_cdc',      to: 'tfm_clean', label: '' },
+  { from: 'ext_logstash', to: 'tfm_clean', label: '' },
+  { from: 'ext_consumer', to: 'tfm_clean', label: '' },
+  { from: 'ext_parser',   to: 'tfm_clean', label: '' },
+  { from: 'tfm_clean', to: 'tfm_map', label: '' },
+  { from: 'tfm_map',   to: 'tfm_agg', label: '' },
+  { from: 'tfm_agg', to: 'ld_ch',  label: '' },
+  { from: 'tfm_agg', to: 'ld_es',  label: '' },
+  { from: 'tfm_agg', to: 'ld_s3',  label: '' },
+  { from: 'ld_ch',  to: 'dst_ch',  label: 'OLAP 数据' },
+  { from: 'ld_es',  to: 'dst_es',  label: '索引文档' },
+  { from: 'ld_s3',  to: 'dst_s3',  label: 'Parquet' },
+];
+
+// ─── 布局计算 ───
+// 列定义：each column has nodes and a group label
+const columns = [
+  { label: 'Sources',   nodes: sources,    style: 'src' },
+  { label: 'Extract',   nodes: extract,    style: 'proc' },
+  { label: 'Transform', nodes: transform,  style: 'proc' },
+  { label: 'Load',      nodes: load,       style: 'proc' },
+  { label: 'Destinations', nodes: destinations, style: 'dst' },
+];
+
+// 计算每列分组框尺寸
+const maxRows = Math.max(...columns.map(c => c.nodes.length));
+const maxGroupH = groupPadTop + maxRows * nodeH + (maxRows - 1) * rowGap + groupPadBot;
+const groupW = nodeW + groupPadX * 2;
+
+// 节点位置映射
+const nodePos = {}; // id → { x, y, w, h }
+
+// x 起始偏移
+let curX = 0;
+const groupRects = [];
+
+columns.forEach((col, ci) => {
+  const gx = curX;
+  const rows = col.nodes.length;
+  const groupH = groupPadTop + rows * nodeH + (rows - 1) * rowGap + groupPadBot;
+  // 垂直居中对齐到最高列
+  const gy = (maxGroupH - groupH) / 2;
+
+  groupRects.push({ x: gx, y: gy, w: groupW, h: groupH, label: col.label, style: col.style });
+
+  col.nodes.forEach((node, ri) => {
+    const nx = gx + groupPadX;
+    const ny = gy + groupPadTop + ri * (nodeH + rowGap);
+    nodePos[node.id] = { x: nx, y: ny, w: nodeW, h: nodeH, node };
+  });
+
+  curX += groupW + colGap;
+});
+
+const totalW = curX - colGap;
+
+// 监控区域
+const monW = 160;
+const monGap = 24;
+const monTotalW = monitors.length * monW + (monitors.length - 1) * monGap;
+const monX0 = (totalW - monTotalW) / 2;
+const monY = maxGroupH + monitorY;
+
+monitors.forEach((m, i) => {
+  const mx = monX0 + i * (monW + monGap);
+  nodePos[m.id] = { x: mx, y: monY, w: monW, h: nodeH, node: m };
+});
+
+const totalH = monitors.length > 0 ? monY + nodeH + 20 : maxGroupH + 20;
+
+// 设置 SVG 尺寸
+svg.setAttribute('width', totalW);
+svg.setAttribute('height', totalH);
+svg.setAttribute('viewBox', `0 0 ${totalW} ${totalH}`);
+
+// ─── 辅助函数 ───
+function el(tag, attrs) {
+  const e = document.createElementNS(svgNS, tag);
+  for (const [k, v] of Object.entries(attrs || {})) e.setAttribute(k, v);
+  return e;
+}
+
+// ─── 箭头 marker ───
+const defs = el('defs');
+const marker = el('marker', {
+  id: 'arrowhead', markerWidth: '8', markerHeight: '6',
+  refX: '8', refY: '3', orient: 'auto', markerUnits: 'strokeWidth'
+});
+const arrowPath = el('polygon', { points: '0 0, 8 3, 0 6', fill: C.arrow });
+marker.appendChild(arrowPath);
+defs.appendChild(marker);
+svg.appendChild(defs);
+
+// ─── 1. 画连线（先画，在底层） ───
+const lineGroup = el('g', { class: 'lines' });
+svg.appendChild(lineGroup);
+
+links.forEach(link => {
+  const from = nodePos[link.from];
+  const to = nodePos[link.to];
+  if (!from || !to) return;
+
+  const x1 = from.x + from.w;
+  const y1 = from.y + from.h / 2;
+  const x2 = to.x;
+  const y2 = to.y + to.h / 2;
+
+  const dx = x2 - x1;
+  const cp = dx * 0.45;
+
+  const path = el('path', {
+    d: `M ${x1},${y1} C ${x1 + cp},${y1} ${x2 - cp},${y2} ${x2},${y2}`,
+    fill: 'none',
+    stroke: C.arrow,
+    'stroke-width': '1.5',
+    'marker-end': 'url(#arrowhead)',
+  });
+  lineGroup.appendChild(path);
+
+  // 数据标签
+  if (link.label) {
+    const mx = (x1 + x2) / 2;
+    const my = (y1 + y2) / 2;
+
+    // 背景
+    const bg = el('rect', {
+      x: mx - 30, y: my - 10, width: 60, height: 16, rx: 3,
+      fill: '#ffffff', stroke: 'none',
+    });
+    lineGroup.appendChild(bg);
+
+    const txt = el('text', {
+      x: mx, y: my - 1,
+      'text-anchor': 'middle', 'dominant-baseline': 'middle',
+      'font-size': '10', fill: C.labelText,
+      'font-family': "-apple-system, system-ui, 'PingFang SC', sans-serif",
+    });
+    txt.textContent = link.label;
+    lineGroup.appendChild(txt);
+  }
+});
+
+// ─── 2. 画分组框 ───
+const nodeGroup = el('g', { class: 'nodes' });
+svg.appendChild(nodeGroup);
+
+groupRects.forEach(gr => {
+  const colors = {
+    src:  { bg: C.srcBg,  border: C.srcBorder },
+    proc: { bg: C.procBg, border: C.procBorder },
+    dst:  { bg: C.dstBg,  border: C.dstBorder },
+  };
+  const c = colors[gr.style];
+
+  const rect = el('rect', {
+    x: gr.x, y: gr.y, width: gr.w, height: gr.h, rx: 10,
+    fill: c.bg, stroke: c.border, 'stroke-width': '1.5',
+  });
+  nodeGroup.appendChild(rect);
+
+  const label = el('text', {
+    x: gr.x + gr.w / 2, y: gr.y + 22,
+    'text-anchor': 'middle', 'dominant-baseline': 'middle',
+    'font-size': '12', 'font-weight': '600', fill: C.groupLabel,
+    'font-family': "-apple-system, system-ui, 'PingFang SC', sans-serif",
+  });
+  label.textContent = gr.label;
+  nodeGroup.appendChild(label);
+});
+
+// ─── 3. 画节点 ───
+function drawNode(id, styleName) {
+  const pos = nodePos[id];
+  if (!pos) return;
+  const n = pos.node;
+
+  const colors = {
+    src:  { bg: '#ffffff', border: C.srcBorder, text: '#5B21B6' },
+    proc: { bg: '#ffffff', border: C.procBorder, text: '#1E40AF' },
+    dst:  { bg: '#ffffff', border: C.dstBorder, text: '#065F46' },
+    mon:  { bg: '#ffffff', border: C.monBorder, text: '#92400E' },
+  };
+  const c = colors[styleName];
+
+  const rect = el('rect', {
+    x: pos.x, y: pos.y, width: pos.w, height: pos.h, rx: nodeR,
+    fill: c.bg, stroke: c.border, 'stroke-width': '1.5',
+  });
+  nodeGroup.appendChild(rect);
+
+  // 主标签
+  const labelY = n.sub ? pos.y + pos.h / 2 - 5 : pos.y + pos.h / 2;
+  const txt = el('text', {
+    x: pos.x + pos.w / 2, y: labelY,
+    'text-anchor': 'middle', 'dominant-baseline': 'middle',
+    'font-size': '13', 'font-weight': '600', fill: c.text,
+    'font-family': "-apple-system, system-ui, 'PingFang SC', sans-serif",
+  });
+  txt.textContent = n.label;
+  nodeGroup.appendChild(txt);
+
+  // 副标签
+  if (n.sub) {
+    const sub = el('text', {
+      x: pos.x + pos.w / 2, y: labelY + 14,
+      'text-anchor': 'middle', 'dominant-baseline': 'middle',
+      'font-size': '10', fill: C.labelText,
+      'font-family': "-apple-system, system-ui, 'PingFang SC', sans-serif",
+    });
+    sub.textContent = n.sub;
+    nodeGroup.appendChild(sub);
+  }
+}
+
+sources.forEach(n => drawNode(n.id, 'src'));
+extract.forEach(n => drawNode(n.id, 'proc'));
+transform.forEach(n => drawNode(n.id, 'proc'));
+load.forEach(n => drawNode(n.id, 'proc'));
+destinations.forEach(n => drawNode(n.id, 'dst'));
+
+// 基础设施层容器（仅在有监控节点时绘制）
+if (monitors.length > 0) {
+  const monContX = groupRects[0].x;
+  const monContW = groupRects[groupRects.length - 1].x + groupRects[groupRects.length - 1].w - monContX;
+  const monContY = monY - 28;
+  const monContH = nodeH + 44;
+  nodeGroup.appendChild(el('rect', {
+    x: monContX, y: monContY, width: monContW, height: monContH,
+    rx: '8', fill: C.monBg, stroke: C.monBorder, 'stroke-width': '1', 'stroke-opacity': '0.3'
+  }));
+  const monLbl = el('text', {
+    x: monContX + 12, y: monContY + 14, 'font-size': '10', 'font-weight': '600',
+    fill: '#92400E', 'text-anchor': 'start',
+    'font-family': "-apple-system, system-ui, 'PingFang SC', sans-serif"
+  });
+  monLbl.textContent = '基础设施层 · 覆盖以上全部阶段';
+  nodeGroup.appendChild(monLbl);
+
+  monitors.forEach(n => drawNode(n.id, 'mon'));
+}
+</script>
+</body>
+</html>

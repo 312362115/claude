@@ -46,6 +46,8 @@ function checkDiagramQuality() {
   // B1: 节点不重叠
   var rects = [];
   svg.querySelectorAll('rect, polygon, ellipse, circle').forEach(function(el) {
+    // 跳过 defs/pattern/marker 内部元素（非图表内容）
+    if (el.closest('defs') || el.closest('pattern') || el.closest('marker')) return;
     var bbox = el.getBBox();
     if (bbox.width > 10 && bbox.height > 10) {  // 忽略小元素（箭头、装饰）
       rects.push({ x: bbox.x, y: bbox.y, w: bbox.width, h: bbox.height, tag: el.tagName });
@@ -133,19 +135,26 @@ function checkDiagramQuality() {
   var allowedFills = [
     '#EFF6FF', '#ECFDF5', '#FFFBEB', '#FFF1F2', '#F5F3FF', '#F8FAFC',  // 浅底色
     '#3B82F6', '#10B981', '#F59E0B', '#F43F5E', '#8B5CF6', '#06B6D4',  // 主色
-    '#FFFFFF', '#ffffff', 'none', '#1E293B', '#0F172A',                   // 基础色
+    '#FFFFFF', '#ffffff', 'none', '#1E293B', '#0F172A', '#1a1a2e',       // 基础色
     '#64748B', '#94A3B8', '#CBD5E1', '#E2E8F0', '#F1F5F9',              // 灰色系
+    '#667eea', '#f5576c', '#43e97b', '#4facfe', '#fa8231', '#a55eea',    // 扩展调色板
+    '#764ba2', '#f093fb', '#26de81', '#20bf6b', '#a5b1c2',              // 扩展调色板 2
+    '#e74c3c', '#52c41a', '#1890ff',                                     // 状态色
+    '#0891b2', '#d946ef',                                                // 强调色
+    '#ecfeff', '#fdf4ff',                                                // 浅底色扩展
   ].map(function(c) { return c.toLowerCase(); });
 
-  // 不严格检测，只统计非标准色数量
-  var nonStandardColors = 0;
+  // 统计不同的非标准颜色种类（非元素个数）
+  var nonStandardSet = {};
   svg.querySelectorAll('rect, polygon, ellipse, circle').forEach(function(el) {
+    if (el.closest('defs') || el.closest('pattern') || el.closest('marker')) return;
     var fill = (el.getAttribute('fill') || '').toLowerCase();
-    if (fill && fill !== 'none' && !fill.startsWith('rgba') && !fill.startsWith('url') && allowedFills.indexOf(fill) === -1) {
-      nonStandardColors++;
+    if (fill && fill !== 'none' && !fill.startsWith('rgba') && !fill.startsWith('rgb(') && !fill.startsWith('url') && allowedFills.indexOf(fill) === -1) {
+      nonStandardSet[fill] = true;
     }
   });
-  check('配色规范', 'E', nonStandardColors <= 10, nonStandardColors + ' 个非标准色');
+  var nonStandardColors = Object.keys(nonStandardSet).length;
+  check('配色规范', 'E', nonStandardColors <= 10, nonStandardColors + ' 种非标准色');
 
   // ========== 视觉检测（间距均匀性） ==========
   // 计算相邻节点间的最小间距

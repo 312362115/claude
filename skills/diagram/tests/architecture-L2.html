@@ -62,17 +62,6 @@
 
   // ========== 工具函数 ==========
   var FONT = "-apple-system, system-ui, 'PingFang SC', sans-serif";
-  function el(tag, attrs, text) {
-    var e = document.createElementNS(NS, tag);
-    if (attrs) for (var k in attrs) e.setAttribute(k, attrs[k]);
-    if (text !== undefined) e.textContent = text;
-    return e;
-  }
-  function mt(str, fs) {
-    var w = 0;
-    for (var i = 0; i < str.length; i++) w += str.charCodeAt(i) > 127 ? fs : fs * 0.6;
-    return w;
-  }
 
   // ========== 布局参数 ==========
   var TITLE_H = 52;

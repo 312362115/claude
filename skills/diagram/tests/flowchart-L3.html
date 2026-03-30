@@ -85,16 +85,6 @@
   }
 
   // ========== 工具函数 ==========
-  function el(tag, attrs) {
-    var e = document.createElementNS(NS, tag);
-    if (attrs) for (var k in attrs) e.setAttribute(k, attrs[k]);
-    return e;
-  }
-  function measureText(str, fontSize) {
-    var w = 0;
-    for (var i = 0; i < str.length; i++) w += str.charCodeAt(i) > 127 ? fontSize : fontSize * 0.62;
-    return w;
-  }
 
   // ========== 布局参数 ==========
   var FONT_SIZE = 13;

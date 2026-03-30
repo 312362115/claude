@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1200, height=800">
+<title>一周用户活跃时段分布</title>
+<link rel="stylesheet" href="lib/base.css">
+<style>
+  body {
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .title { font-size: 22px; font-weight: 700; color: #1a1a2e; margin-top: 24px; }
+  .subtitle { font-size: 14px; color: #888; margin-top: 6px; }
+  .chart-wrap { margin-top: 16px; }
+</style>
+</head>
+<body class="fixed-1200">
+  <div class="title">一周用户活跃时段分布</div>
+  <div class="subtitle">活跃指数 0–100</div>
+  <div class="chart-wrap">
+    <svg id="hm" width="1140" height="660" viewBox="0 0 1140 660"></svg>
+  </div>
+
+<script src="lib/utils.js"></script>
+<script>
+const svg = document.getElementById('hm');
+
+const hours = Array.from({ length: 24 }, (_, i) => `${i}:00`);
+const days = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
+
+const rawData = [
+  [0,0,15],[1,0,10],[2,0,5],[3,0,3],[4,0,2],[5,0,5],[6,0,12],[7,0,30],[8,0,55],[9,0,72],[10,0,80],[11,0,75],
+  [12,0,65],[13,0,70],[14,0,74],[15,0,70],[16,0,65],[17,0,58],[18,0,50],[19,0,42],[20,0,35],[21,0,28],[22,0,22],[23,0,18],
+  [0,1,14],[1,1,9],[2,1,5],[3,1,3],[4,1,2],[5,1,5],[6,1,14],[7,1,32],[8,1,58],[9,1,75],[10,1,82],[11,1,78],
+  [12,1,68],[13,1,73],[14,1,76],[15,1,72],[16,1,67],[17,1,60],[18,1,52],[19,1,44],[20,1,36],[21,1,30],[22,1,24],[23,1,18],
+  [0,2,16],[1,2,11],[2,2,6],[3,2,4],[4,2,3],[5,2,6],[6,2,16],[7,2,38],[8,2,65],[9,2,82],[10,2,88],[11,2,85],
+  [12,2,75],[13,2,80],[14,2,84],[15,2,80],[16,2,74],[17,2,66],[18,2,58],[19,2,48],[20,2,40],[21,2,32],[22,2,25],[23,2,18],
+  [0,3,18],[1,3,12],[2,3,7],[3,3,4],[4,3,3],[5,3,7],[6,3,18],[7,3,42],[8,3,70],[9,3,86],[10,3,92],[11,3,88],
+  [12,3,78],[13,3,84],[14,3,88],[15,3,85],[16,3,78],[17,3,70],[18,3,62],[19,3,52],[20,3,44],[21,3,36],[22,3,28],[23,3,20],
+  [0,4,20],[1,4,14],[2,4,8],[3,4,5],[4,4,3],[5,4,8],[6,4,20],[7,4,45],[8,4,74],[9,4,90],[10,4,95],[11,4,92],
+  [12,4,82],[13,4,88],[14,4,92],[15,4,88],[16,4,82],[17,4,75],[18,4,66],[19,4,56],[20,4,48],[21,4,40],[22,4,30],[23,4,22],
+  [0,5,22],[1,5,16],[2,5,10],[3,5,6],[4,5,4],[5,5,8],[6,5,22],[7,5,48],[8,5,78],[9,5,94],[10,5,98],[11,5,95],
+  [12,5,85],[13,5,90],[14,5,94],[15,5,92],[16,5,86],[17,5,78],[18,5,70],[19,5,60],[20,5,50],[21,5,42],[22,5,32],[23,5,24],
+  [0,6,20],[1,6,14],[2,6,8],[3,6,5],[4,6,3],[5,6,7],[6,6,18],[7,6,44],[8,6,72],[9,6,88],[10,6,94],[11,6,90],
+  [12,6,80],[13,6,86],[14,6,90],[15,6,87],[16,6,80],[17,6,72],[18,6,64],[19,6,54],[20,6,46],[21,6,38],[22,6,28],[23,6,20],
+  [0,7,18],[1,7,12],[2,7,7],[3,7,4],[4,7,3],[5,7,6],[6,7,16],[7,7,40],[8,7,68],[9,7,84],[10,7,90],[11,7,86],
+  [12,7,76],[13,7,82],[14,7,86],[15,7,83],[16,7,76],[17,7,68],[18,7,60],[19,7,50],[20,7,42],[21,7,34],[22,7,26],[23,7,18],
+  [0,8,16],[1,8,11],[2,8,6],[3,8,4],[4,8,3],[5,8,6],[6,8,15],[7,8,36],[8,8,62],[9,8,80],[10,8,86],[11,8,82],
+  [12,8,72],[13,8,78],[14,8,82],[15,8,78],[16,8,72],[17,8,64],[18,8,56],[19,8,46],[20,8,38],[21,8,30],[22,8,24],[23,8,16],
+  [0,9,14],[1,9,10],[2,9,5],[3,9,3],[4,9,2],[5,9,5],[6,9,14],[7,9,34],[8,9,60],[9,9,76],[10,9,82],[11,9,78],
+  [12,9,68],[13,9,74],[14,9,78],[15,9,74],[16,9,68],[17,9,60],[18,9,52],[19,9,44],[20,9,36],[21,9,28],[22,9,22],[23,9,15],
+  [0,10,15],[1,10,10],[2,10,5],[3,10,3],[4,10,2],[5,10,5],[6,10,12],[7,10,30],[8,10,56],[9,10,74],[10,10,80],[11,10,76],
+  [12,10,66],[13,10,72],[14,10,76],[15,10,72],[16,10,66],[17,10,58],[18,10,50],[19,10,42],[20,10,34],[21,10,26],[22,10,20],[23,10,14],
+  [0,11,18],[1,11,12],[2,11,7],[3,11,4],[4,11,3],[5,11,6],[6,11,15],[7,11,35],[8,11,62],[9,11,78],[10,11,85],[11,11,80],
+  [12,11,70],[13,11,76],[14,11,80],[15,11,76],[16,11,70],[17,11,62],[18,11,54],[19,11,45],[20,11,38],[21,11,30],[22,11,22],[23,11,16]
+];
+
+// 布局（12 行需要缩小 cellH）
+const ox = 70, oy = 20;
+const cellW = 38, cellH = 35;
+const gap = 2;
+const gridW = 24 * (cellW + gap) - gap;
+const gridH = 12 * (cellH + gap) - gap;
+
+// 色阶：蓝→红
+const colorStops = [
+  [0,   [232,244,253]],
+  [20,  [179,217,247]],
+  [40,  [108,180,238]],
+  [60,  [58,143,214]],
+  [75,  [232,117,90]],
+  [90,  [217,69,53]],
+  [100, [185,28,28]]
+];
+
+function valToColor(v) {
+  let lo = colorStops[0], hi = colorStops[colorStops.length - 1];
+  for (let i = 0; i < colorStops.length - 1; i++) {
+    if (v >= colorStops[i][0] && v <= colorStops[i + 1][0]) {
+      lo = colorStops[i]; hi = colorStops[i + 1]; break;
+    }
+  }
+  const t = (v - lo[0]) / (hi[0] - lo[0] || 1);
+  const r = Math.round(lo[1][0] + (hi[1][0] - lo[1][0]) * t);
+  const g = Math.round(lo[1][1] + (hi[1][1] - lo[1][1]) * t);
+  const b = Math.round(lo[1][2] + (hi[1][2] - lo[1][2]) * t);
+  return `rgb(${r},${g},${b})`;
+}
+
+// 画格子 + 数值
+rawData.forEach(([h, d, v]) => {
+  const x = ox + h * (cellW + gap);
+  const y = oy + d * (cellH + gap);
+
+  const rect = document.createElementNS(svgNS, 'rect');
+  rect.setAttribute('x', x); rect.setAttribute('y', y);
+  rect.setAttribute('width', cellW); rect.setAttribute('height', cellH);
+  rect.setAttribute('rx', '3'); rect.setAttribute('ry', '3');
+  rect.setAttribute('fill', valToColor(v));
+  svg.appendChild(rect);
+
+  const txt = document.createElementNS(svgNS, 'text');
+  txt.setAttribute('x', x + cellW / 2);
+  txt.setAttribute('y', y + cellH / 2 + 1);
+  txt.setAttribute('text-anchor', 'middle');
+  txt.setAttribute('dominant-baseline', 'middle');
+  txt.setAttribute('font-size', '10');
+  txt.setAttribute('fill', v > 60 ? '#fff' : '#666');
+  txt.textContent = v;
+  svg.appendChild(txt);
+});
+
+// X 轴标签（小时）
+hours.forEach((h, i) => {
+  const txt = document.createElementNS(svgNS, 'text');
+  txt.setAttribute('x', ox + i * (cellW + gap) + cellW / 2);
+  txt.setAttribute('y', oy + gridH + 22);
+  txt.setAttribute('text-anchor', 'middle');
+  txt.setAttribute('font-size', '11');
+  txt.setAttribute('fill', '#666');
+  txt.textContent = h;
+  svg.appendChild(txt);
+});
+
+// Y 轴标签（星期）
+days.forEach((d, i) => {
+  const txt = document.createElementNS(svgNS, 'text');
+  txt.setAttribute('x', ox - 12);
+  txt.setAttribute('y', oy + i * (cellH + gap) + cellH / 2 + 1);
+  txt.setAttribute('text-anchor', 'end');
+  txt.setAttribute('dominant-baseline', 'middle');
+  txt.setAttribute('font-size', '14');
+  txt.setAttribute('font-weight', 'bold');
+  txt.setAttribute('fill', '#555');
+  txt.textContent = d;
+  svg.appendChild(txt);
+});
+
+// 色阶图例
+const lgX = ox + gridW + 30, lgY = oy + 60, lgW = 16, lgH = 300;
+const defs = document.createElementNS(svgNS, 'defs');
+const grad = document.createElementNS(svgNS, 'linearGradient');
+grad.setAttribute('id', 'hm-grad'); grad.setAttribute('x1', '0'); grad.setAttribute('y1', '1');
+grad.setAttribute('x2', '0'); grad.setAttribute('y2', '0');
+colorStops.forEach(([pct, _]) => {
+  const stop = document.createElementNS(svgNS, 'stop');
+  stop.setAttribute('offset', pct + '%');
+  stop.setAttribute('stop-color', valToColor(pct));
+  grad.appendChild(stop);
+});
+defs.appendChild(grad);
+svg.appendChild(defs);
+
+const lgRect = document.createElementNS(svgNS, 'rect');
+lgRect.setAttribute('x', lgX); lgRect.setAttribute('y', lgY);
+lgRect.setAttribute('width', lgW); lgRect.setAttribute('height', lgH);
+lgRect.setAttribute('rx', '4'); lgRect.setAttribute('fill', 'url(#hm-grad)');
+svg.appendChild(lgRect);
+
+[0, 50, 100].forEach(v => {
+  const y = lgY + lgH - (v / 100) * lgH;
+  const txt = document.createElementNS(svgNS, 'text');
+  txt.setAttribute('x', lgX + lgW + 8);
+  txt.setAttribute('y', y + 1);
+  txt.setAttribute('dominant-baseline', 'middle');
+  txt.setAttribute('font-size', '12');
+  txt.setAttribute('fill', '#666');
+  txt.textContent = v;
+  svg.appendChild(txt);
+});
+</script>
+</body>
+</html>
