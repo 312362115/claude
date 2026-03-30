@@ -1,6 +1,6 @@
 ---
 priority: P1
-status: open
+status: done
 spec:
 plan:
 ---
