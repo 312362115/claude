@@ -47,7 +47,7 @@ MD 文件写完后，向用户提问：
 用户确认后，执行：
 
 ```bash
-node ~/.claude/scripts/preview-md.mjs <md-file-absolute-path>
+node ~/.claude/skills/preview-md/scripts/preview-md.mjs <md-file-absolute-path>
 ```
 
 ### Step 3: 等待反馈
@@ -58,6 +58,6 @@ node ~/.claude/scripts/preview-md.mjs <md-file-absolute-path>
 
 ## 注意事项
 
-- 脚本位置固定在 `~/.claude/scripts/preview-md.mjs`，全局可用
+- 脚本位置在 `~/.claude/skills/preview-md/scripts/preview-md.mjs`
 - 脚本会生成临时 HTML 文件并用默认浏览器打开
 - 渲染特性：GitHub Markdown CSS + 左侧固定目录（h1-h4）+ 滚动高亮 + 平滑跳转
