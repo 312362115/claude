@@ -4,20 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=1200, height=800">
 <title>电商用户转化漏斗</title>
+<link rel="stylesheet" href="lib/base.css">
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    width: 1200px; height: 800px;
-    font-family: -apple-system, system-ui, 'PingFang SC', sans-serif;
-    background: #ffffff;
-    display: inline-block; text-align: center;
-  }
   .title { font-size: 22px; font-weight: 700; color: #0F172A; margin-top: 28px; }
   .subtitle { font-size: 14px; color: #64748B; margin-top: 6px; }
   .chart-wrap { margin-top: 24px; position: relative; }
 </style>
 </head>
-<body>
+<body class="fixed-1200">
   <div class="title">电商用户转化漏斗</div>
   <div class="subtitle">2024 年 Q3 核心链路转化率分析</div>
   <div class="chart-wrap">
@@ -36,8 +30,6 @@
 
   const colors = ['#3B82F6', '#10B981', '#F59E0B', '#F43F5E', '#8B5CF6'];
   const lightBg = ['#EFF6FF', '#ECFDF5', '#FFFBEB', '#FFF1F2', '#F5F3FF'];
-
-  const svgNS = 'http://www.w3.org/2000/svg';
   const svg = document.getElementById('funnel');
 
   const cx = 550;

@@ -4,12 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=1200, height=800">
 <title>用户行为路径分析</title>
+<link rel="stylesheet" href="lib/base.css">
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
-    width: 1200px; height: 800px;
-    font-family: -apple-system, system-ui, 'PingFang SC', sans-serif;
-    background: #ffffff;
     display: flex; flex-direction: column; align-items: center;
   }
   .title { font-size: 22px; font-weight: 700; color: #1a1a2e; margin-top: 28px; }
@@ -17,7 +14,7 @@
   .chart-wrap { margin-top: 16px; }
 </style>
 </head>
-<body>
+<body class="fixed-1200">
   <div class="title">用户行为路径分析</div>
   <div class="subtitle">从流量入口到最终转化</div>
   <div class="chart-wrap">
@@ -25,7 +22,6 @@
   </div>
 
 <script>
-const svgNS = 'http://www.w3.org/2000/svg';
 const svg = document.getElementById('sk');
 
 // 节点定义：name, layer, color

@@ -1,0 +1,57 @@
+/* 图表公共基础样式 — 所有模板共享 */
+
+/* 重置 */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* 基础 body — 模板可通过自身 style 覆盖 */
+body {
+  font-family: -apple-system, system-ui, 'PingFang SC', sans-serif;
+  background: #ffffff;
+}
+
+/* 固定画布模式 */
+body.fixed-1200 {
+  width: 1200px; height: 800px;
+  display: inline-block; text-align: center;
+}
+body.fixed-1400 {
+  width: 1400px; height: 960px;
+}
+
+/* 自适应模式（结构图用） */
+body.auto-size {
+  display: inline-block;
+  padding: 24px;
+}
+
+/* 标题 */
+.title {
+  font-size: 22px; font-weight: 700; color: #0F172A;
+  margin-top: 28px;
+}
+.subtitle {
+  font-size: 14px; color: #64748B;
+  margin-top: 6px;
+}
+
+/* 小标题变体（部分图表用） */
+.title-sm { font-size: 16px; font-weight: 700; color: #1a1a2e; }
+.subtitle-sm { font-size: 12px; color: #888; margin-top: 2px; }
+
+/* 图例 */
+.legend {
+  display: flex; gap: 32px; margin-top: 20px;
+  justify-content: center;
+}
+.legend-item {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 14px; color: #64748B;
+}
+.legend-dot {
+  width: 20px; height: 12px; border-radius: 3px;
+}
+
+/* 图表容器 */
+.chart-wrap {
+  margin-top: 20px; position: relative;
+}

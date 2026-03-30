@@ -4,21 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=1400, height=960">
 <title>思维导图 - 微服务架构设计</title>
-<style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    width: 1400px; height: 960px;
-    font-family: -apple-system, system-ui, 'PingFang SC', sans-serif;
-    background: #ffffff;
-  }
-</style>
+<link rel="stylesheet" href="lib/base.css">
 </head>
-<body>
+<body class="fixed-1400">
 <svg id="canvas" width="1400" height="960" viewBox="0 0 1400 960"></svg>
 
+<script src="lib/utils.js"></script>
 <script>
 (function() {
-  var svgNS = 'http://www.w3.org/2000/svg';
   var svg = document.getElementById('canvas');
 
   var colors = ['#667eea', '#f5576c', '#43e97b', '#4facfe', '#fa8231'];
@@ -57,12 +50,6 @@
   ];
 
   var CX = 700, CY = 480;
-
-  function el(tag, attrs) {
-    var e = document.createElementNS(svgNS, tag);
-    for (var k in attrs) e.setAttribute(k, attrs[k]);
-    return e;
-  }
 
   function textW(str, size) {
     var w = 0;

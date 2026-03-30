@@ -2,17 +2,16 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
+<link rel="stylesheet" href="lib/base.css">
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
-    background: #ffffff;
-    font-family: -apple-system, system-ui, 'PingFang SC', sans-serif;
     padding: 24px;
     -webkit-font-smoothing: antialiased;
   }
 </style>
 </head>
 <body>
+<script src="lib/utils.js"></script>
 <script>
 (function() {
   // ===== 配置 =====
@@ -137,13 +136,6 @@
   svg.setAttribute('height', canvasH);
   svg.setAttribute('viewBox', '0 0 ' + canvasW + ' ' + canvasH);
   svg.style.display = 'block';
-
-  function el(tag, attrs) {
-    var e = document.createElementNS('http://www.w3.org/2000/svg', tag);
-    if (attrs) {
-      for (var k in attrs) {
-        if (attrs.hasOwnProperty(k)) e.setAttribute(k, attrs[k]);
-      }
     }
     return e;
   }

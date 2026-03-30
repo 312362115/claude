@@ -4,14 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=1200, height=800">
 <title>2024年利润变动瀑布图</title>
+<link rel="stylesheet" href="lib/base.css">
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    width: 1200px; height: 800px;
-    font-family: -apple-system, system-ui, 'PingFang SC', sans-serif;
-    background: #ffffff;
-    display: inline-block; text-align: center;
-  }
   .title { font-size: 22px; font-weight: 700; color: #0F172A; margin-top: 28px; }
   .subtitle { font-size: 14px; color: #64748B; margin-top: 6px; }
   .legend {
@@ -27,7 +21,7 @@
   .chart-wrap { margin-top: 16px; position: relative; }
 </style>
 </head>
-<body>
+<body class="fixed-1200">
   <div class="title">2024年利润变动瀑布图</div>
   <div class="subtitle">单位：万元</div>
 
@@ -89,8 +83,6 @@
     increase: '#10B981',
     decrease: '#F43F5E'
   };
-
-  const svgNS = 'http://www.w3.org/2000/svg';
   const svg = document.getElementById('waterfall');
 
   // 布局参数

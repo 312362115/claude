@@ -2,23 +2,15 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    font-family: -apple-system, system-ui, 'PingFang SC', sans-serif;
-    background: #ffffff;
-    padding: 24px;
-    display: inline-block;
-  }
-</style>
+<link rel="stylesheet" href="lib/base.css">
 <script src="lib/elk.bundled.js"></script>
 </head>
-<body>
+<body class="auto-size">
 <svg id="canvas"></svg>
 
+<script src="lib/utils.js"></script>
 <script>
 (function() {
-  var NS = 'http://www.w3.org/2000/svg';
   var svg = document.getElementById('canvas');
 
   // ========== 数据定义 ==========
@@ -137,16 +129,6 @@
   };
 
   // ========== 工具函数 ==========
-  function el(tag, attrs) {
-    var e = document.createElementNS(NS, tag);
-    if (attrs) for (var k in attrs) e.setAttribute(k, attrs[k]);
-    return e;
-  }
-  function mt(str, fs) {
-    var w = 0;
-    for (var i = 0; i < str.length; i++) w += str.charCodeAt(i) > 127 ? fs : fs * 0.62;
-    return w;
-  }
 
   // ========== 计算每个节点的尺寸 ==========
   var HEADER_H = 34, HEADER_BRIDGE = 8, FIELD_H = 20, METHOD_H = 20, ENUM_VAL_H = 20, FIELD_PAD = 12, TITLE_H = 52;

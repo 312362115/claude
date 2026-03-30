@@ -4,17 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=1200, height=800">
 <title>电商平台开发项目计划 — 甘特图</title>
+<link rel="stylesheet" href="lib/base.css">
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
-    width: 1200px; height: 800px;
-    font-family: -apple-system, system-ui, 'PingFang SC', sans-serif;
-    background: #ffffff;
     overflow: hidden;
   }
 </style>
 </head>
-<body>
+<body class="fixed-1200">
 <svg id="gantt" width="1200" height="800" viewBox="0 0 1200 800" font-family="-apple-system, system-ui, 'PingFang SC', sans-serif">
   <defs>
     <!-- 条纹图案：活跃任务 -->
@@ -45,6 +42,7 @@
   </defs>
 </svg>
 
+<script src="lib/utils.js"></script>
 <script>
 (function() {
   const svg = document.getElementById('gantt');

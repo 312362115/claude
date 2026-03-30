@@ -4,12 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=1200, height=800">
 <title>一周用户活跃时段分布</title>
+<link rel="stylesheet" href="lib/base.css">
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
-    width: 1200px; height: 800px;
-    font-family: -apple-system, system-ui, 'PingFang SC', sans-serif;
-    background: #ffffff;
     display: flex; flex-direction: column; align-items: center;
   }
   .title { font-size: 22px; font-weight: 700; color: #1a1a2e; margin-top: 24px; }
@@ -17,7 +14,7 @@
   .chart-wrap { margin-top: 16px; }
 </style>
 </head>
-<body>
+<body class="fixed-1200">
   <div class="title">一周用户活跃时段分布</div>
   <div class="subtitle">活跃指数 0–100</div>
   <div class="chart-wrap">
@@ -25,7 +22,6 @@
   </div>
 
 <script>
-const svgNS = 'http://www.w3.org/2000/svg';
 const svg = document.getElementById('hm');
 
 const hours = Array.from({ length: 24 }, (_, i) => `${i}:00`);
