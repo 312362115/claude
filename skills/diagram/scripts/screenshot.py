@@ -21,8 +21,9 @@ import socketserver
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 
-TESTS_DIR = Path(__file__).parent
-OUTPUT_DIR = TESTS_DIR / '../../../docs/assets/diagram/tests'
+SCRIPTS_DIR = Path(__file__).parent
+TESTS_DIR = SCRIPTS_DIR / '../tests'
+OUTPUT_DIR = SCRIPTS_DIR / '../../../docs/assets/diagram/tests'
 PORT = 18770
 DEVICE_SCALE_FACTOR = 2
 WAIT_MS = 800  # ELKjs 异步布局等待时间

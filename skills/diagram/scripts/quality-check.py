@@ -22,8 +22,9 @@ import socketserver
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 
-TESTS_DIR = Path(__file__).parent
-QC_JS = TESTS_DIR / 'quality-check.js'
+SCRIPTS_DIR = Path(__file__).parent
+TESTS_DIR = SCRIPTS_DIR / '../tests'
+QC_JS = SCRIPTS_DIR / 'quality-check.js'
 PORT = 18772
 WAIT_MS = 800
 

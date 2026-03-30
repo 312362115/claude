@@ -16,6 +16,7 @@ import argparse
 from pathlib import Path
 
 TESTS_DIR = Path(__file__).parent
+SCRIPTS_DIR = TESTS_DIR / '../scripts'
 
 # 11 种图表类型
 ALL_TYPES = [
@@ -81,7 +82,7 @@ def main():
     if not args.skip_screenshot:
         ok, _ = run_step(
             f'Screenshot ({", ".join(types)})',
-            [sys.executable, str(TESTS_DIR / 'screenshot.py')] + types
+            [sys.executable, str(SCRIPTS_DIR / 'screenshot.py')] + types
         )
         results['screenshot'] = ok
 
@@ -89,7 +90,7 @@ def main():
     if not args.skip_check:
         ok, _ = run_step(
             f'Quality check ({", ".join(types)})',
-            [sys.executable, str(TESTS_DIR / 'quality-check.py')] + types
+            [sys.executable, str(SCRIPTS_DIR / 'quality-check.py')] + types
         )
         results['quality-check'] = ok
 
