@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1200, height=800">
+<title>电商用户转化漏斗</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 1200px; height: 800px;
+    font-family: -apple-system, system-ui, 'PingFang SC', sans-serif;
+    background: #ffffff;
+    display: inline-block; text-align: center;
+  }
+  .title { font-size: 22px; font-weight: 700; color: #0F172A; margin-top: 28px; }
+  .subtitle { font-size: 14px; color: #64748B; margin-top: 6px; }
+  .chart-wrap { margin-top: 24px; position: relative; }
+</style>
+</head>
+<body>
+  <div class="title">电商用户转化漏斗</div>
+  <div class="subtitle">2024 年 Q3 核心链路转化率分析</div>
+  <div class="chart-wrap">
+    <svg id="funnel" width="1100" height="660" viewBox="0 0 1100 660"></svg>
+  </div>
+
+<script>
+(function() {
+  const data = [
+    { name: '访问首页',   value: 100000 },
+    { name: '浏览商品',   value: 68000 },
+    { name: '加入购物车', value: 35200 },
+    { name: '提交订单',   value: 18600 },
+    { name: '完成支付',   value: 12400 }
+  ];
+
+  const colors = ['#3B82F6', '#10B981', '#F59E0B', '#F43F5E', '#8B5CF6'];
+  const lightBg = ['#EFF6FF', '#ECFDF5', '#FFFBEB', '#FFF1F2', '#F5F3FF'];
+
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const svg = document.getElementById('funnel');
+
+  const cx = 550;
+  const topY = 30;
+  const maxWidth = 800;
+  const minWidth = 200;
+  const totalHeight = 580;
+  const gap = 6;
+  const n = data.length;
+  const stepH = (totalHeight - gap * (n - 1)) / n;
+  const maxVal = data[0].value;
+
+  // 计算每层的宽度
+  function widthFor(val) {
+    const ratio = val / maxVal;
+    return minWidth + (maxWidth - minWidth) * ratio;
+  }
+
+  data.forEach((d, i) => {
+    const y = topY + i * (stepH + gap);
+    const w1 = widthFor(d.value);
+    const w2 = i < n - 1 ? widthFor(data[i + 1].value) : w1 * 0.7;
+
+    const x1L = cx - w1 / 2;
+    const x1R = cx + w1 / 2;
+    const x2L = cx - w2 / 2;
+    const x2R = cx + w2 / 2;
+
+    // 梯形路径
+    const path = document.createElementNS(svgNS, 'path');
+    path.setAttribute('d', `M ${x1L},${y} L ${x1R},${y} L ${x2R},${y + stepH} L ${x2L},${y + stepH} Z`);
+    path.setAttribute('fill', colors[i]);
+    path.setAttribute('opacity', '0.85');
+    svg.appendChild(path);
+
+    // 阶段名称（左侧）
+    const nameEl = document.createElementNS(svgNS, 'text');
+    nameEl.setAttribute('x', cx - maxWidth / 2 - 20);
+    nameEl.setAttribute('y', y + stepH / 2 + 5);
+    nameEl.setAttribute('text-anchor', 'end');
+    nameEl.setAttribute('font-size', '15');
+    nameEl.setAttribute('font-weight', '600');
+    nameEl.setAttribute('fill', '#1E293B');
+    nameEl.textContent = d.name;
+    svg.appendChild(nameEl);
+
+    // 数值（梯形内部）
+    const valEl = document.createElementNS(svgNS, 'text');
+    valEl.setAttribute('x', cx);
+    valEl.setAttribute('y', y + stepH / 2 + 2);
+    valEl.setAttribute('text-anchor', 'middle');
+    valEl.setAttribute('font-size', '18');
+    valEl.setAttribute('font-weight', '700');
+    valEl.setAttribute('fill', '#ffffff');
+    valEl.textContent = d.value.toLocaleString();
+    svg.appendChild(valEl);
+
+    // 百分比（梯形内部数值下方）
+    const pct = (d.value / maxVal * 100).toFixed(1);
+    const pctEl = document.createElementNS(svgNS, 'text');
+    pctEl.setAttribute('x', cx);
+    pctEl.setAttribute('y', y + stepH / 2 + 20);
+    pctEl.setAttribute('text-anchor', 'middle');
+    pctEl.setAttribute('font-size', '13');
+    pctEl.setAttribute('fill', 'rgba(255,255,255,0.85)');
+    pctEl.textContent = pct + '%';
+    svg.appendChild(pctEl);
+
+    // 转化率标注（右侧，阶段之间）
+    if (i < n - 1) {
+      const convRate = (data[i + 1].value / d.value * 100).toFixed(1);
+      const arrowY = y + stepH + gap / 2;
+
+      // 箭头
+      const arrow = document.createElementNS(svgNS, 'path');
+      const ax = cx + maxWidth / 2 + 30;
+      arrow.setAttribute('d', `M ${ax},${arrowY - 12} L ${ax},${arrowY + 12} M ${ax - 5},${arrowY + 7} L ${ax},${arrowY + 12} L ${ax + 5},${arrowY + 7}`);
+      arrow.setAttribute('fill', 'none');
+      arrow.setAttribute('stroke', '#94A3B8');
+      arrow.setAttribute('stroke-width', '2');
+      arrow.setAttribute('stroke-linecap', 'round');
+      svg.appendChild(arrow);
+
+      // 转化率文字
+      const convEl = document.createElementNS(svgNS, 'text');
+      convEl.setAttribute('x', ax + 16);
+      convEl.setAttribute('y', arrowY + 5);
+      convEl.setAttribute('text-anchor', 'start');
+      convEl.setAttribute('font-size', '14');
+      convEl.setAttribute('font-weight', '600');
+      convEl.setAttribute('fill', '#64748B');
+      convEl.textContent = convRate + '%';
+      svg.appendChild(convEl);
+    }
+  });
+})();
+</script>
+</body>
+</html>
