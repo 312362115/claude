@@ -261,11 +261,13 @@ description: >
 ### 3.2 分析框架选择
 
 根据调研类型和行业背景，从框架库中选择合适的分析方法。
-具体框架详见 `references/analysis-frameworks.md`，此处只列选择逻辑：
+框架路由表见 `references/frameworks/_index.md`，各领域详细框架见 `references/frameworks/<领域>.md`。
+
+此处只列选择逻辑：
 
 **选择流程**：
-1. 确定调研类型 → 查通用框架推荐（analysis-frameworks.md 第一节）
-2. 判断行业背景 → 叠加特化框架（互联网/金融，同文件第二、三节）
+1. 确定调研类型 → 查通用框架推荐（`frameworks/_index.md` 路由表 + `frameworks/general.md`）
+2. 判断行业背景 → 叠加特化框架（互联网 → `frameworks/internet-*.md`，金融 → `frameworks/finance-*.md`）
 3. 判断分析视角 → 调整产出重点（券商视角重估值、咨询视角重策略、VC 视角重增长）
 
 **不确定时默认**：通用底座框架（PESTEL + 竞争格局 + 价值链）+ 咨询视角
@@ -387,7 +389,7 @@ docs/research/
 
 #### 正文（按调研类型选择模板）
 
-面向执行者，完整论证过程。具体模板见 `references/report-templates.md`。
+面向执行者，完整论证过程。具体模板见 `references/templates/<调研类型>.md`，通用章节见 `references/templates/_common.md`。
 
 所有类型的报告都包含以下通用部分：
 
