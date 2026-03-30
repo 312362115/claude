@@ -13,7 +13,7 @@
 
 **适用场景：** 审批流程、业务流程、算法逻辑、操作步骤说明
 
-![流程图](assets/flowchart.png)
+![流程图](../assets/diagram/showcase/flowchart.png)
 
 ---
 
@@ -23,7 +23,7 @@
 
 **适用场景：** 跨部门协作流程、多角色审批流、服务间交互流程
 
-![泳道图](assets/swimlane.png)
+![泳道图](../assets/diagram/showcase/swimlane.png)
 
 ---
 
@@ -33,7 +33,7 @@
 
 **适用场景：** API 调用链路、微服务间通信、用户操作时序、协议交互
 
-![时序图](assets/sequence.png)
+![时序图](../assets/diagram/showcase/sequence.png)
 
 ---
 
@@ -43,7 +43,7 @@
 
 **适用场景：** 系统架构设计、技术选型展示、部署架构、分层架构
 
-![架构图](assets/architecture.png)
+![架构图](../assets/diagram/showcase/architecture.png)
 
 ---
 
@@ -53,7 +53,7 @@
 
 **适用场景：** 订单状态流转、任务生命周期、有限状态机、协议状态
 
-![状态图](assets/state.png)
+![状态图](../assets/diagram/showcase/state.png)
 
 ---
 
@@ -63,7 +63,7 @@
 
 **适用场景：** 数据库设计、数据模型设计、表关系梳理
 
-![ER图](assets/er.png)
+![ER图](../assets/diagram/showcase/er.png)
 
 ---
 
@@ -73,7 +73,7 @@
 
 **适用场景：** 面向对象设计、领域模型、API 数据结构、设计模式
 
-![类图](assets/class.png)
+![类图](../assets/diagram/showcase/class.png)
 
 ---
 
@@ -83,7 +83,7 @@
 
 **适用场景：** 企业网络规划、服务器部署拓扑、安全分区设计
 
-![网络拓扑图](assets/network.png)
+![网络拓扑图](../assets/diagram/showcase/network.png)
 
 ---
 
@@ -93,7 +93,7 @@
 
 **适用场景：** 技术选型决策、故障排查指南、分类逻辑、产品选择引导
 
-![决策树](assets/decision-tree.png)
+![决策树](../assets/diagram/showcase/decision-tree.png)
 
 ---
 
@@ -103,7 +103,7 @@
 
 **适用场景：** ETL 管道设计、数据处理流水线、消息队列架构、数据治理
 
-![数据流图](assets/dataflow.png)
+![数据流图](../assets/diagram/showcase/dataflow.png)
 
 ---
 
@@ -113,7 +113,7 @@
 
 **适用场景：** 系统架构文档、微服务边界划分、技术方案评审
 
-![C4容器图](assets/c4.png)
+![C4容器图](../assets/diagram/showcase/c4.png)
 
 ---
 
@@ -123,7 +123,7 @@
 
 **适用场景：** 知识梳理、头脑风暴、技术方案拆解、学习笔记
 
-![思维导图](assets/mindmap.png)
+![思维导图](../assets/diagram/showcase/mindmap.png)
 
 ---
 
@@ -133,7 +133,7 @@
 
 **适用场景：** 项目排期、迭代规划、里程碑管理、资源分配
 
-![甘特图](assets/gantt.png)
+![甘特图](../assets/diagram/showcase/gantt.png)
 
 ---
 
@@ -143,7 +143,7 @@
 
 **适用场景：** 产品演进历程、技术发展史、项目大事记、版本发布记录
 
-![时间线](assets/timeline.png)
+![时间线](../assets/diagram/showcase/timeline.png)
 
 ---
 
@@ -153,7 +153,7 @@
 
 **适用场景：** 团队架构、公司组织结构、项目团队分工
 
-![组织结构图](assets/orgchart.png)
+![组织结构图](../assets/diagram/showcase/orgchart.png)
 
 ---
 
@@ -163,7 +163,7 @@
 
 **适用场景：** 战略分析、竞品分析、项目可行性评估、个人发展规划
 
-![SWOT分析](assets/swot.png)
+![SWOT分析](../assets/diagram/showcase/swot.png)
 
 ---
 
@@ -173,7 +173,7 @@
 
 **适用场景：** 根因分析、质量问题排查、故障复盘、流程改进
 
-![鱼骨图](assets/fishbone.png)
+![鱼骨图](../assets/diagram/showcase/fishbone.png)
 
 ---
 
@@ -183,7 +183,7 @@
 
 **适用场景：** 概念对比、技术方案重叠分析、角色职责划分、功能覆盖对比
 
-![文氏图](assets/venn.png)
+![文氏图](../assets/diagram/showcase/venn.png)
 
 ---
 
@@ -193,7 +193,7 @@
 
 **适用场景：** 用户体验设计、服务设计、产品流程优化、痛点分析
 
-![旅程图](assets/journey.png)
+![旅程图](../assets/diagram/showcase/journey.png)
 
 ---
 
@@ -205,7 +205,7 @@
 
 **适用场景：** 季度营收对比、部门业绩排名、产品销量对比、A/B 测试结果
 
-![柱状图](assets/bar.png)
+![柱状图](../assets/diagram/showcase/bar.png)
 
 ---
 
@@ -215,7 +215,7 @@
 
 **适用场景：** 用户增长趋势、性能监控曲线、股价走势、温度变化
 
-![折线图](assets/line.png)
+![折线图](../assets/diagram/showcase/line.png)
 
 ---
 
@@ -225,7 +225,7 @@
 
 **适用场景：** 市场份额分布、预算分配、技术栈使用比例、用户画像构成
 
-![饼图](assets/pie.png)
+![饼图](../assets/diagram/showcase/pie.png)
 
 ---
 
@@ -235,7 +235,7 @@
 
 **适用场景：** 相关性分析、聚类分析、异常检测、用户行为分布
 
-![散点图](assets/scatter.png)
+![散点图](../assets/diagram/showcase/scatter.png)
 
 ---
 
@@ -245,7 +245,7 @@
 
 **适用场景：** 技术方案多维评估、人才能力画像、产品竞品对比、绩效雷达
 
-![雷达图](assets/radar.png)
+![雷达图](../assets/diagram/showcase/radar.png)
 
 ---
 
@@ -255,7 +255,7 @@
 
 **适用场景：** 用户活跃时段分布、功能使用频率、代码提交热度、相关性矩阵
 
-![热力图](assets/heatmap.png)
+![热力图](../assets/diagram/showcase/heatmap.png)
 
 ---
 
@@ -265,4 +265,4 @@
 
 **适用场景：** 用户转化路径、能源/资源流向、预算分配流转、流量来源分析
 
-![桑基图](assets/sankey.png)
+![桑基图](../assets/diagram/showcase/sankey.png)
