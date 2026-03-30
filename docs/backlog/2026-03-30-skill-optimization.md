@@ -13,6 +13,7 @@ status: open
 
 - [x] **P1** 补充漏斗图、瀑布图等常用商业图表（2026-03-30 完成）
 - [x] **P2** 模板去重 — 31 个模板抽取公共渲染逻辑为 shared module（2026-03-30 完成）
+- [ ] **P2.5** 回归测试补全 — 12 个有 JS 动态布局的模板需补 L1-L4 测试生成器（pie/radar/heatmap/sankey/c4/dataflow/decision-tree/gantt/mindmap/network/orgchart/timeline），bar/line/scatter 纯 HTML 无需生成器
 - [ ] **P3** 布局引擎统一评估 — Dagre 和 ELK 并存是否必要
 
 ## Deep-Research（7.9 → 9）
