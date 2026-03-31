@@ -1,7 +1,7 @@
 ---
 priority: P1
-status: open
-spec:
+status: done
+spec: docs/specs/2026-03-31-deep-research-html-report.md
 plan:
 ---
 
