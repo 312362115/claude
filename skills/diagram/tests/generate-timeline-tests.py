@@ -103,13 +103,15 @@ const sections = [
 
 '''
 
-# 渲染引擎模板（参数化 sectionH / eventGap）
-def make_engine(sectionH=140, eventGap=28):
-    return f'''// 布局：纵向中轴线
+# 渲染引擎模板（动态计算 sectionH：按最大事件数 * eventGap + padding）
+def make_engine(eventGap=28):
+    return f'''// 布局：纵向中轴线，动态计算每段高度
 const CX = 600;          // 中轴 x
 const startY = 30;       // 起始 y
-const sectionH = {sectionH};    // 每个时代段高度
 const eventGap = {eventGap};     // 事件行间距
+// sectionH 根据最大事件数动态计算
+const maxEvents = Math.max(...sections.map(s => s.events.length));
+const sectionH = maxEvents * eventGap + 30;
 const eventOffsetX = 200; // 事件卡片到中轴的水平距离
 const dotR = 5;
 
@@ -191,12 +193,12 @@ sections.forEach((sec, si) => {{
 }});
 '''
 
-# 各级别使用不同的 SVG 高度和引擎参数
-level_config = {
-    'L1': {'svgH': 740, 'sectionH': 140, 'eventGap': 28},
-    'L2': {'svgH': 740, 'sectionH': 140, 'eventGap': 28},
-    'L3': {'svgH': 780, 'sectionH': 120, 'eventGap': 22},
-    'L4': {'svgH': 780, 'sectionH': 90,  'eventGap': 16},
+# 各级别配置：eventGap + 数据引用（sectionH 由引擎动态计算）
+level_meta = {
+    'L1': {'eventGap': 28, 'maxEvents': 3, 'numSections': 2},
+    'L2': {'eventGap': 28, 'maxEvents': 5, 'numSections': 5},
+    'L3': {'eventGap': 22, 'maxEvents': 6, 'numSections': 6},
+    'L4': {'eventGap': 22, 'maxEvents': 7, 'numSections': 8},
 }
 
 level_data = {
@@ -206,20 +208,27 @@ level_data = {
     'L4': L4_data,
 }
 
-for level, cfg in level_config.items():
-    svgH = cfg['svgH']
+for level, meta in level_meta.items():
+    startY = 30
+    # 与引擎计算一致：sectionH = maxEvents * eventGap + 30
+    sectionH = meta['maxEvents'] * meta['eventGap'] + 30
+    svgH = startY + meta['numSections'] * sectionH + 20
+    viewportH = svgH + 60
     # 替换 head 中的 SVG 高度（height 属性和 viewBox）以及 viewport meta
     level_head = head.replace(
         'height="740" viewBox="0 0 1200 740"',
         f'height="{svgH}" viewBox="0 0 1200 {svgH}"'
     ).replace(
         'height=800',
-        f'height={svgH + 60}'
+        f'height={viewportH}'
+    ).replace(
+        'class="fixed-1200"',
+        f'style="width:1200px; height:{viewportH}px; display:inline-block; text-align:center;"'
     )
-    engine = make_engine(cfg['sectionH'], cfg['eventGap'])
+    engine = make_engine(meta['eventGap'])
     script = level_data[level] + engine
     content = level_head + '\n' + script + '\n' + tail
     filename = f'timeline-{level}.html'
     with open(filename, 'w') as f:
         f.write(content)
-    print(f'Generated {filename} (svgH={svgH}, sectionH={cfg["sectionH"]}, eventGap={cfg["eventGap"]})')
+    print(f'Generated {filename} (svgH={svgH}, sectionH={sectionH}, eventGap={meta["eventGap"]})')

@@ -29,9 +29,9 @@ const rawData = [
   [0,2,79],[1,2,93],[2,2,97],[3,2,74],[4,2,86],[5,2,91],[6,2,85],[7,2,77]
 ];
 
-// 布局
+// 布局（8 列较少，加大 cellW 填满空间）
 const ox = 70, oy = 20;
-const cellW = 38, cellH = 62;
+const cellW = 70, cellH = 62;
 const gap = 2;
 const gridW = 8 * (cellW + gap) - gap;
 const gridH = 3 * (cellH + gap) - gap;
@@ -148,8 +148,22 @@ const gridH = 12 * (cellH + gap) - gap;
 
 test_data = {'L1': L1_data, 'L2': L2_data, 'L3': L3_data, 'L4': L4_data}
 
+# L1 网格较小（8列×3行，cellW=70），需要缩小 SVG 尺寸
+# gridW = 8*72-2 = 574, 加 ox=70 + legend≈60 → 约 720px
+# gridH = 3*64-2 = 190, 加 oy=20 + x轴标签≈30 → 约 280px
+svg_overrides = {
+    'L1': {'width': 750, 'height': 420},
+}
+
 for level, data in test_data.items():
-    content = html_head + script_prefix + data + engine + tail
+    head = html_head
+    if level in svg_overrides:
+        w, h = svg_overrides[level]['width'], svg_overrides[level]['height']
+        head = head.replace(
+            'width="1140" height="660" viewBox="0 0 1140 660"',
+            f'width="{w}" height="{h}" viewBox="0 0 {w} {h}"'
+        )
+    content = head + script_prefix + data + engine + tail
     filename = f'heatmap-{level}.html'
     with open(filename, 'w') as f:
         f.write(content)

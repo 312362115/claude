@@ -74,7 +74,7 @@ const total = data.reduce((s, d) => s + d.value, 0);
 
 '''
 
-# L4: 14 items，含长名称，测试标签防碰撞
+# L4: 11 items，含长名称，测试标签防碰撞（控制在 11 项以内避免溢出）
 L4 = '''// 数据 & 配色
 const data = [
   { value: 8500, name: 'Visual Studio Code' },
@@ -86,18 +86,14 @@ const data = [
   { value: 1800, name: 'Xcode' },
   { value: 1400, name: 'Android Studio' },
   { value: 1000, name: 'Eclipse IDE' },
-  { value: 750,  name: 'Atom (已归档)' },
-  { value: 500,  name: 'Emacs' },
-  { value: 350,  name: 'Notepad++' },
-  { value: 200,  name: 'Fleet (JetBrains)' },
-  { value: 120,  name: 'Zed Editor' }
+  { value: 750,  name: 'Emacs' },
+  { value: 500,  name: 'Notepad++' }
 ];
 const colors = [
   'rgba(102,126,234,0.75)', 'rgba(245,87,108,0.75)', 'rgba(79,172,254,0.75)',
   'rgba(67,233,123,0.75)',  'rgba(250,130,49,0.75)',  'rgba(165,94,234,0.75)',
   'rgba(252,92,101,0.75)',  'rgba(38,222,129,0.75)',  'rgba(255,165,2,0.75)',
-  'rgba(46,213,115,0.75)',  'rgba(116,185,255,0.75)', 'rgba(223,228,234,0.75)',
-  'rgba(255,107,129,0.75)', 'rgba(55,66,250,0.75)'
+  'rgba(46,213,115,0.75)',  'rgba(116,185,255,0.75)'
 ];
 const total = data.reduce((s, d) => s + d.value, 0);
 

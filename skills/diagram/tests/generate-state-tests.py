@@ -29,6 +29,7 @@ header = '''<!DOCTYPE html>
   }
 </style>
 <script src="lib/elk.bundled.js"></script>
+<script src="lib/utils.js"></script>
 </head>
 <body>
 <svg id="canvas"></svg>

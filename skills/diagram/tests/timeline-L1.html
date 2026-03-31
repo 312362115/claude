@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=1200, height=800">
+<meta name="viewport" content="width=1200, height=338">
 <title>前端技术演进时间线</title>
 <link rel="stylesheet" href="lib/base.css">
 <style>
@@ -10,10 +10,10 @@
   .subtitle { font-size: 14px; color: #888; text-align: center; margin-top: 4px; }
 </style>
 </head>
-<body class="fixed-1200">
+<body style="width:1200px; height:338px; display:inline-block; text-align:center;">
   <div class="title">前端技术演进时间线</div>
   <div class="subtitle">1995 – 2024 · 从静态页面到新一代工具链</div>
-  <svg id="tl" width="1200" height="740" viewBox="0 0 1200 740" style="margin-top:4px;"></svg>
+  <svg id="tl" width="1200" height="278" viewBox="0 0 1200 278" style="margin-top:4px;"></svg>
 
 <script src="lib/utils.js"></script>
 <script>
@@ -29,11 +29,13 @@ const sections = [
     events: ['用户破万', 'A 轮融资'] }
 ];
 
-// 布局：纵向中轴线
+// 布局：纵向中轴线，动态计算每段高度
 const CX = 600;          // 中轴 x
 const startY = 30;       // 起始 y
-const sectionH = 140;    // 每个时代段高度
 const eventGap = 28;     // 事件行间距
+// sectionH 根据最大事件数动态计算
+const maxEvents = Math.max(...sections.map(s => s.events.length));
+const sectionH = maxEvents * eventGap + 30;
 const eventOffsetX = 200; // 事件卡片到中轴的水平距离
 const dotR = 5;
 

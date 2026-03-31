@@ -98,8 +98,8 @@ L1_SCRIPT = r'''(function() {
   var svg = el('svg', { width: W, height: totalH, viewBox: '0 0 ' + W + ' ' + totalH, style: 'display:block' });
 
   var defs = el('defs');
-  var marker = el('marker', { id: 'arr', markerWidth: 10, markerHeight: 8, refX: 9, refY: 4, orient: 'auto' });
-  marker.appendChild(el('path', { d: 'M1,1 L9,4 L1,7', fill: 'none', stroke: '#94a3b8', 'stroke-width': 1.3, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }));
+  var marker = el('marker', { id: 'arr', markerWidth: 8, markerHeight: 8, refX: 7, refY: 4, orient: 'auto' });
+  marker.appendChild(el('path', { d: 'M0,0 L8,4 L0,8 Z', fill: '#94a3b8' }));
   defs.appendChild(marker);
   var shadow = el('filter', { id: 'nodeShadow', x: '-10%', y: '-10%', width: '130%', height: '140%' });
   shadow.appendChild(el('feDropShadow', { dx: 0, dy: 1, stdDeviation: 2, 'flood-color': 'rgba(0,0,0,0.06)' }));
@@ -281,8 +281,8 @@ L2_SCRIPT = r'''(function() {
   var svg = el('svg', { width: W, height: totalH, viewBox: '0 0 ' + W + ' ' + totalH, style: 'display:block' });
 
   var defs = el('defs');
-  var marker = el('marker', { id: 'arr', markerWidth: 10, markerHeight: 8, refX: 9, refY: 4, orient: 'auto' });
-  marker.appendChild(el('path', { d: 'M1,1 L9,4 L1,7', fill: 'none', stroke: '#94a3b8', 'stroke-width': 1.3, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }));
+  var marker = el('marker', { id: 'arr', markerWidth: 8, markerHeight: 8, refX: 7, refY: 4, orient: 'auto' });
+  marker.appendChild(el('path', { d: 'M0,0 L8,4 L0,8 Z', fill: '#94a3b8' }));
   defs.appendChild(marker);
   var shadow = el('filter', { id: 'nodeShadow', x: '-10%', y: '-10%', width: '130%', height: '140%' });
   shadow.appendChild(el('feDropShadow', { dx: 0, dy: 1, stdDeviation: 2, 'flood-color': 'rgba(0,0,0,0.06)' }));
@@ -497,8 +497,8 @@ L3_SCRIPT = r'''(function() {
   var svg = el('svg', { width: W, height: totalH, viewBox: '0 0 ' + W + ' ' + totalH, style: 'display:block' });
 
   var defs = el('defs');
-  var marker = el('marker', { id: 'arr', markerWidth: 10, markerHeight: 8, refX: 9, refY: 4, orient: 'auto' });
-  marker.appendChild(el('path', { d: 'M1,1 L9,4 L1,7', fill: 'none', stroke: '#94a3b8', 'stroke-width': 1.3, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }));
+  var marker = el('marker', { id: 'arr', markerWidth: 8, markerHeight: 8, refX: 7, refY: 4, orient: 'auto' });
+  marker.appendChild(el('path', { d: 'M0,0 L8,4 L0,8 Z', fill: '#94a3b8' }));
   defs.appendChild(marker);
   var shadow = el('filter', { id: 'nodeShadow', x: '-10%', y: '-10%', width: '130%', height: '140%' });
   shadow.appendChild(el('feDropShadow', { dx: 0, dy: 1, stdDeviation: 2, 'flood-color': 'rgba(0,0,0,0.06)' }));
@@ -629,9 +629,9 @@ L4_SCRIPT = r'''(function() {
   var MAIN_X = 40;
 
   var mainLayers = [
-    { label: '互联网/CDN 边缘', color: '#94a3b8',
+    { label: 'CDN 边缘', color: '#94a3b8',
       rows: [['CloudFront', 'Akamai', 'Fastly', 'CloudFlare']] },
-    { label: 'DMZ 安全区域', color: '#f43f5e',
+    { label: 'DMZ', color: '#f43f5e',
       rows: [['WAF-1', 'WAF-2', '防火墙-主', '防火墙-备'], ['LB-1', 'LB-2', 'LB-3', 'LB-4', 'LB-5']],
       nodeColors: {
         'WAF-1': { bg: '#fff1f2', border: '#fda4af', text: '#9f1239' },
@@ -644,11 +644,11 @@ L4_SCRIPT = r'''(function() {
         'LB-4': { bg: '#fffbeb', border: '#fcd34d', text: '#92400e' },
         'LB-5': { bg: '#fffbeb', border: '#fcd34d', text: '#92400e' }
       } },
-    { label: '接入 & 网关层', color: '#0891b2',
+    { label: '网关层', color: '#0891b2',
       rows: [['Gateway-1', 'Gateway-2', 'Gateway-3', 'Gateway-4', 'Gateway-5', 'Gateway-6']] },
-    { label: '应用 & 微服务层', color: '#3b82f6',
+    { label: '应用层', color: '#3b82f6',
       rows: [['Web-1', 'Web-2', 'Web-3', 'Web-4', 'Web-5'], ['API-1', 'API-2', 'API-3', 'API-4'], ['Worker-1', 'Worker-2', 'Worker-3']] },
-    { label: '数据 & 存储层', color: '#8b5cf6',
+    { label: '数据层', color: '#8b5cf6',
       rows: [['MySQL主库', 'MySQL从库-1', 'MySQL从库-2', 'PG主库', 'Redis集群', 'Kafka']] }
   ];
 
@@ -716,8 +716,8 @@ L4_SCRIPT = r'''(function() {
   var svg = el('svg', { width: W, height: totalH, viewBox: '0 0 ' + W + ' ' + totalH, style: 'display:block' });
 
   var defs = el('defs');
-  var marker = el('marker', { id: 'arr', markerWidth: 10, markerHeight: 8, refX: 9, refY: 4, orient: 'auto' });
-  marker.appendChild(el('path', { d: 'M1,1 L9,4 L1,7', fill: 'none', stroke: '#94a3b8', 'stroke-width': 1.3, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }));
+  var marker = el('marker', { id: 'arr', markerWidth: 8, markerHeight: 8, refX: 7, refY: 4, orient: 'auto' });
+  marker.appendChild(el('path', { d: 'M0,0 L8,4 L0,8 Z', fill: '#94a3b8' }));
   defs.appendChild(marker);
   var shadow = el('filter', { id: 'nodeShadow', x: '-10%', y: '-10%', width: '130%', height: '140%' });
   shadow.appendChild(el('feDropShadow', { dx: 0, dy: 1, stdDeviation: 2, 'flood-color': 'rgba(0,0,0,0.06)' }));

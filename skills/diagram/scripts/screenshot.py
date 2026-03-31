@@ -86,6 +86,19 @@ def main():
                 page.goto(f'http://localhost:{PORT}/{f}.html', wait_until='domcontentloaded', timeout=15000)
                 page.wait_for_timeout(WAIT_MS)
 
+                # ELKjs 模板需要额外等待异步布局完成
+                try:
+                    page.wait_for_function(
+                        '''() => {
+                            const svg = document.querySelector('svg');
+                            if (!svg) return true;
+                            return svg.querySelectorAll('rect, path, line, circle').length > 5;
+                        }''',
+                        timeout=5000
+                    )
+                except:
+                    pass  # 非 SVG 模板或超时
+
                 out_path = str(output_dir / f'{f}.png')
                 page.locator('body').screenshot(path=out_path, type='png')
 

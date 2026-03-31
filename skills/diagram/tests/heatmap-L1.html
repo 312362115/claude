@@ -18,7 +18,7 @@
   <div class="title">一周用户活跃时段分布</div>
   <div class="subtitle">活跃指数 0–100</div>
   <div class="chart-wrap">
-    <svg id="hm" width="1140" height="660" viewBox="0 0 1140 660"></svg>
+    <svg id="hm" width="750" height="420" viewBox="0 0 750 420"></svg>
   </div>
 
 <script src="lib/utils.js"></script>
@@ -34,9 +34,9 @@ const rawData = [
   [0,2,79],[1,2,93],[2,2,97],[3,2,74],[4,2,86],[5,2,91],[6,2,85],[7,2,77]
 ];
 
-// 布局
+// 布局（8 列较少，加大 cellW 填满空间）
 const ox = 70, oy = 20;
-const cellW = 38, cellH = 62;
+const cellW = 70, cellH = 62;
 const gap = 2;
 const gridW = 8 * (cellW + gap) - gap;
 const gridH = 3 * (cellH + gap) - gap;
@@ -116,7 +116,7 @@ days.forEach((d, i) => {
 });
 
 // 色阶图例
-const lgX = ox + gridW + 30, lgY = oy + 60, lgW = 16, lgH = 300;
+const lgX = ox + gridW + 30, lgY = oy, lgW = 16, lgH = gridH;
 const defs = document.createElementNS(svgNS, 'defs');
 const grad = document.createElementNS(svgNS, 'linearGradient');
 grad.setAttribute('id', 'hm-grad'); grad.setAttribute('x1', '0'); grad.setAttribute('y1', '1');

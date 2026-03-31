@@ -121,8 +121,8 @@
   var svg = el('svg', { width: W, height: totalH, viewBox: '0 0 ' + W + ' ' + totalH, style: 'display:block' });
 
   var defs = el('defs');
-  var marker = el('marker', { id: 'arr', markerWidth: 10, markerHeight: 8, refX: 9, refY: 4, orient: 'auto' });
-  marker.appendChild(el('path', { d: 'M1,1 L9,4 L1,7', fill: 'none', stroke: '#94a3b8', 'stroke-width': 1.3, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }));
+  var marker = el('marker', { id: 'arr', markerWidth: 8, markerHeight: 8, refX: 7, refY: 4, orient: 'auto' });
+  marker.appendChild(el('path', { d: 'M0,0 L8,4 L0,8 Z', fill: '#94a3b8' }));
   defs.appendChild(marker);
   var shadow = el('filter', { id: 'nodeShadow', x: '-10%', y: '-10%', width: '130%', height: '140%' });
   shadow.appendChild(el('feDropShadow', { dx: 0, dy: 1, stdDeviation: 2, 'flood-color': 'rgba(0,0,0,0.06)' }));

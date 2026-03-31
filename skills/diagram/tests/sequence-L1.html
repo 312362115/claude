@@ -2,6 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
+<link rel="stylesheet" href="lib/base.css">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
@@ -15,6 +16,7 @@
 <body>
 <svg id="canvas"></svg>
 
+<script src="lib/utils.js"></script>
 <script>
 (function() {
   var NS = 'http://www.w3.org/2000/svg';
@@ -62,10 +64,6 @@
       { bg: '#FCE7F3', border: '#FDA4AF' }
     ]
   };
-
-  // ========== 工具函数 ==========
-    return w;
-  }
 
   // ========== 布局参数 ==========
   var FONT_SIZE = 13;

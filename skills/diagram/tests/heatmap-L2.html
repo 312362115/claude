@@ -127,7 +127,7 @@ days.forEach((d, i) => {
 });
 
 // 色阶图例
-const lgX = ox + gridW + 30, lgY = oy + 60, lgW = 16, lgH = 300;
+const lgX = ox + gridW + 30, lgY = oy, lgW = 16, lgH = gridH;
 const defs = document.createElementNS(svgNS, 'defs');
 const grad = document.createElementNS(svgNS, 'linearGradient');
 grad.setAttribute('id', 'hm-grad'); grad.setAttribute('x1', '0'); grad.setAttribute('y1', '1');

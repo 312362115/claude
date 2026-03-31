@@ -86,21 +86,37 @@ data.forEach((d, i) => {
   angle = a2;
 });
 
-// 第二轮：防碰撞 — 同侧标签按 y 排序，保证最小间距 32px
-const minGap = 32;
+// 第二轮：防碰撞 — 同侧标签按 y 排序，保证最小间距
+const minGap = 24;
+const minY = 40, maxY = 620;
 ['left', 'right'].forEach(side => {
   const group = labels.filter(l => side === 'right' ? l.isRight : !l.isRight);
   group.sort((a, b) => a.y - b.y);
+  // 先做基本间距推挤
   for (let j = 1; j < group.length; j++) {
     if (group[j].y - group[j - 1].y < minGap) {
       group[j].y = group[j - 1].y + minGap;
     }
   }
-  // 如果超出底部，整体上移
-  const maxY = 610;
+  // 如果超出底部，均匀分布在可用空间内
   if (group.length && group[group.length - 1].y > maxY) {
-    const overflow = group[group.length - 1].y - maxY;
-    group.forEach(l => l.y -= overflow);
+    const n = group.length;
+    const totalRange = maxY - minY;
+    const neededRange = (n - 1) * minGap;
+    if (neededRange <= totalRange) {
+      // 有足够空间：整体上移即可
+      const overflow = group[n - 1].y - maxY;
+      group.forEach(l => l.y -= overflow);
+      // 确保不超出顶部
+      if (group[0].y < minY) {
+        const shift = minY - group[0].y;
+        group.forEach(l => l.y += shift);
+      }
+    } else {
+      // 空间不足：等间距铺满
+      const gap = totalRange / (n - 1);
+      group.forEach((l, j) => { l.y = minY + j * gap; });
+    }
   }
 });
 

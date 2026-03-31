@@ -14,6 +14,7 @@ header = '''<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
+<link rel="stylesheet" href="lib/base.css">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
@@ -27,6 +28,7 @@ header = '''<!DOCTYPE html>
 <body>
 <svg id="canvas"></svg>
 
+<script src="lib/utils.js"></script>
 <script>
 (function() {
   var NS = 'http://www.w3.org/2000/svg';
