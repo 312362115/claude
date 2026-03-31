@@ -252,10 +252,30 @@
     });
   }
 
-  var contentW = maxX - minX + pad * 2;
-  var svgW = contentW;
+  // 计算主路径中心范围（不含侧分支）
+  var mainMinX = Infinity, mainMaxX = -Infinity;
+  steps.forEach(function(s) {
+    var n = nodeMap[s.id];
+    var left = n.cx - n.w / 2, right = n.cx + n.w / 2;
+    if (left < mainMinX) mainMinX = left;
+    if (right > mainMaxX) mainMaxX = right;
+  });
+  if (hasGroups) {
+    groupMeta.forEach(function(gm) {
+      if (gm.bgLeft < mainMinX) mainMinX = gm.bgLeft;
+      if (gm.bgRight > mainMaxX) mainMaxX = gm.bgRight;
+    });
+  }
+
+  // 侧分支额外宽度
+  var sideExtra = maxX - mainMaxX;
+  if (sideExtra < 0) sideExtra = 0;
+
+  // 画布宽度：主路径居中 + 侧分支向右扩展
+  var mainW = mainMaxX - mainMinX;
+  var svgW = mainW + pad * 2 + sideExtra;
   var svgH = maxY + pad + 20;
-  var offsetX = -minX + pad;
+  var offsetX = -mainMinX + pad;
 
   svg.setAttribute('width', svgW);
   svg.setAttribute('height', svgH);
@@ -312,7 +332,11 @@
     var aid = isAfterDecision ? 'arrow-g' : 'arrow';
 
     lineGroup.appendChild(el('line', { x1: sx, y1: sy, x2: tx, y2: ty, stroke: lc, 'stroke-width': lw, 'marker-end': 'url(#' + aid + ')' }));
-    if (isAfterDecision) drawLabel(sx + 16, sy + (ty - sy) * 0.4, '是', theme.lineYes.color);
+    if (isAfterDecision) {
+      // "是"标签放在线左侧，紧贴 decision 节点下方，避免与下方节点重叠
+      var labelY = Math.min(sy + 18, sy + (ty - sy) * 0.3);
+      drawLabel(sx - 18, labelY, '是', theme.lineYes.color);
+    }
   }
 
   // ========== 侧分支连线 ==========
@@ -325,7 +349,8 @@
       var r = 10;
       var d = 'M' + dx + ',' + dy + ' L' + (tx - r) + ',' + dy + ' Q' + tx + ',' + dy + ' ' + tx + ',' + (dy + r) + ' L' + tx + ',' + ty;
       lineGroup.appendChild(el('path', { d: d, stroke: theme.lineNo.color, 'stroke-width': theme.lineNo.width, fill: 'none', 'marker-end': 'url(#arrow-r)' }));
-      drawLabel((dx + tx) / 2, dy - 1, '否', theme.lineNo.color);
+      // "否"标签放在水平线上方，靠近 decision 出口
+      drawLabel(dx + 24, dy - 14, '否', theme.lineNo.color);
 
       if (sn.nextNodes && sn.nextNodes.length > 0) {
         var prev = sn;
