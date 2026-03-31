@@ -5,7 +5,7 @@ description: >
   覆盖技术选型、行业分析、学术研究、竞品分析、概念探索等所有调研场景。
   核心方法论：假设驱动研究、内外数据结合（先摸清内部现状再对标外部水位）、
   反面证据强制搜索、数据来源三级分类、多层次报告输出。
-  包含多跳网络搜索、信息交叉验证、专业图表生成（matplotlib统计图 + graphviz结构图）、
+  包含多跳网络搜索、信息交叉验证、专业图表生成（Diagram Bridge 统一图表体系）、
   数据来源分级标注、分析框架自动选择、报告结构自适应。
   触发词：调研、研究、分析报告、对比分析、行业报告、技术选型、竞品分析、
   市场调研、深度研究、出一份报告、帮我调研一下、了解一下xxx、
@@ -300,59 +300,90 @@ description: >
 
 报告中的图表是专业性的重要体现。根据内容需要自动选择合适的图表类型，不限制数量。
 
-### 4.1 依赖安装
+**统一使用 Diagram Bridge**（`~/.claude/skills/diagram/scripts/bridge.py`），无需安装额外依赖。
 
-首次使用时运行依赖安装脚本（自动创建 venv 并安装 matplotlib、graphviz）：
+### 4.1 图表类型选择
 
-```bash
-python3 ~/.claude/skills/deep-research/scripts/setup_deps.py
-```
+**统计图表**（bridge.py 生成，JSON 配置 → PNG）：
 
-安装完成后，后续所有图表脚本都通过 venv 中的 Python 执行：
+| 图表 | 适用场景 | bridge type |
+|------|---------|-------------|
+| 柱状图 | 离散项对比（性能、功能评分、市场份额） | `bar` |
+| 折线图 | 趋势变化（时间序列、版本演进） | `line` |
+| 饼图/环形图 | 占比构成（市场份额、成本结构） | `pie` |
+| 雷达图 | 多维度综合评估（产品能力雷达图） | `radar` |
+| 热力图 | 矩阵型数据（功能支持矩阵、相关性） | `heatmap` |
+| 散点图/气泡图 | 分布关系（性价比分布、性能-成本关系） | `scatter` |
+| 漏斗图 | 转化漏斗（用户转化、销售漏斗） | `funnel` |
+| 瀑布图 | 累计增减（利润变动、成本分解） | `waterfall` |
 
-```bash
-VENV_PYTHON=~/.claude/skills/deep-research/.venv/bin/python3
-```
-
-### 4.2 图表类型选择
-
-**统计图表**（matplotlib 生成）：
-
-| 图表 | 适用场景 |
-|------|---------|
-| 柱状图 | 离散项对比（性能、功能评分、市场份额） |
-| 分组柱状图 | 多维度对比（多个产品 × 多个指标） |
-| 折线图 | 趋势变化（时间序列、版本演进） |
-| 饼图/环形图 | 占比构成（市场份额、成本结构） |
-| 雷达图 | 多维度综合评估（产品能力雷达图） |
-| 热力图 | 矩阵型数据（功能支持矩阵、相关性） |
-| 散点图 | 分布关系（性价比分布、性能-成本关系） |
-| 堆叠柱状图 | 构成对比（各产品的功能模块占比） |
-
-**结构图表**（graphviz 生成）：
+**结构图表**（需要时由 Claude 直接编写 HTML + capture.py 截图，参考 Diagram skill）：
 
 | 图表 | 适用场景 |
 |------|---------|
 | 流程图 | 工作流程、决策流程、数据流 |
 | 架构图 | 系统架构、技术栈、模块关系 |
 | 泳道图 | 多角色协作流程、跨系统交互 |
-| 层次图 | 组织结构、分类体系、技术栈分层 |
-| 关系图 | 实体关系、依赖关系、概念网络 |
-| 时序流 | 调用链路、消息传递序列 |
-| 对比图 | 方案 A vs B 的结构差异 |
+| 时序图 | 调用链路、消息传递序列 |
 
-### 4.3 图表生成规范
+### 4.2 统计图表生成（bridge.py）
 
-- 统计图表通过 `$VENV_PYTHON ~/.claude/skills/deep-research/scripts/generate_chart.py --config <config.json> --output <output.png> --theme <theme>` 生成
-- 结构图表通过 `$VENV_PYTHON ~/.claude/skills/deep-research/scripts/generate_diagram.py --config <config.json> --output <output.png> --theme <theme>` 生成
-- 图表配置以 JSON 文件传入，脚本末尾有完整的配置示例供参考
+**调用方式**：
+
+```bash
+# 方式 1：JSON 文件输入
+echo '<JSON配置>' > /tmp/chart-config.json
+python ~/.claude/skills/diagram/scripts/bridge.py -c /tmp/chart-config.json -o docs/research/assets/<文件名>.png
+
+# 方式 2：管道输入
+echo '<JSON配置>' | python ~/.claude/skills/diagram/scripts/bridge.py -o docs/research/assets/<文件名>.png
+```
+
+**JSON 配置格式**：
+
+```json
+{
+  "type": "bar",
+  "title": "图表标题",
+  "subtitle": "副标题（可选）",
+  "data": { ... }
+}
+```
+
+各图表类型的 data 结构：
+
+| type | data 结构 |
+|------|----------|
+| `bar` | `{ "categories": [...], "series": [{"name": "名称", "values": [...]}] }` |
+| `line` | `{ "categories": [...], "series": [{"name": "名称", "values": [...]}] }` |
+| `pie` | `{ "items": [{"name": "名称", "value": 数值}] }` |
+| `radar` | `{ "labels": [...], "series": [{"name": "名称", "values": [...]}] }` |
+| `heatmap` | `{ "xLabels": [...], "yLabels": [...], "data": [[x索引, y索引, 值], ...] }` |
+| `scatter` | `{ "xLabel": "X轴", "yLabel": "Y轴", "series": [{"name": "名称", "data": [[x, y], ...]}] }` |
+| `funnel` | `{ "stages": [{"name": "名称", "value": 数值}] }` |
+| `waterfall` | `{ "items": [{"name": "名称", "value": 数值, "type": "start\|increase\|decrease\|total"}] }` |
+
+scatter 支持气泡图：data 中传 `[[x, y, size], ...]`，size 越大气泡越大。
+
+### 4.3 结构图表生成（capture.py）
+
+需要流程图、架构图等结构图时，直接编写 HTML 文件，然后用 capture.py 截图：
+
+```bash
+python ~/.claude/skills/diagram/scripts/capture.py <HTML文件路径> docs/research/assets/<文件名>.png
+```
+
+HTML 编写参考 `~/.claude/skills/diagram/templates/html/` 下的模板和 `lib/base.css` 样式。
+
+### 4.4 图表输出规范
+
 - 输出保存到 `docs/research/assets/` 目录
 - 文件名格式：`<报告名>-<图表描述>.png`，例如 `redis-benchmark-bar.png`
-- 图表必须包含：标题、坐标轴标签（统计图）、图例（多系列时）、数据标注
-- 分辨率：`dpi=150`，确保清晰度
-- 具体的样式配置（颜色、字体、布局）根据当前报告的视觉风格主题生成，详见 `references/chart-styles.md`
+- 图表必须包含：标题、坐标轴标签（统计图）、图例（多系列时）
+- 默认 2x Retina 输出，确保清晰度
+- **禁止 Read PNG 文件**：生成后只通过 `ls -la` 确认文件存在和大小，不要用 Read 工具查看 PNG，避免图片加载到会话上下文触发多图尺寸限制
 
-### 4.4 图表嵌入
+### 4.5 图表嵌入
 
 在 markdown 报告中用相对路径引用：
 ```markdown
