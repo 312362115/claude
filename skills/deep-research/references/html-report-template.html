@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{REPORT_TITLE}}</title>
+<style>
+/* ─── Reset & Base ─── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --sidebar-w: 260px;
+  --content-max: 860px;
+  --font-sans: -apple-system, system-ui, 'PingFang SC', 'Noto Sans CJK SC', 'Microsoft YaHei', sans-serif;
+  --font-mono: 'SF Mono', 'Fira Code', 'Cascadia Code', Menlo, monospace;
+
+  /* 专业蓝灰色调 */
+  --c-bg: #f8f9fc;
+  --c-surface: #ffffff;
+  --c-border: #e2e8f0;
+  --c-border-light: #f1f5f9;
+  --c-text: #1e293b;
+  --c-text-secondary: #64748b;
+  --c-text-muted: #94a3b8;
+  --c-primary: #3b82f6;
+  --c-primary-light: #eff6ff;
+  --c-primary-dark: #1d4ed8;
+  --c-accent: #0ea5e9;
+  --c-success: #10b981;
+  --c-warning: #f59e0b;
+  --c-danger: #ef4444;
+
+  /* 来源层级颜色 */
+  --c-t1: #059669;
+  --c-t2: #d97706;
+  --c-t3: #9333ea;
+}
+
+html { font-size: 15px; scroll-behavior: smooth; }
+body {
+  font-family: var(--font-sans);
+  background: var(--c-bg);
+  color: var(--c-text);
+  line-height: 1.8;
+  letter-spacing: 0.01em;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ─── Sidebar ─── */
+.sidebar {
+  position: fixed; top: 0; left: 0;
+  width: var(--sidebar-w); height: 100vh;
+  background: var(--c-surface);
+  border-right: 1px solid var(--c-border);
+  overflow-y: auto; padding: 28px 0;
+  z-index: 100;
+  scrollbar-width: thin;
+  scrollbar-color: var(--c-border) transparent;
+}
+.sidebar::-webkit-scrollbar { width: 4px; }
+.sidebar::-webkit-scrollbar-thumb { background: var(--c-border); border-radius: 4px; }
+.sidebar-title {
+  font-size: 11px; font-weight: 700; color: var(--c-text-muted);
+  text-transform: uppercase; letter-spacing: 1px;
+  padding: 0 20px; margin-bottom: 16px;
+}
+.toc-list { list-style: none; }
+.toc-item a {
+  display: block; padding: 7px 20px;
+  font-size: 13px; color: var(--c-text-secondary);
+  text-decoration: none; border-left: 3px solid transparent;
+  border-bottom: none;
+  transition: all 0.15s ease;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  line-height: 1.4;
+}
+.toc-item a:hover {
+  color: var(--c-primary); background: var(--c-primary-light);
+  border-bottom: none;
+}
+.toc-item.active > a {
+  color: var(--c-primary-dark); border-left-color: var(--c-primary);
+  background: var(--c-primary-light); font-weight: 600;
+  border-bottom: none;
+}
+.toc-item.depth-3 a { padding-left: 36px; font-size: 12px; color: var(--c-text-muted); }
+
+/* ─── Main Content ─── */
+.content {
+  margin-left: var(--sidebar-w);
+  padding: 48px 64px 100px;
+  max-width: calc(var(--content-max) + 128px + var(--sidebar-w));
+}
+
+/* 段落间距与阅读节奏 */
+article > p,
+article > ul,
+article > ol,
+article > blockquote,
+article > .callout,
+article > .chart-container,
+article > table {
+  margin-bottom: 16px;
+}
+article > p + p {
+  text-indent: 0;
+  margin-top: 4px;
+}
+article > h2 + p,
+article > h3 + p {
+  margin-top: 4px;
+}
+article > p + table,
+article > p + .chart-container,
+article > p + .callout {
+  margin-top: 20px;
+}
+article > table + p,
+article > .chart-container + p,
+article > .callout + p {
+  margin-top: 20px;
+}
+
+/* ─── Report Header ─── */
+.report-header {
+  margin-bottom: 48px; padding-bottom: 36px;
+  border-bottom: 2px solid var(--c-border);
+}
+.report-title {
+  font-size: 2.1rem; font-weight: 800;
+  color: var(--c-text); line-height: 1.35;
+  margin-bottom: 10px; letter-spacing: -0.01em;
+}
+.report-subtitle {
+  font-size: 1.05rem; color: var(--c-text-secondary);
+  margin-bottom: 24px; line-height: 1.6;
+}
+.report-meta {
+  display: flex; flex-wrap: wrap; gap: 12px 32px;
+  font-size: 0.85rem; color: var(--c-text-muted);
+  padding: 14px 20px; background: #f8fafc;
+  border-radius: 8px; border: 1px solid var(--c-border-light);
+}
+.meta-item { display: flex; align-items: center; gap: 6px; }
+.meta-label { font-weight: 600; color: var(--c-text-secondary); }
+.meta-item::before {
+  content: '';
+  width: 4px; height: 4px; border-radius: 50%;
+  background: var(--c-primary); flex-shrink: 0;
+}
+.meta-item:first-child::before { display: none; }
+
+/* ─── Typography ─── */
+h2 {
+  font-size: 1.45rem; font-weight: 700; color: var(--c-text);
+  margin: 56px 0 20px; padding-bottom: 10px;
+  border-bottom: 1px solid var(--c-border-light);
+  letter-spacing: -0.005em;
+}
+h2:first-child { margin-top: 0; }
+h3 {
+  font-size: 1.12rem; font-weight: 600; color: var(--c-text);
+  margin: 36px 0 14px;
+}
+h4 {
+  font-size: 0.95rem; font-weight: 600; color: var(--c-text-secondary);
+  margin: 28px 0 10px;
+}
+p {
+  margin: 0 0 14px;
+  color: var(--c-text);
+  word-break: break-word;
+}
+strong { font-weight: 600; color: var(--c-text); }
+a { color: var(--c-primary); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+a:hover { border-bottom-color: var(--c-primary); text-decoration: none; }
+ul, ol { margin: 8px 0 16px; padding-left: 24px; }
+li { margin-bottom: 6px; line-height: 1.7; }
+li > ul, li > ol { margin-top: 6px; margin-bottom: 0; }
+li > p { margin-bottom: 6px; }
+
+blockquote {
+  margin: 20px 0; padding: 14px 24px;
+  border-left: 4px solid var(--c-primary);
+  background: var(--c-primary-light);
+  color: var(--c-text-secondary);
+  border-radius: 0 8px 8px 0;
+  font-size: 0.95rem; line-height: 1.7;
+}
+blockquote p:last-child { margin-bottom: 0; }
+
+code {
+  font-family: var(--font-mono); font-size: 0.85em;
+  background: #f1f5f9; padding: 2px 6px; border-radius: 4px; color: #e11d48;
+}
+pre {
+  margin: 16px 0; padding: 16px 20px;
+  background: #1e293b; color: #e2e8f0;
+  border-radius: 8px; overflow-x: auto;
+  font-size: 0.85rem; line-height: 1.6;
+}
+pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
+
+hr { border: none; border-top: 1px solid var(--c-border); margin: 40px 0; }
+
+/* ─── Tables ─── */
+table {
+  width: 100%; border-collapse: collapse;
+  margin: 20px 0; font-size: 0.88rem;
+  border-radius: 8px; overflow: hidden;
+  border: 1px solid var(--c-border);
+}
+thead th {
+  background: #f1f5f9; font-weight: 600; color: var(--c-text);
+  text-align: left; padding: 12px 16px;
+  border-bottom: 2px solid var(--c-border);
+  font-size: 0.85rem; letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+tbody td {
+  padding: 11px 16px; border-bottom: 1px solid var(--c-border-light);
+  vertical-align: top; line-height: 1.6;
+}
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: #f8fafc; }
+tbody tr:nth-child(even) { background: #fafbfd; }
+tbody tr:nth-child(even):hover { background: #f5f7fa; }
+
+/* ─── Chart Container ─── */
+.chart-container {
+  margin: 28px 0; background: var(--c-surface);
+  border: 1px solid var(--c-border); border-radius: 12px;
+  padding: 28px 24px 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.03), 0 1px 2px rgba(0,0,0,0.04);
+  overflow: hidden;
+}
+.chart-container .chart-caption {
+  font-size: 0.82rem; color: var(--c-text-muted);
+  margin-top: 16px; padding-top: 12px;
+  text-align: center; font-style: normal;
+  border-top: 1px solid var(--c-border-light);
+  line-height: 1.5;
+}
+.chart-container svg { max-width: 100%; height: auto; display: block; margin: 0 auto; }
+.chart-container .chart-inner {
+  display: flex; justify-content: center; align-items: center; min-height: 200px;
+}
+
+/* ─── Source Tier Badges ─── */
+.tier-badge {
+  display: inline-block; font-size: 0.65rem; font-weight: 700;
+  padding: 1px 5px; border-radius: 3px;
+  vertical-align: super; margin-left: 1px; line-height: 1;
+}
+.tier-t1 { background: #d1fae5; color: var(--c-t1); }
+.tier-t2 { background: #fef3c7; color: var(--c-t2); }
+.tier-t3 { background: #f3e8ff; color: var(--c-t3); }
+
+/* ─── Hypothesis Result ─── */
+.hypothesis-confirmed { color: var(--c-success); font-weight: 600; }
+.hypothesis-falsified { color: var(--c-danger); font-weight: 600; }
+.hypothesis-insufficient { color: var(--c-warning); font-weight: 600; }
+
+/* ─── Executive Summary Box ─── */
+.exec-summary {
+  background: linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%);
+  border: 1px solid #bfdbfe; border-radius: 12px;
+  padding: 28px 32px; margin: 8px 0 40px;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.06);
+}
+.exec-summary h2 {
+  margin-top: 0; margin-bottom: 14px; border-bottom: none;
+  font-size: 1.15rem; color: var(--c-primary-dark);
+  letter-spacing: 0.02em;
+}
+.exec-summary p { font-size: 0.95rem; line-height: 1.75; color: #334155; }
+.exec-summary ul { margin: 10px 0 14px; }
+.exec-summary li { font-size: 0.95rem; color: #334155; margin-bottom: 5px; }
+
+/* ─── Callout Boxes ─── */
+.callout {
+  margin: 24px 0; padding: 16px 22px;
+  border-radius: 8px; border-left: 4px solid;
+  font-size: 0.93rem; line-height: 1.7;
+}
+.callout p { margin-bottom: 6px; }
+.callout p:last-child { margin-bottom: 0; }
+.callout-info { background: #eff6ff; border-color: var(--c-primary); }
+.callout-warning { background: #fffbeb; border-color: var(--c-warning); }
+.callout-danger { background: #fef2f2; border-color: var(--c-danger); }
+
+/* ─── Footnotes ─── */
+sup a { color: var(--c-primary); font-size: 0.8em; font-weight: 600; text-decoration: none; }
+sup a:hover { text-decoration: underline; }
+
+/* ─── References Section ─── */
+.references { margin-top: 48px; }
+.references > h2 { margin-bottom: 24px; }
+.references .ref-group-title {
+  font-size: 0.88rem; font-weight: 700;
+  margin: 20px 0 10px; color: var(--c-text-secondary);
+}
+.references ol { padding-left: 28px; }
+.references li {
+  font-size: 0.88rem; color: var(--c-text-secondary);
+  margin-bottom: 8px; line-height: 1.6; padding-left: 4px;
+}
+.references li a { color: var(--c-primary); }
+.references li strong { color: var(--c-text); font-weight: 600; }
+
+/* ─── Card Grid ─── */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px; margin: 20px 0;
+}
+.card {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: 12px;
+  padding: 22px 24px;
+  transition: border-color 0.2s;
+  position: relative;
+}
+.card:hover { border-color: var(--c-primary); }
+.card h4 { margin: 0 0 8px; font-size: 0.95rem; color: var(--c-text); }
+.card p { margin: 0; font-size: 0.88rem; color: var(--c-text-secondary); line-height: 1.6; }
+.card-tag {
+  position: absolute; top: 14px; right: 14px;
+  font-size: 0.7rem; font-weight: 700;
+  padding: 2px 10px; border-radius: 14px;
+}
+.tag-primary { background: var(--c-primary-light); color: var(--c-primary-dark); }
+.tag-success { background: #d1fae5; color: var(--c-success); }
+.tag-warning { background: #fef3c7; color: #b45309; }
+.tag-muted { background: #f1f5f9; color: var(--c-text-muted); }
+
+/* ─── Score Bar ─── */
+.score-bar {
+  display: flex; align-items: center; gap: 8px; margin: 6px 0;
+}
+.score-bar .label {
+  width: 80px; font-size: 0.82rem; color: var(--c-text-secondary);
+  text-align: right; flex-shrink: 0;
+}
+.score-bar .bar {
+  flex: 1; height: 6px;
+  background: var(--c-border-light);
+  border-radius: 3px; overflow: hidden;
+}
+.score-bar .fill {
+  height: 100%; border-radius: 3px;
+  transition: width 0.5s ease;
+}
+.fill-high { background: linear-gradient(90deg, var(--c-success), var(--c-accent)); }
+.fill-med { background: linear-gradient(90deg, var(--c-warning), #fbbf24); }
+.fill-low { background: linear-gradient(90deg, var(--c-danger), var(--c-warning)); }
+.score-bar .score-value {
+  font-size: 0.75rem; font-weight: 600; width: 40px; flex-shrink: 0;
+}
+
+/* ─── VS Block (Comparison) ─── */
+.vs-block {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 0; margin: 24px 0;
+  border-radius: 12px; overflow: hidden;
+  border: 1px solid var(--c-border);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+}
+.vs-col { padding: 28px; }
+.vs-col:first-child {
+  background: linear-gradient(160deg, #f0fdf4 0%, #ecfdf5 50%, #f0fdfa 100%);
+  border-right: 1px solid var(--c-border);
+}
+.vs-col:last-child {
+  background: linear-gradient(160deg, #fffbeb 0%, #fef3c7 50%, #fffbeb 100%);
+}
+.vs-label {
+  font-size: 0.78rem; text-transform: uppercase;
+  letter-spacing: 1px; font-weight: 700; margin-bottom: 14px;
+  padding-bottom: 10px;
+}
+.vs-label.label-a { color: var(--c-success); border-bottom: 2px solid #86efac; }
+.vs-label.label-b { color: #b45309; border-bottom: 2px solid #fcd34d; }
+.vs-col p { font-size: 0.9rem; line-height: 1.7; color: #334155; }
+.vs-col ul { font-size: 0.9rem; padding-left: 18px; }
+.vs-col li { margin-bottom: 8px; color: #334155; line-height: 1.6; }
+.vs-col li::marker { color: var(--c-text-muted); }
+
+/* ─── Timeline ─── */
+.timeline {
+  position: relative;
+  padding-left: 32px;
+  margin: 24px 0;
+}
+.timeline::before {
+  content: '';
+  position: absolute; left: 14px; top: 0; bottom: 0;
+  width: 2px;
+  background: linear-gradient(180deg, var(--c-primary), #8b5cf6, var(--c-success));
+}
+.tl-item {
+  position: relative;
+  padding: 14px 0 22px;
+  border-bottom: 1px dashed var(--c-border);
+}
+.tl-item:last-child { border-bottom: none; }
+.tl-dot {
+  position: absolute; left: -24px; top: 18px;
+  width: 12px; height: 12px; border-radius: 50%;
+  border: 2px solid var(--c-primary);
+  background: var(--c-bg);
+}
+.tl-item:nth-child(2) .tl-dot { border-color: #8b5cf6; }
+.tl-item:nth-child(3) .tl-dot { border-color: var(--c-success); }
+.tl-item:nth-child(4) .tl-dot { border-color: var(--c-warning); }
+.tl-title {
+  font-weight: 700; font-size: 1rem; margin-bottom: 6px;
+  color: var(--c-text);
+}
+.tl-desc {
+  font-size: 0.88rem; color: var(--c-text-secondary); line-height: 1.6;
+}
+
+/* ─── Badge (Inline Status) ─── */
+.badge {
+  display: inline-block;
+  padding: 2px 10px; border-radius: 14px;
+  font-size: 0.72rem; font-weight: 700;
+  vertical-align: middle; margin-left: 4px;
+}
+.badge-blue { background: var(--c-primary-light); color: var(--c-primary-dark); }
+.badge-green { background: #d1fae5; color: var(--c-t1); }
+.badge-orange { background: #fef3c7; color: #b45309; }
+.badge-purple { background: #f3e8ff; color: #7c3aed; }
+.badge-gray { background: #f1f5f9; color: var(--c-text-muted); }
+
+/* ─── Misc ─── */
+article > ul > li { margin-bottom: 12px; }
+
+/* ─── Responsive ─── */
+@media (max-width: 960px) {
+  .sidebar { display: none; }
+  .content { margin-left: 0; padding: 28px 20px 60px; }
+  .report-meta { gap: 8px 20px; }
+  table { font-size: 0.82rem; }
+  thead th, tbody td { padding: 8px 10px; }
+  .card-grid { grid-template-columns: 1fr; }
+  .vs-block { grid-template-columns: 1fr; }
+  .vs-col:first-child { border-right: none; border-bottom: 1px solid var(--c-border); }
+}
+
+/* ─── Print ─── */
+@media print {
+  .sidebar { display: none; }
+  .content { margin-left: 0; max-width: 100%; padding: 0; }
+  .chart-container { break-inside: avoid; box-shadow: none; border: 1px solid #ddd; }
+  .exec-summary { box-shadow: none; }
+  body { font-size: 12px; background: #fff; }
+  h2 { page-break-after: avoid; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ 侧边目录（JS 自动生成） ═══ -->
+<nav class="sidebar">
+  <div class="sidebar-title">目录</div>
+  <ul class="toc-list" id="toc"></ul>
+</nav>
+
+<!-- ═══ 主内容区 ═══ -->
+<main class="content">
+
+  <!-- 报告头 -->
+  <header class="report-header">
+    <h1 class="report-title">{{REPORT_TITLE}}</h1>
+    <p class="report-subtitle">{{REPORT_SUBTITLE}}</p>
+    <div class="report-meta">
+      <span class="meta-item"><span class="meta-label">调研日期</span> {{DATE}}</span>
+      <span class="meta-item"><span class="meta-label">调研类型</span> {{TYPE}}</span>
+      <span class="meta-item"><span class="meta-label">搜索深度</span> {{DEPTH}}</span>
+      <span class="meta-item"><span class="meta-label">内部数据</span> {{INTERNAL_DATA}}</span>
+    </div>
+  </header>
+
+  <!-- Executive Summary -->
+  <section class="exec-summary">
+    <h2>Executive Summary</h2>
+    <!-- 在此写入摘要内容 -->
+  </section>
+
+  <article>
+    <!--
+      正文内容区 — Claude 直接在此编写报告 HTML
+
+      ▸ 章节用 <h2> / <h3> 标签（目录 JS 会自动提取）
+      ▸ 图表嵌入格式：
+        <div class="chart-container">
+          <div class="chart-inner">
+            此处粘贴 bridge.py -f html 输出的 <svg>...</svg> 或图表 HTML 片段
+          </div>
+          <p class="chart-caption">图表说明文字</p>
+        </div>
+
+      ▸ 来源层级标注：
+        <sup><a href="#ref-1">1</a></sup>
+        <span class="tier-badge tier-t1">T1</span>
+
+      ▸ 假设验证结果：
+        <span class="hypothesis-confirmed">✅ 已验证</span>
+        <span class="hypothesis-falsified">❌ 已证伪</span>
+        <span class="hypothesis-insufficient">⚠️ 证据不足</span>
+
+      ▸ 提示框：
+        <div class="callout callout-info">提示内容</div>
+        <div class="callout callout-warning">警告内容</div>
+
+      ▸ 卡片网格（并列展示方案/观点/关键发现）：
+        <div class="card-grid">
+          <div class="card">
+            <span class="card-tag tag-primary">推荐</span>
+            <h4>方案 A</h4>
+            <p>方案描述</p>
+          </div>
+          <div class="card">
+            <h4>方案 B</h4>
+            <p>方案描述</p>
+          </div>
+        </div>
+
+      ▸ 评分条（多维度量化评估）：
+        <div class="score-bar">
+          <span class="label">维度名</span>
+          <div class="bar"><div class="fill fill-high" style="width:90%"></div></div>
+          <span class="score-value" style="color:var(--c-success)">90%</span>
+        </div>
+        fill-high(绿) / fill-med(橙) / fill-low(红)
+
+      ▸ 对比块（方案 A vs B 双栏）：
+        <div class="vs-block">
+          <div class="vs-col">
+            <div class="vs-label label-a">推荐方案</div>
+            <p>优势描述...</p>
+          </div>
+          <div class="vs-col">
+            <div class="vs-label label-b">备选方案</div>
+            <p>优势描述...</p>
+          </div>
+        </div>
+
+      ▸ 时间轴（路线图/技术演进）：
+        <div class="timeline">
+          <div class="tl-item">
+            <div class="tl-dot"></div>
+            <div class="tl-title">阶段标题 <span class="badge badge-blue">时间</span></div>
+            <div class="tl-desc">阶段描述</div>
+          </div>
+        </div>
+
+      ▸ 行内徽章（表格/标题中的状态标签）：
+        <span class="badge badge-green">已确认</span>
+        <span class="badge badge-blue">推荐</span>
+        <span class="badge badge-orange">待定</span>
+        <span class="badge badge-purple">实验性</span>
+    -->
+  </article>
+
+  <!-- 参考资料 -->
+  <section class="references">
+    <h2>参考资料</h2>
+    <h4 class="ref-group-title">一手来源 <span class="tier-badge tier-t1">T1</span></h4>
+    <ol>
+      <li id="ref-1"><a href="#">来源标题</a> — 引用内容概要</li>
+    </ol>
+    <h4 class="ref-group-title">二手来源 <span class="tier-badge tier-t2">T2</span></h4>
+    <ol start="2">
+      <li id="ref-2"><a href="#">来源标题</a> — 引用内容概要</li>
+    </ol>
+    <h4 class="ref-group-title">三手来源 <span class="tier-badge tier-t3">T3</span></h4>
+    <ol start="3">
+      <li id="ref-3"><a href="#">来源标题</a> — 引用内容概要</li>
+    </ol>
+  </section>
+
+</main>
+
+<!-- ═══ 目录自动生成 + 滚动高亮 ═══ -->
+<script>
+(function() {
+  const toc = document.getElementById('toc');
+  const headings = document.querySelectorAll('.content h2, .content h3');
+  const tocItems = [];
+
+  headings.forEach((h, i) => {
+    const id = 'section-' + i;
+    h.id = id;
+    const depth = h.tagName === 'H3' ? 3 : 2;
+    const li = document.createElement('li');
+    li.className = 'toc-item depth-' + depth;
+    li.innerHTML = '<a href="#' + id + '">' + h.textContent + '</a>';
+    toc.appendChild(li);
+    tocItems.push({ el: li, target: h });
+  });
+
+  let ticking = false;
+  function updateActive() {
+    let active = tocItems[0];
+    const scrollY = window.scrollY + 80;
+    for (const item of tocItems) {
+      if (item.target.offsetTop <= scrollY) active = item;
+    }
+    tocItems.forEach(i => i.el.classList.remove('active'));
+    if (active) {
+      active.el.classList.add('active');
+      active.el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+    ticking = false;
+  }
+  window.addEventListener('scroll', () => {
+    if (!ticking) { requestAnimationFrame(updateActive); ticking = true; }
+  });
+  updateActive();
+})();
+</script>
+
+</body>
+</html>
