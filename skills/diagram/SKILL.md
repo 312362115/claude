@@ -167,10 +167,17 @@ description: >
 ## 第三步：输出规范
 
 ### 3.1 文件格式
-- 格式：PNG
+
+**PNG（默认）** — 用于 Markdown 文档配图：
 - 背景：白色 `#FFFFFF`
 - 四周 padding：至少 24px
 - 缩放：原生设备 DPI（Retina 设备自动输出 2x 清晰图）
+
+**HTML（可选）** — 用于富文档嵌入、交互式展示：
+- 自包含：所有 CSS/JS 内联，无外部依赖，单文件可直接浏览器打开
+- 矢量：SVG 无损缩放，文字可选中/搜索
+- 适用场景：嵌入 HTML 报告、做交互式架构文档、需要二次编辑的图表
+- 生成方式：`python scripts/capture.py input.html -f html`
 
 ### 3.2 截图方式
 
