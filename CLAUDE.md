@@ -112,6 +112,33 @@ plan: docs/plans/xxx.md   # 关联计划
 ---
 ```
 
+**backlog 索引（INDEX.md）**：
+
+`docs/backlog/INDEX.md` 是 backlog 的快速索引文件，AI 读取此文件即可掌握全部需求概况，无需逐个打开 backlog 文件。
+
+- **更新时机**：仅在**新建需求**和**需求状态变更**（open → done / dropped）时更新
+- **格式**：按优先级分组，每条一行
+
+```markdown
+# Backlog Index
+
+## P0 — 紧急
+<!-- 当前无 P0 -->
+
+## P1 — 重要
+- [ ] [Session 改造](2026-03-23-auth-session.md) — 合规要求，Q1 deadline
+- [x] [日志规范化](2026-03-10-logging.md) — 统一日志格式
+
+## P2 — 普通
+- [ ] [首页性能优化](2026-03-15-homepage-perf.md) — LCP > 3s
+
+## P3 — 低优
+- [ ] [管理后台暗色模式](2026-03-20-admin-dark-mode.md) — 用户反馈
+```
+
+- `[ ]` = open，`[x]` = done，`~~删除线~~` = dropped
+- 每条格式：`- [ ] [标题](文件名) — 一句话描述`
+
 **开发计划（plan）规范**：
 
 plan 是 spec 的执行层：spec 定义"做什么、怎么做"，plan 定义"拆成几步、每步具体干什么、当前做到哪了"。进度跟踪在 plan 中完成，不在 backlog 中重复跟踪。
