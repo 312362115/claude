@@ -27,6 +27,7 @@ plugins/
 # 技能评估工作区 - 测试产物，非核心配置
 skills/*/workspace/
 skills/*-workspace/
+skills/*/tests/bridge-review/
 
 # 定时任务运行时状态
 scheduled-tasks/
