@@ -58,9 +58,42 @@ status: open
 - 与 HTML 报告的图表体验一致
 - 文本 DSL 可版本控制、可 diff，比二进制 PNG 更适合 git
 
+## 需求三：Diagram Skill 支持 Mermaid DSL 输出
+
+diagram skill 新增输出模式：除了 HTML/PNG，还能输出 **Mermaid DSL 文本**。
+
+**价值**：
+- 图表描述和文档在同一个 MD 文件里，可版本控制、可 diff
+- 输出的 Mermaid 在 GitHub/GitLab 上直接渲染，不依赖 PNG
+- 与需求二的 Mermaid 渲染打通完整链路
+
+**实现思路**：
+- bridge.py 新增 `-f mermaid` 输出模式
+- 每种图表类型写一个 数据 JSON → Mermaid 语法 的转换器
+- 覆盖范围取 diagram skill 模板和 Mermaid 支持的交集
+
+**覆盖范围**（diagram 模板 ∩ Mermaid 支持）：
+
+| 图表 | diagram 模板 | Mermaid | 可转换 |
+|------|------------|---------|--------|
+| flowchart | ✅ | ✅ | ✅ |
+| sequence | ✅ | ✅ | ✅ |
+| class | ✅ | ✅ | ✅ |
+| state | ✅ | ✅ | ✅ |
+| er | ✅ | ✅ | ✅ |
+| gantt | ✅ | ✅ | ✅ |
+| mindmap | ✅ | ✅ | ✅ |
+| timeline | ✅ | ✅ | ✅ |
+| c4 | ✅ | ✅ | ✅ |
+| pie | ✅ | ✅ | ✅ |
+| swimlane | ✅ | ❌ | ❌（用 flowchart subgraph 模拟） |
+| architecture | ✅ | ❌ | ❌ |
+| sankey | ✅ | ✅ | ✅ |
+| bar/line/radar 等统计图 | ✅(bridge) | ✅(xychart) | 部分 |
+
 ## 关键点
 
 - 从 `html-report-template.html` 提取通用 CSS 作为共享样式基础
 - preview-md 和 HTML 报告模板共用一套 CSS 变量和排版规范
 - 不影响 HTML 报告的专属组件（评分条、对比块等），那些仍留在报告模板中
-- 图表渲染依赖 bridge.py，需确保 Python 环境和 playwright 可用
+- 图表渲染依赖 bridge.py + mermaid.js，需确保 Python 环境和 playwright 可用
