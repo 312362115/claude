@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1200, height=800">
+<title>一周用户活跃时段分布</title>
+<link rel="stylesheet" href="lib/base.css">
+<style>
+  body {
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .title { font-size: 22px; font-weight: 700; color: #1a1a2e; margin-top: 24px; }
+  .subtitle { font-size: 14px; color: #888; margin-top: 6px; }
+  .chart-wrap { margin-top: 16px; }
+</style>
+</head>
+<body class="fixed-1200">
+  <div class="title">一周用户活跃时段分布</div>
+  <div class="subtitle">活跃指数 0–100</div>
+  <div class="chart-wrap">
+    <svg id="hm" width="1140" height="660" viewBox="0 0 1140 660"></svg>
+  </div>
+
+<script src="lib/utils.js"></script>
+<script>
+const svg = document.getElementById('hm');
+
+const hours = Array.from({ length: 24 }, (_, i) => `${i}:00`);
+const days = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+
+const rawData = [
+  [0,0,65],[1,0,58],[2,0,42],[3,0,30],[4,0,20],[5,0,15],[6,0,10],[7,0,12],[8,0,18],[9,0,25],[10,0,30],[11,0,35],
+  [12,0,40],[13,0,38],[14,0,35],[15,0,40],[16,0,48],[17,0,55],[18,0,68],[19,0,82],[20,0,90],[21,0,95],[22,0,88],[23,0,75],
+  [0,1,62],[1,1,55],[2,1,40],[3,1,28],[4,1,18],[5,1,14],[6,1,10],[7,1,12],[8,1,16],[9,1,22],[10,1,28],[11,1,32],
+  [12,1,38],[13,1,35],[14,1,33],[15,1,38],[16,1,45],[17,1,52],[18,1,65],[19,1,80],[20,1,88],[21,1,92],[22,1,85],[23,1,72],
+  [0,2,68],[1,2,60],[2,2,45],[3,2,32],[4,2,22],[5,2,16],[6,2,12],[7,2,14],[8,2,20],[9,2,28],[10,2,32],[11,2,38],
+  [12,2,42],[13,2,40],[14,2,38],[15,2,42],[16,2,50],[17,2,58],[18,2,70],[19,2,85],[20,2,92],[21,2,98],[22,2,90],[23,2,78],
+  [0,3,60],[1,3,52],[2,3,38],[3,3,25],[4,3,16],[5,3,12],[6,3,8],[7,3,10],[8,3,15],[9,3,20],[10,3,25],[11,3,30],
+  [12,3,35],[13,3,32],[14,3,30],[15,3,35],[16,3,42],[17,3,50],[18,3,62],[19,3,78],[20,3,86],[21,3,90],[22,3,82],[23,3,70],
+  [0,4,70],[1,4,65],[2,4,50],[3,4,38],[4,4,25],[5,4,18],[6,4,12],[7,4,10],[8,4,14],[9,4,20],[10,4,25],[11,4,30],
+  [12,4,35],[13,4,38],[14,4,40],[15,4,48],[16,4,58],[17,4,68],[18,4,80],[19,4,90],[20,4,96],[21,4,100],[22,4,95],[23,4,82],
+  [0,5,78],[1,5,72],[2,5,60],[3,5,45],[4,5,32],[5,5,22],[6,5,15],[7,5,12],[8,5,14],[9,5,18],[10,5,25],[11,5,32],
+  [12,5,38],[13,5,42],[14,5,48],[15,5,55],[16,5,65],[17,5,75],[18,5,85],[19,5,95],[20,5,100],[21,5,98],[22,5,92],[23,5,85],
+  [0,6,72],[1,6,65],[2,6,52],[3,6,40],[4,6,28],[5,6,20],[6,6,14],[7,6,12],[8,6,15],[9,6,20],[10,6,28],[11,6,35],
+  [12,6,42],[13,6,45],[14,6,50],[15,6,55],[16,6,62],[17,6,70],[18,6,80],[19,6,88],[20,6,94],[21,6,92],[22,6,85],[23,6,78]
+];
+
+// 布局
+const ox = 70, oy = 20;
+const cellW = 38, cellH = 62;
+const gap = 2;
+const gridW = 24 * (cellW + gap) - gap;
+const gridH = 7 * (cellH + gap) - gap;
+
+// 色阶：蓝→红
+const colorStops = [
+  [0,   [232,244,253]],
+  [20,  [179,217,247]],
+  [40,  [108,180,238]],
+  [60,  [58,143,214]],
+  [75,  [232,117,90]],
+  [90,  [217,69,53]],
+  [100, [185,28,28]]
+];
+
+function valToColor(v) {
+  let lo = colorStops[0], hi = colorStops[colorStops.length - 1];
+  for (let i = 0; i < colorStops.length - 1; i++) {
+    if (v >= colorStops[i][0] && v <= colorStops[i + 1][0]) {
+      lo = colorStops[i]; hi = colorStops[i + 1]; break;
+    }
+  }
+  const t = (v - lo[0]) / (hi[0] - lo[0] || 1);
+  const r = Math.round(lo[1][0] + (hi[1][0] - lo[1][0]) * t);
+  const g = Math.round(lo[1][1] + (hi[1][1] - lo[1][1]) * t);
+  const b = Math.round(lo[1][2] + (hi[1][2] - lo[1][2]) * t);
+  return `rgb(${r},${g},${b})`;
+}
+
+// 画格子 + 数值
+rawData.forEach(([h, d, v]) => {
+  const x = ox + h * (cellW + gap);
+  const y = oy + d * (cellH + gap);
+
+  const rect = document.createElementNS(svgNS, 'rect');
+  rect.setAttribute('x', x); rect.setAttribute('y', y);
+  rect.setAttribute('width', cellW); rect.setAttribute('height', cellH);
+  rect.setAttribute('rx', '3'); rect.setAttribute('ry', '3');
+  rect.setAttribute('fill', valToColor(v));
+  svg.appendChild(rect);
+
+  const txt = document.createElementNS(svgNS, 'text');
+  txt.setAttribute('x', x + cellW / 2);
+  txt.setAttribute('y', y + cellH / 2 + 1);
+  txt.setAttribute('text-anchor', 'middle');
+  txt.setAttribute('dominant-baseline', 'middle');
+  txt.setAttribute('font-size', '10');
+  txt.setAttribute('fill', v > 60 ? '#fff' : '#666');
+  txt.textContent = v;
+  svg.appendChild(txt);
+});
+
+// X 轴标签（小时）
+hours.forEach((h, i) => {
+  const txt = document.createElementNS(svgNS, 'text');
+  txt.setAttribute('x', ox + i * (cellW + gap) + cellW / 2);
+  txt.setAttribute('y', oy + gridH + 22);
+  txt.setAttribute('text-anchor', 'middle');
+  txt.setAttribute('font-size', '11');
+  txt.setAttribute('fill', '#666');
+  txt.textContent = h;
+  svg.appendChild(txt);
+});
+
+// Y 轴标签（星期）
+days.forEach((d, i) => {
+  const txt = document.createElementNS(svgNS, 'text');
+  txt.setAttribute('x', ox - 12);
+  txt.setAttribute('y', oy + i * (cellH + gap) + cellH / 2 + 1);
+  txt.setAttribute('text-anchor', 'end');
+  txt.setAttribute('dominant-baseline', 'middle');
+  txt.setAttribute('font-size', '14');
+  txt.setAttribute('font-weight', 'bold');
+  txt.setAttribute('fill', '#555');
+  txt.textContent = d;
+  svg.appendChild(txt);
+});
+
+// 色阶图例
+const lgX = ox + gridW + 30, lgY = oy, lgW = 16, lgH = gridH;
+const defs = document.createElementNS(svgNS, 'defs');
+const grad = document.createElementNS(svgNS, 'linearGradient');
+grad.setAttribute('id', 'hm-grad'); grad.setAttribute('x1', '0'); grad.setAttribute('y1', '1');
+grad.setAttribute('x2', '0'); grad.setAttribute('y2', '0');
+colorStops.forEach(([pct, _]) => {
+  const stop = document.createElementNS(svgNS, 'stop');
+  stop.setAttribute('offset', pct + '%');
+  stop.setAttribute('stop-color', valToColor(pct));
+  grad.appendChild(stop);
+});
+defs.appendChild(grad);
+svg.appendChild(defs);
+
+const lgRect = document.createElementNS(svgNS, 'rect');
+lgRect.setAttribute('x', lgX); lgRect.setAttribute('y', lgY);
+lgRect.setAttribute('width', lgW); lgRect.setAttribute('height', lgH);
+lgRect.setAttribute('rx', '4'); lgRect.setAttribute('fill', 'url(#hm-grad)');
+svg.appendChild(lgRect);
+
+[0, 50, 100].forEach(v => {
+  const y = lgY + lgH - (v / 100) * lgH;
+  const txt = document.createElementNS(svgNS, 'text');
+  txt.setAttribute('x', lgX + lgW + 8);
+  txt.setAttribute('y', y + 1);
+  txt.setAttribute('dominant-baseline', 'middle');
+  txt.setAttribute('font-size', '12');
+  txt.setAttribute('fill', '#666');
+  txt.textContent = v;
+  svg.appendChild(txt);
+});
+</script>
+</body>
+</html>

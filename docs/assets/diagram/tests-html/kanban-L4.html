@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, system-ui, 'PingFang SC', sans-serif; background: #fff; display: flex; flex-direction: column; align-items: center; }
+  .title { font-size: 22px; font-weight: 700; color: #1a1a2e; margin-top: 28px; }
+  .subtitle { font-size: 14px; color: #888; margin-top: 6px; }
+  .chart-wrap { margin-top: 20px; position: relative; }
+</style>
+<script src="lib/utils.js"></script>
+</head>
+<body>
+<div class="title" id="title"></div>
+<div class="subtitle" id="subtitle"></div>
+<div class="chart-wrap">
+  <svg id="canvas"></svg>
+</div>
+<script>
+(function() {
+  var svg = document.getElementById('canvas');
+  var SANS = "-apple-system, system-ui, 'PingFang SC', sans-serif";
+
+
+  document.getElementById('title').textContent = '大型项目全局看板';
+  document.getElementById('subtitle').textContent = 'L4 超级复杂 · 7 列 · 5-8 卡片 · 全特性';
+  var columns = [
+    { title: 'Icebox', cards: [
+      { title: 'GraphQL 迁移', tag: 'feature' },
+      { title: '微前端架构评估', tag: 'task' },
+      { title: 'AI 智能推荐引擎', tag: 'feature' },
+      { title: '跨端统一 SDK', tag: 'feature' },
+      { title: '自动化运维平台', tag: 'task' },
+      { title: '多租户架构改造', tag: 'feature' }
+    ]},
+    { title: 'Backlog', cards: [
+      { title: '全文搜索 ES 接入', tag: 'feature', assignee: '张三' },
+      { title: '修复 OOM #401', tag: 'bug', assignee: '李四' },
+      { title: '灰度发布系统', tag: 'feature', assignee: '王五' },
+      { title: '接口幂等性改造', tag: 'task', assignee: '赵六' },
+      { title: '修复死锁 #405', tag: 'bug', assignee: '李四' },
+      { title: '分布式事务 Saga', tag: 'feature' },
+      { title: '压测环境搭建', tag: 'task' }
+    ]},
+    { title: 'To Do', cards: [
+      { title: '支付对账系统', tag: 'feature', assignee: '张三' },
+      { title: '修复数据不一致 #410', tag: 'bug', assignee: '王五' },
+      { title: '链路追踪 Jaeger', tag: 'task', assignee: '赵六' },
+      { title: '文件存储 OSS 迁移', tag: 'feature', assignee: '李四' },
+      { title: '修复慢查询 #415', tag: 'bug', assignee: '张三' },
+      { title: '配置热更新', tag: 'task', assignee: '王五' },
+      { title: '审计日志模块', tag: 'feature' },
+      { title: '修复 CORS #418', tag: 'bug' }
+    ]},
+    { title: 'In Progress', cards: [
+      { title: '实时数据大屏', tag: 'feature', assignee: '张三' },
+      { title: '修复连接池泄漏 #420', tag: 'bug', assignee: '李四' },
+      { title: '短信网关对接', tag: 'feature', assignee: '王五' },
+      { title: '数据脱敏中间件', tag: 'task', assignee: '赵六' },
+      { title: '修复重复提交 #425', tag: 'bug', assignee: '张三' },
+      { title: '动态表单引擎', tag: 'feature', assignee: '李四' },
+      { title: '服务熔断 Sentinel', tag: 'task', assignee: '王五' }
+    ]},
+    { title: 'Review', cards: [
+      { title: '消息通知中心', tag: 'feature', assignee: '赵六' },
+      { title: '修复权限绕过 #430', tag: 'bug', assignee: '张三' },
+      { title: '数据迁移工具', tag: 'task', assignee: '李四' },
+      { title: '定时任务调度', tag: 'feature', assignee: '王五' },
+      { title: '修复并发超卖 #435', tag: 'bug', assignee: '赵六' }
+    ]},
+    { title: 'Testing', cards: [
+      { title: '全链路压测', tag: 'task', assignee: '张三' },
+      { title: '安全渗透测试', tag: 'task', assignee: '李四' },
+      { title: '性能回归验证', tag: 'task', assignee: '王五' },
+      { title: '修复边界条件 #440', tag: 'bug', assignee: '赵六' },
+      { title: 'UAT 用户验收', tag: 'task', assignee: '张三' },
+      { title: '修复兼容性 #442', tag: 'bug', assignee: '李四' }
+    ]},
+    { title: 'Done', cards: [
+      { title: '统一认证中心', tag: 'feature', assignee: '张三' },
+      { title: '修复 XSS #390', tag: 'bug', assignee: '李四' },
+      { title: 'K8s 部署改造', tag: 'task', assignee: '王五' },
+      { title: '数据备份恢复', tag: 'task', assignee: '赵六' },
+      { title: '修复 CSRF #395', tag: 'bug', assignee: '张三' },
+      { title: '监控告警体系', tag: 'feature', assignee: '李四' },
+      { title: 'API 版本管理', tag: 'feature', assignee: '王五' },
+      { title: '修复内存溢出 #398', tag: 'bug', assignee: '赵六' }
+    ]}
+  ];
+
+  // ========== 配色 ==========
+  var tagColors = {
+    feature: { bg: '#EFF6FF', border: '#3B82F6', text: '#1E40AF', label: 'Feature' },
+    bug:     { bg: '#FFF1F2', border: '#F43F5E', text: '#9F1239', label: 'Bug' },
+    task:    { bg: '#ECFDF5', border: '#10B981', text: '#065F46', label: 'Task' }
+  };
+  var colHeaderColors = ['#667eea', '#4facfe', '#f59e0b', '#8b5cf6', '#10B981'];
+
+  // ========== 布局常量 ==========
+  var COL_W = 200;
+  var COL_GAP = 16;
+  var CARD_H = 64;
+  var CARD_GAP = 8;
+  var COL_PAD = 12;
+  var HEADER_H = 36;
+  var PAD = 16;
+
+  // 计算画布尺寸
+  var maxCards = 0;
+  columns.forEach(function(c) { if (c.cards.length > maxCards) maxCards = c.cards.length; });
+  var totalW = PAD * 2 + columns.length * COL_W + (columns.length - 1) * COL_GAP;
+  var colContentH = HEADER_H + COL_PAD + maxCards * CARD_H + (maxCards - 1) * CARD_GAP + COL_PAD;
+  var totalH = PAD * 2 + colContentH;
+
+  svg.setAttribute('width', totalW);
+  svg.setAttribute('height', totalH);
+  svg.setAttribute('viewBox', '0 0 ' + totalW + ' ' + totalH);
+
+  // ========== 绘制列 ==========
+  columns.forEach(function(col, ci) {
+    var cx = PAD + ci * (COL_W + COL_GAP);
+    var colH = HEADER_H + COL_PAD + col.cards.length * CARD_H + Math.max(0, col.cards.length - 1) * CARD_GAP + COL_PAD;
+    var headerColor = colHeaderColors[ci % colHeaderColors.length];
+
+    // 列背景
+    svg.appendChild(el('rect', { x: cx, y: PAD, width: COL_W, height: colContentH, rx: 8, fill: '#F8FAFC', stroke: '#E2E8F0', 'stroke-width': 1 }));
+
+    // 列标题栏
+    svg.appendChild(el('rect', { x: cx, y: PAD, width: COL_W, height: HEADER_H, rx: 8, fill: headerColor }));
+    // 底部补方角
+    svg.appendChild(el('rect', { x: cx, y: PAD + HEADER_H - 8, width: COL_W, height: 8, fill: headerColor }));
+
+    svg.appendChild(el('text', { x: cx + 12, y: PAD + HEADER_H / 2 + 1, 'dominant-baseline': 'central', 'font-size': 13, 'font-weight': 700, fill: '#FFFFFF', 'font-family': SANS })).textContent = col.title;
+    // 计数徽章
+    svg.appendChild(el('circle', { cx: cx + COL_W - 20, cy: PAD + HEADER_H / 2, r: 10, fill: 'rgba(255,255,255,0.3)' }));
+    svg.appendChild(el('text', { x: cx + COL_W - 20, y: PAD + HEADER_H / 2 + 1, 'text-anchor': 'middle', 'dominant-baseline': 'central', 'font-size': 11, 'font-weight': 700, fill: '#FFFFFF', 'font-family': SANS })).textContent = col.cards.length;
+
+    // 卡片
+    col.cards.forEach(function(card, ki) {
+      var cardY = PAD + HEADER_H + COL_PAD + ki * (CARD_H + CARD_GAP);
+      var tc = tagColors[card.tag] || tagColors.task;
+
+      // 卡片背景
+      svg.appendChild(el('rect', { x: cx + COL_PAD, y: cardY, width: COL_W - COL_PAD * 2, height: CARD_H, rx: 6, fill: '#FFFFFF', stroke: '#E2E8F0', 'stroke-width': 1 }));
+      // 左侧色条
+      svg.appendChild(el('rect', { x: cx + COL_PAD, y: cardY, width: 3, height: CARD_H, rx: 1, fill: tc.border }));
+
+      // 卡片标题（截断）
+      var titleText = card.title;
+      var maxTitleW = COL_W - COL_PAD * 2 - 16;
+      if (mt(titleText, 12) > maxTitleW) {
+        while (mt(titleText + '…', 12) > maxTitleW && titleText.length > 1) titleText = titleText.slice(0, -1);
+        titleText += '…';
+      }
+      svg.appendChild(el('text', { x: cx + COL_PAD + 10, y: cardY + 20, 'font-size': 12, 'font-weight': 500, fill: '#1E293B', 'font-family': SANS })).textContent = titleText;
+
+      // 标签
+      var tagText = tc.label;
+      var tagW = mt(tagText, 10) + 10;
+      svg.appendChild(el('rect', { x: cx + COL_PAD + 10, y: cardY + 32, width: tagW, height: 18, rx: 3, fill: tc.bg, stroke: tc.border, 'stroke-width': 0.5 }));
+      svg.appendChild(el('text', { x: cx + COL_PAD + 10 + tagW / 2, y: cardY + 41, 'text-anchor': 'middle', 'dominant-baseline': 'central', 'font-size': 10, 'font-weight': 600, fill: tc.text, 'font-family': SANS })).textContent = tagText;
+
+      // Assignee
+      if (card.assignee) {
+        var ax = cx + COL_W - COL_PAD - 10;
+        svg.appendChild(el('circle', { cx: ax - 8, cy: cardY + 41, r: 8, fill: '#E2E8F0' }));
+        svg.appendChild(el('text', { x: ax - 8, y: cardY + 42, 'text-anchor': 'middle', 'dominant-baseline': 'central', 'font-size': 9, 'font-weight': 600, fill: '#64748B', 'font-family': SANS })).textContent = card.assignee.charAt(0);
+      }
+    });
+  });
+})();
+</script>
+</body>
+</html>

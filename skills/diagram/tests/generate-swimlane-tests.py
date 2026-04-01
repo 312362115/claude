@@ -2,7 +2,7 @@ from pathlib import Path
 """生成 swimlane L1-L4 测试 HTML 文件"""
 import re
 
-OUTPUT_DIR = Path(__file__).parent.parent.parent.parent / 'docs' / 'assets' / 'diagram' / 'tests' / 'html'
+OUTPUT_DIR = Path(__file__).parent.parent.parent.parent / 'docs' / 'assets' / 'diagram' / 'tests-html'
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 # 读取模板

@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="lib/base.css">
+<style>
+  body {
+    background: #ffffff;
+    padding: 24px;
+  }
+</style>
+</head>
+<body>
+<script src="lib/utils.js"></script>
+<script>
+(function() {
+  function txt(str, x, y, size, color, weight, anchor) {
+    var t = el('text', {
+      x: x, y: y, 'font-size': size || 13, fill: color || '#334155',
+      'font-weight': weight || 'normal', 'text-anchor': anchor || 'middle',
+      'dominant-baseline': 'central',
+      'font-family': "-apple-system, system-ui, 'PingFang SC', sans-serif"
+    });
+    t.textContent = str;
+    return t;
+  }
+
+  // 数据
+  var data = {
+    name: '张明达', title: 'CEO · 首席执行官', color: '#3b82f6', icon: '张',
+    children: [
+      { name: '李伟', title: 'CTO · 技术', color: '#0891b2', icon: '李',
+        teams: [
+          { name: '研发团队', count: '10人' },
+          { name: 'SRE团队', count: '3人' }
+        ]},
+      { name: '王雪', title: 'COO · 运营', color: '#10b981', icon: '王',
+        teams: [
+          { name: '运营团队', count: '6人' }
+        ]}
+    ]
+  };
+
+  // 布局参数
+  var EXEC_W = 160, EXEC_H = 80;
+  var TEAM_W = 100, TEAM_H = 32;
+  var TEAM_GAP = 6;
+  var COL_GAP = 40;
+  var LEVEL_GAP = 60;
+  var CEO_W = 180, CEO_H = 80;
+
+  var cols = data.children;
+  var colWidths = cols.map(function() { return Math.max(EXEC_W, TEAM_W + 20); });
+  var totalW = colWidths.reduce(function(s, w) { return s + w; }, 0) + (cols.length - 1) * COL_GAP;
+
+  var startX = (totalW) / 2;
+  var ceoY = 60;
+  var execY = ceoY + CEO_H + LEVEL_GAP;
+
+  var colX = [];
+  var cx = 40;
+  cols.forEach(function(c, i) {
+    colX.push(cx);
+    cx += colWidths[i] + COL_GAP;
+  });
+
+  var maxTeamH = 0;
+  cols.forEach(function(c) {
+    var h = c.teams.length * (TEAM_H + TEAM_GAP) - TEAM_GAP;
+    if (h > maxTeamH) maxTeamH = h;
+  });
+
+  var teamY = execY + EXEC_H + LEVEL_GAP;
+  var canvasW = cx - COL_GAP + 80;
+  var canvasH = teamY + maxTeamH + 60;
+
+  var svg = el('svg', {
+    width: canvasW, height: canvasH,
+    viewBox: '0 0 ' + canvasW + ' ' + canvasH,
+    style: 'display:block'
+  });
+
+  var defs = el('defs');
+  var filter = el('filter', { id: 's', x: '-5%', y: '-5%', width: '110%', height: '120%' });
+  filter.appendChild(el('feDropShadow', { dx: 0, dy: 2, stdDeviation: 4, 'flood-color': 'rgba(0,0,0,0.08)' }));
+  defs.appendChild(filter);
+  svg.appendChild(defs);
+
+  var lineG = el('g');
+  svg.appendChild(lineG);
+  var nodeG = el('g');
+  svg.appendChild(nodeG);
+
+  nodeG.appendChild(txt('创业公司组织结构', canvasW / 2, 28, 22, '#1a1a2e', 700));
+
+  var firstExecCX = colX[0] + EXEC_W / 2;
+  var lastExecCX = colX[cols.length - 1] + EXEC_W / 2;
+  var ceoCX = (firstExecCX + lastExecCX) / 2;
+  nodeG.appendChild(el('rect', {
+    x: ceoCX - CEO_W / 2, y: ceoY, width: CEO_W, height: CEO_H,
+    rx: 14, fill: 'white', filter: 'url(#s)'
+  }));
+  nodeG.appendChild(txt(data.name, ceoCX, ceoY + 30, 15, '#1e293b', 700));
+  nodeG.appendChild(txt(data.title, ceoCX, ceoY + 50, 11, '#94a3b8'));
+
+  var ceoBY = ceoY + CEO_H;
+  var forkY = ceoBY + (LEVEL_GAP / 2);
+  lineG.appendChild(el('line', { x1: ceoCX, y1: ceoBY, x2: ceoCX, y2: forkY, stroke: '#cbd5e1', 'stroke-width': 2 }));
+  lineG.appendChild(el('line', { x1: firstExecCX, y1: forkY, x2: lastExecCX, y2: forkY, stroke: '#cbd5e1', 'stroke-width': 2 }));
+
+  var bgColors = {
+    '#0891b2': '#ecfeff', '#10b981': '#ecfdf5'
+  };
+  var textColors = {
+    '#0891b2': '#0891b2', '#10b981': '#047857'
+  };
+
+  cols.forEach(function(c, i) {
+    var ex = colX[i];
+    var ecx = ex + EXEC_W / 2;
+
+    lineG.appendChild(el('line', { x1: ecx, y1: forkY, x2: ecx, y2: execY, stroke: '#cbd5e1', 'stroke-width': 2 }));
+
+    nodeG.appendChild(el('rect', {
+      x: ex, y: execY, width: EXEC_W, height: EXEC_H,
+      rx: 14, fill: 'white', filter: 'url(#s)'
+    }));
+    nodeG.appendChild(txt(c.name, ex + EXEC_W / 2, execY + 28, 14, '#1e293b', 700));
+    nodeG.appendChild(txt(c.title, ex + EXEC_W / 2, execY + 48, 10, '#94a3b8'));
+
+    var execBY = execY + EXEC_H;
+    var teamForkY = execBY + (LEVEL_GAP / 2);
+    lineG.appendChild(el('line', { x1: ecx, y1: execBY, x2: ecx, y2: teamForkY, stroke: '#cbd5e1', 'stroke-width': 1.5 }));
+
+    var teamStartX = ex + (EXEC_W - TEAM_W) / 2;
+    var treeLineX = teamStartX - 10;
+    var lastTeamIdx = c.teams.length - 1;
+
+    var turnY = teamY + TEAM_H / 2;
+    lineG.appendChild(el('path', {
+      d: 'M' + ecx + ',' + teamForkY + ' L' + ecx + ',' + turnY + ' L' + treeLineX + ',' + turnY,
+      stroke: '#cbd5e1', 'stroke-width': 1.5, fill: 'none'
+    }));
+
+    var firstTCY = teamY + TEAM_H / 2;
+    var lastTCY = teamY + lastTeamIdx * (TEAM_H + TEAM_GAP) + TEAM_H / 2;
+    lineG.appendChild(el('line', { x1: treeLineX, y1: firstTCY, x2: treeLineX, y2: lastTCY, stroke: '#cbd5e1', 'stroke-width': 1.5 }));
+
+    c.teams.forEach(function(t, ti) {
+      var ty = teamY + ti * (TEAM_H + TEAM_GAP);
+      var tcx = teamStartX + TEAM_W / 2;
+      var tcy = ty + TEAM_H / 2;
+
+      lineG.appendChild(el('line', { x1: treeLineX, y1: tcy, x2: teamStartX, y2: tcy, stroke: '#cbd5e1', 'stroke-width': 1.5 }));
+
+      var tint = c.color;
+      nodeG.appendChild(el('rect', {
+        x: teamStartX, y: ty, width: TEAM_W, height: TEAM_H,
+        rx: 8, fill: bgColors[tint] || '#f8fafc', stroke: tint, 'stroke-width': 1.5, filter: 'url(#s)'
+      }));
+      nodeG.appendChild(txt(t.name, tcx, ty + TEAM_H / 2, 12, textColors[tint] || tint, 600));
+    });
+  });
+
+  document.body.appendChild(svg);
+})();
+</script>
+</body>
+</html>

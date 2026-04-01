@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, system-ui, 'PingFang SC', sans-serif; background: #fff; padding: 24px; display: inline-block; }
+  .title { font-size: 22px; font-weight: 700; color: #1a1a2e; margin-bottom: 6px; }
+  .subtitle { font-size: 14px; color: #888; margin-bottom: 16px; }
+</style>
+<script src="lib/utils.js"></script>
+</head>
+<body>
+<div class="title" id="title"></div>
+<div class="subtitle" id="subtitle"></div>
+<svg id="canvas"></svg>
+<script>
+(function() {
+  var svg = document.getElementById('canvas');
+  var SANS = "-apple-system, system-ui, 'PingFang SC', sans-serif";
+
+
+  document.getElementById('title').textContent = '磁盘使用';
+  document.getElementById('subtitle').textContent = 'L1 简单 · 4 叶节点';
+  var data = { name: 'Root', children: [
+    { name: 'Documents', value: 120 },
+    { name: 'Photos', value: 80 },
+    { name: 'Music', value: 50 },
+    { name: 'Videos', value: 30 }
+  ]};
+
+  // ========== 配色 ==========
+  var colors = ['#667eea', '#f5576c', '#43e97b', '#4facfe', '#fa8231', '#a55eea', '#fc5c65', '#26de81'];
+
+  function hexToRgba(hex, alpha) {
+    var r = parseInt(hex.slice(1, 3), 16);
+    var g = parseInt(hex.slice(3, 5), 16);
+    var b = parseInt(hex.slice(5, 7), 16);
+    return 'rgba(' + r + ',' + g + ',' + b + ',' + alpha + ')';
+  }
+
+  // ========== 常量 ==========
+  var CHART_W = 800;
+  var CHART_H = 500;
+  var CELL_GAP = 2;
+  var MIN_LABEL_W = 50;
+  var MIN_LABEL_H = 30;
+
+  // ========== 递归计算值 ==========
+  function computeValues(node) {
+    if (!node.children || node.children.length === 0) return node.value || 0;
+    var sum = 0;
+    node.children.forEach(function(c) { sum += computeValues(c); });
+    node.value = sum;
+    return sum;
+  }
+  computeValues(data);
+
+  // ========== Squarified Treemap 算法 ==========
+  function squarify(items, x, y, w, h) {
+    if (items.length === 0) return;
+    var totalVal = 0;
+    items.forEach(function(it) { totalVal += it.value; });
+    if (totalVal === 0) return;
+
+    // 归一化面积
+    var area = w * h;
+    items.forEach(function(it) { it._area = (it.value / totalVal) * area; });
+
+    // 按面积降序排列
+    items.sort(function(a, b) { return b._area - a._area; });
+
+    layoutRow(items.slice(), x, y, w, h);
+  }
+
+  function layoutRow(items, x, y, w, h) {
+    if (items.length === 0) return;
+
+    var isVertical = w >= h;
+    var side = isVertical ? h : w;
+    var row = [];
+    var rowArea = 0;
+
+    function worst(r, rArea, s) {
+      if (r.length === 0) return Infinity;
+      var maxA = 0, minA = Infinity;
+      r.forEach(function(it) {
+        if (it._area > maxA) maxA = it._area;
+        if (it._area < minA) minA = it._area;
+      });
+      var s2 = s * s;
+      var rA2 = rArea * rArea;
+      return Math.max((s2 * maxA) / rA2, rA2 / (s2 * minA));
+    }
+
+    for (var i = 0; i < items.length; i++) {
+      var testRow = row.concat([items[i]]);
+      var testArea = rowArea + items[i]._area;
+      if (row.length === 0 || worst(testRow, testArea, side) <= worst(row, rowArea, side)) {
+        row.push(items[i]);
+        rowArea += items[i]._area;
+      } else {
+        break;
+      }
+    }
+
+    // 布局当前 row
+    var rowLen = (side > 0) ? rowArea / side : 0;
+    var offset = 0;
+    row.forEach(function(it) {
+      var itLen = (rowArea > 0) ? (it._area / rowArea) * side : 0;
+      if (isVertical) {
+        it._x = x;
+        it._y = y + offset;
+        it._w = rowLen;
+        it._h = itLen;
+      } else {
+        it._x = x + offset;
+        it._y = y;
+        it._w = itLen;
+        it._h = rowLen;
+      }
+      offset += itLen;
+    });
+
+    // 递归处理剩余
+    var remaining = items.slice(row.length);
+    if (remaining.length > 0) {
+      if (isVertical) {
+        layoutRow(remaining, x + rowLen, y, w - rowLen, h);
+      } else {
+        layoutRow(remaining, x, y + rowLen, w, h - rowLen);
+      }
+    }
+  }
+
+  // ========== 运行布局 ==========
+  var topChildren = data.children || [];
+  squarify(topChildren, 0, 0, CHART_W, CHART_H);
+
+  // 对子节点递归布局
+  function layoutChildren(items, colorIdx) {
+    items.forEach(function(it, i) {
+      var ci = (colorIdx !== undefined) ? colorIdx : i;
+      it._colorIdx = ci;
+      if (it.children && it.children.length > 0) {
+        squarify(it.children, it._x + CELL_GAP, it._y + CELL_GAP, it._w - CELL_GAP * 2, it._h - CELL_GAP * 2);
+        layoutChildren(it.children, ci);
+      }
+    });
+  }
+  layoutChildren(topChildren);
+
+  // ========== SVG 尺寸 ==========
+  svg.setAttribute('width', CHART_W);
+  svg.setAttribute('height', CHART_H);
+  svg.setAttribute('viewBox', '0 0 ' + CHART_W + ' ' + CHART_H);
+
+  // ========== 渲染 ==========
+  function renderNode(node, depth) {
+    var x = node._x + CELL_GAP / 2;
+    var y = node._y + CELL_GAP / 2;
+    var w = node._w - CELL_GAP;
+    var h = node._h - CELL_GAP;
+    if (w <= 0 || h <= 0) return;
+
+    var baseColor = colors[node._colorIdx % colors.length];
+    var fillColor;
+    if (depth === 0) {
+      // 顶层分类：如果有子节点，不画自身矩形（子节点会覆盖）
+      if (node.children && node.children.length > 0) {
+        node.children.forEach(function(c) { renderNode(c, depth + 1); });
+        // 分类标签画在左上角
+        if (w >= MIN_LABEL_W && h >= MIN_LABEL_H) {
+          // 半透明背景条
+          var labelH = 22;
+          svg.appendChild(el('rect', { x: x, y: y, width: w, height: labelH, rx: 2, fill: 'rgba(0,0,0,0.45)' }));
+          svg.appendChild(el('text', {
+            x: x + 6, y: y + 15,
+            'font-size': 12, 'font-weight': 700, fill: '#FFFFFF', 'font-family': SANS
+          })).textContent = node.name;
+        }
+        return;
+      }
+      fillColor = hexToRgba(baseColor, 0.8);
+    } else if (node.children && node.children.length > 0) {
+      // 非顶层分支节点：子节点覆盖自身，只画标签
+      node.children.forEach(function(c) { renderNode(c, depth + 1); });
+      if (w >= MIN_LABEL_W && h >= MIN_LABEL_H) {
+        var labelH = 18;
+        svg.appendChild(el('rect', { x: x, y: y, width: w, height: labelH, rx: 2, fill: 'rgba(0,0,0,0.35)' }));
+        svg.appendChild(el('text', {
+          x: x + 5, y: y + 13,
+          'font-size': 10, 'font-weight': 600, fill: '#FFFFFF', 'font-family': SANS
+        })).textContent = node.name;
+      }
+      return;
+    } else {
+      fillColor = hexToRgba(baseColor, 0.65 - depth * 0.15);
+    }
+
+    svg.appendChild(el('rect', {
+      x: x, y: y, width: w, height: h,
+      rx: 2, fill: fillColor
+    }));
+
+    // 文字标签
+    if (w >= MIN_LABEL_W && h >= MIN_LABEL_H) {
+      var nameStr = node.name;
+      var valStr = String(node.value);
+      svg.appendChild(el('text', {
+        x: x + w / 2, y: y + h / 2 - 6,
+        'text-anchor': 'middle', 'dominant-baseline': 'central',
+        'font-size': 12, 'font-weight': 600, fill: '#FFFFFF', 'font-family': SANS
+      })).textContent = nameStr;
+      svg.appendChild(el('text', {
+        x: x + w / 2, y: y + h / 2 + 10,
+        'text-anchor': 'middle', 'dominant-baseline': 'central',
+        'font-size': 11, fill: 'rgba(255,255,255,0.8)', 'font-family': SANS
+      })).textContent = valStr;
+    } else if (w >= 30 && h >= 20) {
+      svg.appendChild(el('text', {
+        x: x + w / 2, y: y + h / 2,
+        'text-anchor': 'middle', 'dominant-baseline': 'central',
+        'font-size': 10, 'font-weight': 500, fill: '#FFFFFF', 'font-family': SANS
+      })).textContent = node.name;
+    }
+
+    // 递归子节点
+    if (node.children && node.children.length > 0) {
+      node.children.forEach(function(c) { renderNode(c, depth + 1); });
+    }
+  }
+
+  topChildren.forEach(function(c) { renderNode(c, 0); });
+
+  // ========== 图例 ==========
+  var legendY = CHART_H + 20;
+  var legendX = 0;
+  topChildren.forEach(function(c, i) {
+    var color = colors[i % colors.length];
+    svg.appendChild(el('rect', { x: legendX, y: legendY, width: 12, height: 12, rx: 2, fill: color }));
+    svg.appendChild(el('text', {
+      x: legendX + 16, y: legendY + 10,
+      'font-size': 12, fill: '#555', 'font-family': SANS
+    })).textContent = c.name + ' (' + c.value + ')';
+    legendX += mt(c.name + ' (' + c.value + ')', 12) + 32;
+  });
+
+  // 调整画布高度包含图例
+  svg.setAttribute('height', legendY + 28);
+  svg.setAttribute('viewBox', '0 0 ' + CHART_W + ' ' + (legendY + 28));
+})();
+</script>
+</body>
+</html>

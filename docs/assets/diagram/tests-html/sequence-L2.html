@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="lib/base.css">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, system-ui, 'PingFang SC', sans-serif;
+    background: #ffffff;
+    padding: 24px;
+    display: inline-block;
+  }
+</style>
+</head>
+<body>
+<svg id="canvas"></svg>
+
+<script src="lib/utils.js"></script>
+<script>
+(function() {
+  var NS = 'http://www.w3.org/2000/svg';
+  var svg = document.getElementById('canvas');
+
+
+  var title = 'API 登录鉴权时序图';
+  var subtitle = 'L2 中等 · 6 参与者 · alt fragment';
+
+  var participants = [
+    { id: 'user', label: '用户', type: 'actor' },
+    { id: 'fe', label: '前端', type: 'service' },
+    { id: 'gw', label: 'API Gateway', type: 'service' },
+    { id: 'auth', label: 'Auth 服务', type: 'service' },
+    { id: 'mysql', label: 'MySQL', type: 'database' },
+    { id: 'redis', label: 'Redis', type: 'database' }
+  ];
+
+  var messages = [
+    { from: 'user', to: 'fe',    label: '输入账号密码',          type: 'sync' },
+    { from: 'fe',   to: 'gw',    label: 'POST /login',          type: 'sync' },
+    { from: 'gw',   to: 'auth',  label: '转发请求',              type: 'sync' },
+    { from: 'auth', to: 'mysql', label: '查询用户',              type: 'sync' },
+    { from: 'mysql',to: 'auth',  label: '返回用户信息',          type: 'return' },
+    { from: 'auth', to: 'auth',  label: '验证密码 + 签发 Token', type: 'self' },
+    { type: 'fragment', kind: 'alt', condition: 'Token 有效',
+      messages: [
+        { from: 'auth', to: 'redis', label: '存储 Session',     type: 'sync' },
+        { from: 'redis',to: 'auth',  label: 'OK',               type: 'return' }
+      ],
+      elseCondition: 'Token 无效',
+      elseMessages: [
+        { from: 'auth', to: 'gw',    label: '401 Unauthorized', type: 'return' }
+      ]
+    },
+    { from: 'auth', to: 'gw',    label: '返回 Token',            type: 'return' },
+    { from: 'gw',   to: 'fe',    label: '200 OK + Token',        type: 'return' },
+    { from: 'fe',   to: 'user',  label: '登录成功',              type: 'return' }
+  ];
+
+  // ========== 主题 ==========
+  var theme = {
+    title: { color: '#1a1a2e', size: 22 },
+    subtitle: { color: '#888888', size: 14 },
+    lifeline: { color: '#CBD5E1', width: 1, dash: '4 3' },
+    message: { color: '#94A3B8', width: 1.5, labelColor: '#1E293B', returnLabelColor: '#64748B' },
+    fragment: { bg: 'rgba(0,0,0,0.015)', border: '#CBD5E1', labelBg: '#64748B', labelColor: '#FFFFFF', condColor: '#64748B', dividerColor: '#CBD5E1' },
+    colors: [
+      { bg: '#EFF6FF', border: '#93C5FD', text: '#1E293B' },
+      { bg: '#ECFDF5', border: '#6EE7B7', text: '#065F46' },
+      { bg: '#FFFBEB', border: '#FCD34D', text: '#92400E' },
+      { bg: '#F5F3FF', border: '#C4B5FD', text: '#5B21B6' },
+      { bg: '#F8FAFC', border: '#CBD5E1', text: '#64748B' },
+      { bg: '#FFF1F2', border: '#FDA4AF', text: '#9F1239' }
+    ],
+    activationColors: [
+      { bg: '#DBEAFE', border: '#93C5FD' },
+      { bg: '#D1FAE5', border: '#6EE7B7' },
+      { bg: '#FEF3C7', border: '#FCD34D' },
+      { bg: '#EDE9FE', border: '#C4B5FD' },
+      { bg: '#F1F5F9', border: '#CBD5E1' },
+      { bg: '#FCE7F3', border: '#FDA4AF' }
+    ]
+  };
+
+  // ========== 布局参数 ==========
+  var FONT_SIZE = 13;
+  var LABEL_FONT_SIZE = 11;
+  var PART_PAD_X = 16;
+  var PART_H = 36;
+  var PART_MIN_W = 60;
+  var PART_GAP = 40;
+  var MSG_GAP = 36;
+  var SELF_H = 28;
+  var SELF_W = 28;
+  var TITLE_AREA_H = 60;
+  var TOP_Y = TITLE_AREA_H + 10;
+  var ACT_W = 10;
+  var FRAG_LABEL_H = 24;        // fragment 标签区高度
+  var FRAG_PAD_TOP = 8;         // fragment 顶部到标签
+  var FRAG_PAD_BOTTOM = 20;     // fragment 底部 padding
+  var FRAG_PAD_X = 28;          // fragment 左右超出参与者的距离
+  var FRAG_DIVIDER_GAP = 20;    // alt 分隔线上下额外间距
+  var FRAG_AFTER_GAP = 16;      // fragment 结束后额外间距（避免下一条消息与边框重合）
+
+  // ========== 第一遍：计算参与者宽度和位置 ==========
+  var partMap = {};
+  var partList = [];
+  var partIdxMap = {};
+
+  participants.forEach(function(p, i) {
+    var textW = measureText(p.label, FONT_SIZE);
+    var w = Math.max(textW + PART_PAD_X * 2, PART_MIN_W);
+    var node = { id: p.id, label: p.label, type: p.type, w: w, h: PART_H, colorIdx: i % theme.colors.length };
+    partMap[p.id] = node;
+    partList.push(node);
+    partIdxMap[p.id] = i;
+  });
+
+  // 收集所有普通消息（递归展平）用于计算间距
+  function collectMessages(items) {
+    var result = [];
+    items.forEach(function(m) {
+      if (m.type === 'fragment') {
+        result = result.concat(collectMessages(m.messages));
+        if (m.elseMessages) result = result.concat(collectMessages(m.elseMessages));
+      } else {
+        result.push(m);
+      }
+    });
+    return result;
+  }
+
+  var allMsgs = collectMessages(messages);
+  var minMsgGap = PART_GAP;
+  allMsgs.forEach(function(m) {
+    if (m.type === 'self') return;
+    var labelW = measureText(m.label, LABEL_FONT_SIZE) + 30; // 留序号空间
+    var fi = partIdxMap[m.from], ti = partIdxMap[m.to];
+    var span = Math.abs(ti - fi);
+    if (span > 0) {
+      var needed = (labelW + 20) / span;
+      if (needed > minMsgGap) minMsgGap = needed;
+    }
+  });
+
+  // 参与者等距排列
+  partList.forEach(function(p, i) {
+    if (i === 0) { p.cx = p.w / 2; }
+    else {
+      var prev = partList[i - 1];
+      p.cx = prev.cx + prev.w / 2 + minMsgGap + p.w / 2;
+    }
+    p.x = p.cx - p.w / 2;
+    partMap[p.id] = p;
+  });
+
+  // ========== 第二遍：递归计算消息 y 坐标 + fragment 边界 ==========
+  var lifelineStart = TOP_Y + PART_H;
+  var msgY = lifelineStart + 40;
+  var globalIdx = 1;
+  var flatMessages = [];  // 展平的普通消息（含 _y）
+  var fragmentRects = []; // fragment 矩形信息
+
+  // 找 fragment 内所有参与者的 min/max cx
+  function findFragmentBounds(items) {
+    var minCx = Infinity, maxCx = -Infinity;
+    items.forEach(function(m) {
+      if (m.type === 'fragment') {
+        var sub = findFragmentBounds(m.messages);
+        if (sub.min < minCx) minCx = sub.min;
+        if (sub.max > maxCx) maxCx = sub.max;
+        if (m.elseMessages) {
+          var sub2 = findFragmentBounds(m.elseMessages);
+          if (sub2.min < minCx) minCx = sub2.min;
+          if (sub2.max > maxCx) maxCx = sub2.max;
+        }
+      } else {
+        var fp = partMap[m.from], tp = partMap[m.to];
+        var leftCx = Math.min(fp.cx, tp.cx);
+        var rightCx = Math.max(fp.cx, tp.cx);
+        if (leftCx < minCx) minCx = leftCx;
+        if (rightCx > maxCx) maxCx = rightCx;
+      }
+    });
+    return { min: minCx, max: maxCx };
+  }
+
+  function processItems(items) {
+    items.forEach(function(item) {
+      if (item.type === 'fragment') {
+        // Fragment 开始
+        var startY = msgY;
+        msgY += FRAG_LABEL_H + FRAG_PAD_TOP;
+
+        // 处理主消息
+        processItems(item.messages);
+
+        var dividerY = null;
+        // Alt 分隔
+        if (item.kind === 'alt' && item.elseMessages) {
+          msgY += FRAG_DIVIDER_GAP / 2;
+          dividerY = msgY;
+          msgY += FRAG_DIVIDER_GAP + 16;  // 分隔线 + else 条件文本 + 间距
+          processItems(item.elseMessages);
+        }
+
+        msgY += FRAG_PAD_BOTTOM;
+        var endY = msgY;
+        msgY += FRAG_AFTER_GAP;  // fragment 后额外间距
+
+        // 计算 x 范围
+        var bounds = findFragmentBounds(item.messages);
+        if (item.elseMessages) {
+          var bounds2 = findFragmentBounds(item.elseMessages);
+          if (bounds2.min < bounds.min) bounds.min = bounds2.min;
+          if (bounds2.max > bounds.max) bounds.max = bounds2.max;
+        }
+
+        // 找最左和最右参与者的框边缘
+        var leftP = null, rightP = null;
+        partList.forEach(function(p) {
+          if (p.cx === bounds.min) leftP = p;
+          if (p.cx === bounds.max) rightP = p;
+        });
+
+        fragmentRects.push({
+          kind: item.kind,
+          condition: item.condition || '',
+          elseCondition: item.elseCondition || '',
+          startY: startY,
+          endY: endY,
+          left: (leftP ? leftP.cx - leftP.w / 2 : bounds.min) - FRAG_PAD_X,
+          right: (rightP ? rightP.cx + rightP.w / 2 : bounds.max) + FRAG_PAD_X,
+          dividerY: dividerY
+        });
+
+      } else {
+        // 普通消息
+        item._y = msgY;
+        item._idx = globalIdx++;
+        flatMessages.push(item);
+        msgY += (item.type === 'self') ? SELF_H + MSG_GAP : MSG_GAP;
+      }
+    });
+  }
+
+  processItems(messages);
+
+  var lifelineEnd = msgY + 20;
+  var bottomPartY = lifelineEnd + 10;
+
+  // ========== 第三遍：计算激活条 ==========
+  var activations = {};
+  participants.forEach(function(p) { activations[p.id] = { startY: Infinity, endY: 0 }; });
+
+  flatMessages.forEach(function(m) {
+    var fromAct = activations[m.from], toAct = activations[m.to];
+    if (m._y < fromAct.startY) fromAct.startY = m._y;
+    if (m._y > fromAct.endY) fromAct.endY = m._y;
+    if (m._y < toAct.startY) toAct.startY = m._y;
+    if (m.type === 'self') {
+      if (m._y + SELF_H > toAct.endY) toAct.endY = m._y + SELF_H;
+    } else {
+      if (m._y > toAct.endY) toAct.endY = m._y;
+    }
+  });
+
+  // ========== 画布自适应 ==========
+  var lastP = partList[partList.length - 1];
+  // 考虑 fragment 和 self-call 标签可能向右扩展
+  var maxRight = lastP.cx + lastP.w / 2;
+  fragmentRects.forEach(function(f) { if (f.right > maxRight) maxRight = f.right; });
+  flatMessages.forEach(function(m) {
+    if (m.type === 'self') {
+      var sx = partMap[m.from].cx + ACT_W / 2 + SELF_W + 14 + measureText(m._idx + '. ' + m.label, LABEL_FONT_SIZE);
+      if (sx > maxRight) maxRight = sx;
+    }
+  });
+
+  var svgW = maxRight + 40;
+  var svgH = bottomPartY + PART_H + 40;
+
+  svg.setAttribute('width', svgW);
+  svg.setAttribute('height', svgH);
+  svg.setAttribute('viewBox', '0 0 ' + svgW + ' ' + svgH);
+
+  // ========== SVG Defs ==========
+  var defs = el('defs');
+  var arrow = el('marker', { id: 'arrow', markerWidth: 8, markerHeight: 6, refX: 8, refY: 3, orient: 'auto' });
+  arrow.appendChild(el('path', { d: 'M0,0.5 L7,3 L0,5.5', fill: 'none', stroke: theme.message.color, 'stroke-width': 1.2, 'stroke-linecap': 'round' }));
+  defs.appendChild(arrow);
+  var arrowOpen = el('marker', { id: 'arrow-open', markerWidth: 8, markerHeight: 6, refX: 8, refY: 3, orient: 'auto' });
+  arrowOpen.appendChild(el('path', { d: 'M0,0.5 L7,3 L0,5.5', fill: 'none', stroke: theme.message.color, 'stroke-width': 1.2, 'stroke-linecap': 'round' }));
+  defs.appendChild(arrowOpen);
+  svg.appendChild(defs);
+
+  // ========== 渲染层 ==========
+  var bgGroup = el('g'); svg.appendChild(bgGroup);
+  var fragGroup = el('g'); svg.appendChild(fragGroup);
+  var lineGroup = el('g'); svg.appendChild(lineGroup);
+  var nodeGroup = el('g'); svg.appendChild(nodeGroup);
+
+  // ========== 标题（左上角） ==========
+  if (title) {
+    var tEl = el('text', { x: 0, y: 18, 'font-size': 16, 'font-weight': 700, fill: theme.title.color, 'font-family': "-apple-system,system-ui,'PingFang SC',sans-serif" });
+    tEl.textContent = title; nodeGroup.appendChild(tEl);
+  }
+  if (subtitle) {
+    var stEl = el('text', { x: 0, y: 36, 'font-size': 12, fill: theme.subtitle.color, 'font-family': "-apple-system,system-ui,'PingFang SC',sans-serif" });
+    stEl.textContent = subtitle; nodeGroup.appendChild(stEl);
+  }
+
+  // ========== 绘制生命线 ==========
+  partList.forEach(function(p) {
+    bgGroup.appendChild(el('line', {
+      x1: p.cx, y1: lifelineStart, x2: p.cx, y2: lifelineEnd,
+      stroke: theme.lifeline.color, 'stroke-width': theme.lifeline.width, 'stroke-dasharray': theme.lifeline.dash
+    }));
+  });
+
+  // ========== 绘制激活条 ==========
+  partList.forEach(function(p) {
+    var act = activations[p.id];
+    if (act.startY < Infinity && act.endY > 0) {
+      var ac = theme.activationColors[p.colorIdx];
+      bgGroup.appendChild(el('rect', {
+        x: p.cx - ACT_W / 2, y: act.startY - 4, width: ACT_W, height: act.endY - act.startY + 8,
+        rx: 2, fill: ac.bg, stroke: ac.border, 'stroke-width': 1
+      }));
+    }
+  });
+
+  // ========== 绘制 fragment 矩形 ==========
+  fragmentRects.forEach(function(f) {
+    var fx = f.left, fy = f.startY, fw = f.right - f.left, fh = f.endY - f.startY;
+
+    // 背景矩形
+    fragGroup.appendChild(el('rect', {
+      x: fx, y: fy, width: fw, height: fh,
+      rx: 4, fill: theme.fragment.bg, stroke: theme.fragment.border, 'stroke-width': 1
+    }));
+
+    // 标签（左上角五边形背景）
+    var kindText = f.kind.toUpperCase();
+    var kindW = measureText(kindText, 10) + 14;
+    var kindH = 18;
+    var labelPath = 'M' + fx + ',' + fy +
+                    ' L' + (fx + kindW) + ',' + fy +
+                    ' L' + (fx + kindW + 6) + ',' + (fy + kindH / 2) +
+                    ' L' + (fx + kindW) + ',' + (fy + kindH) +
+                    ' L' + fx + ',' + (fy + kindH) + ' Z';
+    fragGroup.appendChild(el('path', {
+      d: labelPath, fill: theme.fragment.labelBg
+    }));
+    var kindLabel = el('text', {
+      x: fx + kindW / 2, y: fy + kindH / 2 + 1,
+      'text-anchor': 'middle', 'dominant-baseline': 'central',
+      'font-size': 10, 'font-weight': 700, fill: theme.fragment.labelColor,
+      'font-family': "-apple-system,system-ui,'PingFang SC',sans-serif"
+    });
+    kindLabel.textContent = kindText; fragGroup.appendChild(kindLabel);
+
+    // 条件文本（标签右侧）
+    if (f.condition) {
+      var condLabel = el('text', {
+        x: fx + kindW + 14, y: fy + kindH / 2 + 1,
+        'dominant-baseline': 'central',
+        'font-size': 11, fill: theme.fragment.condColor, 'font-style': 'italic',
+        'font-family': "-apple-system,system-ui,'PingFang SC',sans-serif"
+      });
+      condLabel.textContent = '[' + f.condition + ']'; fragGroup.appendChild(condLabel);
+    }
+
+    // Alt 分隔线
+    if (f.dividerY !== null) {
+      fragGroup.appendChild(el('line', {
+        x1: fx, y1: f.dividerY, x2: fx + fw, y2: f.dividerY,
+        stroke: theme.fragment.dividerColor, 'stroke-width': 1, 'stroke-dasharray': '6 3'
+      }));
+      // else 条件文本
+      if (f.elseCondition) {
+        var elseLabel = el('text', {
+          x: fx + 14, y: f.dividerY + 14,
+          'font-size': 11, fill: theme.fragment.condColor, 'font-style': 'italic',
+          'font-family': "-apple-system,system-ui,'PingFang SC',sans-serif"
+        });
+        elseLabel.textContent = '[' + f.elseCondition + ']'; fragGroup.appendChild(elseLabel);
+      }
+    }
+  });
+
+  // ========== 绘制消息 ==========
+  flatMessages.forEach(function(m) {
+    var fromP = partMap[m.from], toP = partMap[m.to];
+    var y = m._y;
+    var labelText = m._idx + '. ' + m.label;
+
+    if (m.type === 'self') {
+      var sx = fromP.cx + ACT_W / 2;
+      var d = 'M' + sx + ',' + y +
+              ' L' + (sx + SELF_W) + ',' + y +
+              ' Q' + (sx + SELF_W + 8) + ',' + y + ' ' + (sx + SELF_W + 8) + ',' + (y + 8) +
+              ' L' + (sx + SELF_W + 8) + ',' + (y + SELF_H - 8) +
+              ' Q' + (sx + SELF_W + 8) + ',' + (y + SELF_H) + ' ' + (sx + SELF_W) + ',' + (y + SELF_H) +
+              ' L' + sx + ',' + (y + SELF_H);
+      lineGroup.appendChild(el('path', {
+        d: d, stroke: theme.message.color, 'stroke-width': theme.message.width,
+        fill: 'none', 'marker-end': 'url(#arrow)'
+      }));
+      var lt = el('text', {
+        x: sx + SELF_W + 14, y: y + SELF_H / 2 + 1,
+        'font-size': LABEL_FONT_SIZE, fill: theme.message.labelColor,
+        'font-family': "-apple-system,system-ui,'PingFang SC',sans-serif"
+      });
+      lt.textContent = labelText; lineGroup.appendChild(lt);
+
+    } else {
+      var leftToRight = fromP.cx < toP.cx;
+      var x1 = fromP.cx + (leftToRight ? ACT_W / 2 : -ACT_W / 2);
+      var x2 = toP.cx + (leftToRight ? -ACT_W / 2 : ACT_W / 2);
+      var isReturn = m.type === 'return';
+
+      var lineAttrs = {
+        x1: x1, y1: y, x2: x2, y2: y,
+        stroke: theme.message.color, 'stroke-width': theme.message.width,
+        'marker-end': isReturn ? 'url(#arrow-open)' : 'url(#arrow)'
+      };
+      if (isReturn) lineAttrs['stroke-dasharray'] = '6 3';
+      lineGroup.appendChild(el('line', lineAttrs));
+
+      var labelX = (x1 + x2) / 2;
+      var labelColor = isReturn ? theme.message.returnLabelColor : theme.message.labelColor;
+      var lt = el('text', {
+        x: labelX, y: y - 7, 'text-anchor': 'middle',
+        'font-size': LABEL_FONT_SIZE, fill: labelColor,
+        'font-family': "-apple-system,system-ui,'PingFang SC',sans-serif"
+      });
+      lt.textContent = labelText; lineGroup.appendChild(lt);
+    }
+  });
+
+  // ========== 绘制参与者 ==========
+  function drawParticipant(p, y) {
+    var color = theme.colors[p.colorIdx];
+    if (p.type === 'database') {
+      var cx = p.cx, rx = p.w / 2, ry = 8;
+      var bodyTop = y + ry, bodyBottom = y + p.h - ry;
+      nodeGroup.appendChild(el('ellipse', { cx: cx, cy: bodyBottom, rx: rx, ry: ry, fill: color.bg, stroke: color.border, 'stroke-width': 1.5 }));
+      nodeGroup.appendChild(el('rect', { x: cx - rx, y: bodyTop, width: rx * 2, height: bodyBottom - bodyTop, fill: color.bg }));
+      nodeGroup.appendChild(el('line', { x1: cx - rx, y1: bodyTop, x2: cx - rx, y2: bodyBottom, stroke: color.border, 'stroke-width': 1.5 }));
+      nodeGroup.appendChild(el('line', { x1: cx + rx, y1: bodyTop, x2: cx + rx, y2: bodyBottom, stroke: color.border, 'stroke-width': 1.5 }));
+      nodeGroup.appendChild(el('ellipse', { cx: cx, cy: bodyTop, rx: rx, ry: ry, fill: color.bg, stroke: color.border, 'stroke-width': 1.5 }));
+      var t = el('text', { x: cx, y: y + p.h / 2 + 4, 'text-anchor': 'middle', 'dominant-baseline': 'central', 'font-size': 11, 'font-weight': 600, fill: color.text, 'font-family': "-apple-system,system-ui,'PingFang SC',sans-serif" });
+      t.textContent = p.label; nodeGroup.appendChild(t);
+    } else {
+      nodeGroup.appendChild(el('rect', { x: p.x, y: y, width: p.w, height: p.h, rx: 6, fill: color.bg, stroke: color.border, 'stroke-width': 1.5 }));
+      var t = el('text', { x: p.cx, y: y + p.h / 2 + 1, 'text-anchor': 'middle', 'dominant-baseline': 'central', 'font-size': FONT_SIZE, 'font-weight': 600, fill: color.text, 'font-family': "-apple-system,system-ui,'PingFang SC',sans-serif" });
+      t.textContent = p.label; nodeGroup.appendChild(t);
+    }
+  }
+
+  partList.forEach(function(p) { drawParticipant(p, TOP_Y); });
+  partList.forEach(function(p) { drawParticipant(p, bottomPartY); });
+
+})();
+</script>
+</body>
+</html>

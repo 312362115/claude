@@ -143,7 +143,7 @@ links.forEach(link => {
   const to = nodePos[link.to];
   if (!from || !to) return;
 
-OUTPUT_DIR = Path(__file__).parent.parent.parent.parent / 'docs' / 'assets' / 'diagram' / 'tests' / 'html'
+OUTPUT_DIR = Path(__file__).parent.parent.parent.parent / 'docs' / 'assets' / 'diagram' / 'tests-html'
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
   const x1 = from.x + from.w;

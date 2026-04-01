@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="lib/base.css">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, system-ui, 'PingFang SC', sans-serif;
+    background: #ffffff;
+    padding: 24px;
+    display: inline-block;
+  }
+</style>
+</head>
+<body>
+<svg id="canvas"></svg>
+
+<script src="lib/utils.js"></script>
+<script>
+(function() {
+  var NS = 'http://www.w3.org/2000/svg';
+  var svg = document.getElementById('canvas');
+
+
+  var title = '电商退货退款流程';
+  var subtitle = 'L4 超级复杂 · 5 泳道 · 15 步 · 3 决策';
+
+  var lanes = [
+    { id: 'customer', label: '客户' },
+    { id: 'cs', label: '客服' },
+    { id: 'warehouse', label: '仓库' },
+    { id: 'finance', label: '财务' },
+    { id: 'system', label: '系统' }
+  ];
+
+  var steps = [
+    { id: 's1', label: '申请退货', lane: 'customer', type: 'start' },
+    { id: 's2', label: '提交工单', lane: 'system', type: 'process' },
+    { id: 'd1', label: '审核通过?', lane: 'cs', type: 'decision', no: 'e1' },
+    { id: 's3', label: '生成退货单', lane: 'system', type: 'process' },
+    { id: 's4', label: '寄回商品', lane: 'customer', type: 'process' },
+    { id: 's5', label: '签收入库', lane: 'warehouse', type: 'datastore' },
+    { id: 'd2', label: '商品完好?', lane: 'warehouse', type: 'decision', no: 'e2' },
+    { id: 's6', label: '确认退货', lane: 'warehouse', type: 'success' },
+    { id: 's7', label: '发起退款', lane: 'finance', type: 'highlight' },
+    { id: 's8', label: '调用支付渠道', lane: 'system', type: 'process' },
+    { id: 'd3', label: '退款成功?', lane: 'system', type: 'decision', no: 'e3' },
+    { id: 's9', label: '更新订单状态', lane: 'system', type: 'process' },
+    { id: 's10', label: '发送通知', lane: 'system', type: 'process' },
+    { id: 's11', label: '确认到账', lane: 'customer', type: 'success' },
+    { id: 'end', label: '完成', lane: 'customer', type: 'end' }
+  ];
+
+  var sideNodes = [
+    { id: 'e1', label: '审核拒绝', type: 'error', lane: 'cs' },
+    { id: 'e2', label: '商品损坏', type: 'error', lane: 'warehouse' },
+    { id: 'e3', label: '退款异常', type: 'error', lane: 'system' }
+  ];
+
+  // ========== 主题 ==========
+  var theme = {
+    title: { color: '#1a1a2e' }, subtitle: { color: '#888888' },
+    node:      { bg: '#EFF6FF', border: '#93C5FD', text: '#1E293B' },
+    highlight: { bg: '#3B82F6', border: '#3B82F6', text: '#FFFFFF' },
+    decision:  { bg: '#FFFBEB', border: '#FCD34D', text: '#92400E' },
+    success:   { bg: '#ECFDF5', border: '#6EE7B7', text: '#065F46' },
+    error:     { bg: '#FFF1F2', border: '#FDA4AF', text: '#9F1239' },
+    datastore: { bg: '#F5F3FF', border: '#C4B5FD', text: '#5B21B6' },
+    start:     { bg: '#ECFDF5', border: '#6EE7B7', text: '#065F46' },
+    end:       { bg: '#ECFDF5', border: '#6EE7B7', text: '#065F46' },
+    line: { color: '#94A3B8', width: 1.2 },
+    lineYes: { color: '#10B981', width: 1.5 },
+    lineNo:  { color: '#F43F5E', width: 1.5 },
+    laneHeaders: [
+      { bg: '#3B82F6', text: '#FFFFFF' },
+      { bg: '#10B981', text: '#FFFFFF' },
+      { bg: '#F59E0B', text: '#FFFFFF' },
+      { bg: '#8B5CF6', text: '#FFFFFF' },
+      { bg: '#06B6D4', text: '#FFFFFF' },
+      { bg: '#F43F5E', text: '#FFFFFF' }
+    ],
+    laneBg: ['#FFFFFF', '#F8FAFC']
+  };
+
+  function getStyle(type) { return theme[type] || theme.node; }
+
+  // ========== 工具函数 ==========
+  var SANS = "-apple-system, system-ui, 'PingFang SC', sans-serif";
+
+  // ========== 布局参数 ==========
+  var LANE_HEADER_W = 48;
+  var NODE_H = 36;
+  var DIAMOND_R = 26;
+  var COL_GAP = 44;         // 列间距增大
+  var LANE_H = 110;         // 基础泳道高度
+  var TITLE_H = 52;
+  var R = 8;
+
+  // ========== 计算节点宽度 ==========
+  var nodeMaxW = 100;
+  steps.concat(sideNodes).forEach(function(s) {
+    if (s.type !== 'decision') {
+      var w = mt(s.label, 13) + 28;
+      if (w > nodeMaxW) nodeMaxW = w;
+    }
+  });
+  var colW = nodeMaxW;
+
+  // ========== 泳道索引 ==========
+  var laneIdx = {};
+  lanes.forEach(function(l, i) { laneIdx[l.id] = i; });
+
+  // ========== 计算泳道高度 ==========
+  var laneHeights = [];
+  lanes.forEach(function() { laneHeights.push(LANE_H); });
+  // 有决策侧节点的泳道需要更高
+  sideNodes.forEach(function(sn) {
+    var li = laneIdx[sn.lane];
+    if (li !== undefined) {
+      var needed = DIAMOND_R * 2 + 28 + NODE_H + 32;
+      if (needed > laneHeights[li]) laneHeights[li] = needed;
+    }
+  });
+
+  // ========== 泳道 Y 位置 ==========
+  var laneY = [], laneCY = [];
+  var curY = TITLE_H;
+  lanes.forEach(function(l, i) {
+    laneY.push(curY);
+    laneCY.push(curY + laneHeights[i] / 2);
+    curY += laneHeights[i];
+  });
+  var totalLaneH = curY - TITLE_H;
+
+  // ========== 列位置（每步一列） ==========
+  var colX = [];
+  var startX = LANE_HEADER_W + 20;
+  for (var i = 0; i < steps.length; i++) {
+    colX.push(startX + i * (colW + COL_GAP) + colW / 2);
+  }
+
+  // ========== 放置节点 ==========
+  var nodeMap = {};
+  steps.forEach(function(s, i) {
+    var li = laneIdx[s.lane];
+    var isDiamond = s.type === 'decision';
+    var w = isDiamond ? DIAMOND_R * 2 : colW;
+    var h = isDiamond ? DIAMOND_R * 2 : NODE_H;
+    var cy = (isDiamond && laneHeights[li] > LANE_H) ? laneY[li] + LANE_H / 2 - 6 : laneCY[li];
+    nodeMap[s.id] = { id: s.id, label: s.label, type: s.type, no: s.no, lane: s.lane,
+      cx: colX[i], cy: cy, w: w, h: h, x: colX[i] - w / 2, y: cy - h / 2, col: i, laneIdx: li };
+  });
+
+  // 侧节点（决策下方）
+  steps.forEach(function(s) {
+    if (s.type === 'decision' && s.no) {
+      var dn = nodeMap[s.id];
+      var sn = sideNodes.find(function(x) { return x.id === s.no; });
+      if (!sn) return;
+      var cy = dn.cy + DIAMOND_R + 18 + NODE_H / 2;
+      nodeMap[sn.id] = { id: sn.id, label: sn.label, type: sn.type, isSide: true, lane: sn.lane,
+        cx: dn.cx, cy: cy, w: colW, h: NODE_H, x: dn.cx - colW / 2, y: cy - NODE_H / 2, col: dn.col, laneIdx: dn.laneIdx };
+    }
+  });
+
+  // ========== 画布 ==========
+  var lastColX = colX[steps.length - 1] + colW / 2 + 24;
+  var svgW = lastColX;
+  var svgH = curY + 16;
+  svg.setAttribute('width', svgW);
+  svg.setAttribute('height', svgH);
+  svg.setAttribute('viewBox', '0 0 ' + svgW + ' ' + svgH);
+
+  // ========== SVG Defs ==========
+  var defs = el('defs');
+  function addArrow(id, color) {
+    var m = el('marker', { id: id, markerWidth: 7, markerHeight: 5, refX: 7, refY: 2.5, orient: 'auto', markerUnits: 'userSpaceOnUse' });
+    m.appendChild(el('path', { d: 'M0,0.4 L6,2.5 L0,4.6', fill: 'none', stroke: color, 'stroke-width': 1, 'stroke-linecap': 'round' }));
+    defs.appendChild(m);
+  }
+  addArrow('arrow', theme.line.color);
+  addArrow('arrow-g', theme.lineYes.color);
+  addArrow('arrow-r', theme.lineNo.color);
+  svg.appendChild(defs);
+
+  var bgGroup = el('g'); svg.appendChild(bgGroup);
+  var lineGroup = el('g'); svg.appendChild(lineGroup);
+  var nodeGroup = el('g'); svg.appendChild(nodeGroup);
+
+  // ========== 标题 ==========
+  nodeGroup.appendChild(el('text', { x: 0, y: 18, 'font-size': 16, 'font-weight': 700, fill: theme.title.color, 'font-family': SANS })).textContent = title;
+  nodeGroup.appendChild(el('text', { x: 0, y: 36, 'font-size': 12, fill: theme.subtitle.color, 'font-family': SANS })).textContent = subtitle;
+
+  // ========== 泳道背景 ==========
+  bgGroup.appendChild(el('rect', { x: 0, y: TITLE_H, width: svgW, height: totalLaneH, rx: 8, fill: 'none', stroke: '#E2E8F0', 'stroke-width': 1 }));
+
+  lanes.forEach(function(l, i) {
+    var y = laneY[i], h = laneHeights[i];
+    var hc = theme.laneHeaders[i % theme.laneHeaders.length];
+
+    bgGroup.appendChild(el('rect', { x: LANE_HEADER_W, y: y, width: svgW - LANE_HEADER_W, height: h, fill: theme.laneBg[i % 2] }));
+    if (i < lanes.length - 1) bgGroup.appendChild(el('line', { x1: 0, y1: y + h, x2: svgW, y2: y + h, stroke: '#E2E8F0', 'stroke-width': 1 }));
+
+    // 标题栏
+    bgGroup.appendChild(el('rect', { x: 0, y: y, width: LANE_HEADER_W, height: h, fill: hc.bg }));
+    if (i === 0) { bgGroup.appendChild(el('rect', { x: 0, y: y, width: LANE_HEADER_W, height: 10, rx: 8, fill: hc.bg })); bgGroup.appendChild(el('rect', { x: 0, y: y + 6, width: LANE_HEADER_W, height: h - 6, fill: hc.bg })); }
+    if (i === lanes.length - 1) { bgGroup.appendChild(el('rect', { x: 0, y: y + h - 10, width: LANE_HEADER_W, height: 10, rx: 8, fill: hc.bg })); bgGroup.appendChild(el('rect', { x: 0, y: y, width: LANE_HEADER_W, height: h - 6, fill: hc.bg })); }
+
+    // 标签
+    var chars = l.label.split('');
+    var charH = 18;
+    var textStartY = y + (h - chars.length * charH) / 2 + charH / 2 + 2;
+    chars.forEach(function(ch, ci) {
+      bgGroup.appendChild(el('text', { x: LANE_HEADER_W / 2, y: textStartY + ci * charH, 'text-anchor': 'middle', 'dominant-baseline': 'central', 'font-size': 14, 'font-weight': 700, fill: hc.text, 'font-family': SANS })).textContent = ch;
+    });
+  });
+
+  // ========== 连线 ==========
+  for (var i = 0; i < steps.length - 1; i++) {
+    var curr = nodeMap[steps[i].id], next = nodeMap[steps[i + 1].id];
+    var isAfterDec = curr.type === 'decision';
+    var lc = isAfterDec ? theme.lineYes.color : theme.line.color;
+    var lw = isAfterDec ? theme.lineYes.width : theme.line.width;
+    var aid = isAfterDec ? 'arrow-g' : 'arrow';
+    var x1 = curr.cx + curr.w / 2, y1 = curr.cy;
+    var x2 = next.cx - next.w / 2, y2 = next.cy;
+
+    if (Math.abs(y1 - y2) < 2) {
+      lineGroup.appendChild(el('line', { x1: x1, y1: y1, x2: x2, y2: y2, stroke: lc, 'stroke-width': lw, 'marker-end': 'url(#' + aid + ')' }));
+    } else {
+      var midX = (x1 + x2) / 2;
+      var sy = y2 > y1 ? 1 : -1;
+      lineGroup.appendChild(el('path', {
+        d: 'M' + x1 + ',' + y1 + ' L' + (midX - R) + ',' + y1 + ' Q' + midX + ',' + y1 + ' ' + midX + ',' + (y1 + R * sy) + ' L' + midX + ',' + (y2 - R * sy) + ' Q' + midX + ',' + y2 + ' ' + (midX + R) + ',' + y2 + ' L' + x2 + ',' + y2,
+        stroke: lc, 'stroke-width': lw, fill: 'none', 'marker-end': 'url(#' + aid + ')'
+      }));
+    }
+    if (isAfterDec) {
+      nodeGroup.appendChild(el('text', { x: (x1 + x2) / 2, y: Math.min(y1, y2) - 8, 'text-anchor': 'middle', 'font-size': 11, 'font-weight': 500, fill: theme.lineYes.color, 'font-family': SANS })).textContent = '是';
+    }
+  }
+
+  // 侧分支连线
+  steps.forEach(function(s) {
+    if (s.type === 'decision' && s.no && nodeMap[s.no]) {
+      var dn = nodeMap[s.id], sn = nodeMap[s.no];
+      lineGroup.appendChild(el('line', { x1: dn.cx, y1: dn.cy + DIAMOND_R, x2: sn.cx, y2: sn.y, stroke: theme.lineNo.color, 'stroke-width': theme.lineNo.width, 'marker-end': 'url(#arrow-r)' }));
+      nodeGroup.appendChild(el('text', { x: dn.cx + 10, y: (dn.cy + DIAMOND_R + sn.y) / 2, 'font-size': 11, 'font-weight': 500, fill: theme.lineNo.color, 'font-family': SANS })).textContent = '否';
+    }
+  });
+
+  // ========== 节点 ==========
+  function drawNode(n) {
+    var st = getStyle(n.type);
+    if (n.type === 'decision') {
+      var r = DIAMOND_R;
+      nodeGroup.appendChild(el('polygon', { points: n.cx + ',' + (n.cy - r) + ' ' + (n.cx + r) + ',' + n.cy + ' ' + n.cx + ',' + (n.cy + r) + ' ' + (n.cx - r) + ',' + n.cy, fill: st.bg, stroke: st.border, 'stroke-width': 1.5 }));
+      nodeGroup.appendChild(el('text', { x: n.cx, y: n.cy + 1, 'text-anchor': 'middle', 'dominant-baseline': 'central', 'font-size': 11, 'font-weight': 500, fill: st.text, 'font-family': SANS })).textContent = n.label;
+    } else {
+      var rx = (n.type === 'start' || n.type === 'end') ? n.h / 2 : 6;
+      nodeGroup.appendChild(el('rect', { x: n.x, y: n.y, width: n.w, height: n.h, rx: rx, fill: st.bg, stroke: st.border, 'stroke-width': 1.5 }));
+      nodeGroup.appendChild(el('text', { x: n.cx, y: n.cy + 1, 'text-anchor': 'middle', 'dominant-baseline': 'central', 'font-size': 13, 'font-weight': 500, fill: st.text, 'font-family': SANS })).textContent = n.label;
+    }
+  }
+  steps.forEach(function(s) { drawNode(nodeMap[s.id]); });
+  sideNodes.forEach(function(s) { if (nodeMap[s.id]) drawNode(nodeMap[s.id]); });
+})();
+</script>
+</body>
+</html>

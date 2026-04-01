@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="lib/base.css">
+<style>
+  body {
+    background: #ffffff;
+    padding: 24px;
+  }
+</style>
+</head>
+<body>
+<script src="lib/utils.js"></script>
+<script>
+(function() {
+  function txt(str, x, y, size, color, weight, anchor) {
+    var t = el('text', {
+      x: x, y: y, 'font-size': size || 13, fill: color || '#334155',
+      'font-weight': weight || 'normal', 'text-anchor': anchor || 'middle',
+      'dominant-baseline': 'central',
+      'font-family': "-apple-system, system-ui, 'PingFang SC', sans-serif"
+    });
+    t.textContent = str;
+    return t;
+  }
+
+  var data = {
+    name: '张明达', title: 'CEO · 首席执行官', color: '#3b82f6', icon: '张',
+    children: [
+      { name: '李伟', title: 'CTO · 首席技术官', color: '#0891b2', icon: '李',
+        teams: [
+          { name: '前端工程团队', count: '15人' },
+          { name: '后端服务团队', count: '22人' },
+          { name: '移动端研发团队', count: '10人' },
+          { name: '大数据与AI团队', count: '14人' },
+          { name: 'SRE/DevOps团队', count: '8人' },
+          { name: '安全工程团队', count: '6人' }
+        ]},
+      { name: '王雪', title: 'CPO · 首席产品官', color: '#d946ef', icon: '王',
+        teams: [
+          { name: '产品战略规划', count: '6人' },
+          { name: '用户体验设计', count: '10人' },
+          { name: '用户增长分析', count: '5人' },
+          { name: '国际化产品', count: '4人' }
+        ]},
+      { name: '陈刚', title: 'CFO · 首席财务官', color: '#f59e0b', icon: '陈',
+        teams: [
+          { name: '财务核算中心', count: '6人' },
+          { name: '投融资管理', count: '4人' },
+          { name: '税务与合规', count: '3人' },
+          { name: '内部审计', count: '3人' },
+          { name: '预算与成本', count: '3人' }
+        ]},
+      { name: '赵倩', title: 'COO · 首席运营官', color: '#10b981', icon: '赵',
+        teams: [
+          { name: '品牌市场营销', count: '12人' },
+          { name: '客户成功管理', count: '10人' },
+          { name: '商务拓展合作', count: '8人' },
+          { name: '内容与社区运营', count: '7人' },
+          { name: '数据运营分析', count: '5人' }
+        ]},
+      { name: '孙磊', title: 'CHRO · 人力资源', color: '#f43f5e', icon: '孙',
+        teams: [
+          { name: '人才招聘中心', count: '6人' },
+          { name: '培训与发展', count: '4人' },
+          { name: '薪酬绩效管理', count: '4人' },
+          { name: '企业文化建设', count: '3人' }
+        ]},
+      { name: '周华', title: 'CLO · 首席法务官', color: '#6366f1', icon: '周',
+        teams: [
+          { name: '知识产权管理', count: '3人' },
+          { name: '合同与诉讼', count: '4人' },
+          { name: '数据隐私合规', count: '3人' },
+          { name: '政府关系维护', count: '2人' }
+        ]}
+    ]
+  };
+
+  var EXEC_W = 148, EXEC_H = 74;
+  var TEAM_W = 110, TEAM_H = 28;
+  var TEAM_GAP = 4;
+  var COL_GAP = 28;
+  var LEVEL_GAP = 52;
+  var CEO_W = 180, CEO_H = 80;
+
+  var cols = data.children;
+  var colWidths = cols.map(function() { return Math.max(EXEC_W, TEAM_W + 20); });
+  var totalW = colWidths.reduce(function(s, w) { return s + w; }, 0) + (cols.length - 1) * COL_GAP;
+
+  var ceoY = 60;
+  var execY = ceoY + CEO_H + LEVEL_GAP;
+
+  var colX = [];
+  var cx = 40;
+  cols.forEach(function(c, i) {
+    colX.push(cx);
+    cx += colWidths[i] + COL_GAP;
+  });
+
+  var maxTeamH = 0;
+  cols.forEach(function(c) {
+    var h = c.teams.length * (TEAM_H + TEAM_GAP) - TEAM_GAP;
+    if (h > maxTeamH) maxTeamH = h;
+  });
+
+  var teamY = execY + EXEC_H + LEVEL_GAP;
+  var canvasW = cx - COL_GAP + 80;
+  var canvasH = teamY + maxTeamH + 60;
+
+  var svg = el('svg', {
+    width: canvasW, height: canvasH,
+    viewBox: '0 0 ' + canvasW + ' ' + canvasH,
+    style: 'display:block'
+  });
+
+  var defs = el('defs');
+  var filter = el('filter', { id: 's', x: '-5%', y: '-5%', width: '110%', height: '120%' });
+  filter.appendChild(el('feDropShadow', { dx: 0, dy: 2, stdDeviation: 4, 'flood-color': 'rgba(0,0,0,0.08)' }));
+  defs.appendChild(filter);
+  svg.appendChild(defs);
+
+  var lineG = el('g');
+  svg.appendChild(lineG);
+  var nodeG = el('g');
+  svg.appendChild(nodeG);
+
+  nodeG.appendChild(txt('集团公司组织架构全景图', canvasW / 2, 28, 22, '#1a1a2e', 700));
+
+  var firstExecCX = colX[0] + EXEC_W / 2;
+  var lastExecCX = colX[cols.length - 1] + EXEC_W / 2;
+  var ceoCX = (firstExecCX + lastExecCX) / 2;
+  nodeG.appendChild(el('rect', {
+    x: ceoCX - CEO_W / 2, y: ceoY, width: CEO_W, height: CEO_H,
+    rx: 14, fill: 'white', filter: 'url(#s)'
+  }));
+  nodeG.appendChild(txt(data.name, ceoCX, ceoY + 30, 15, '#1e293b', 700));
+  nodeG.appendChild(txt(data.title, ceoCX, ceoY + 50, 11, '#94a3b8'));
+
+  var ceoBY = ceoY + CEO_H;
+  var forkY = ceoBY + (LEVEL_GAP / 2);
+  lineG.appendChild(el('line', { x1: ceoCX, y1: ceoBY, x2: ceoCX, y2: forkY, stroke: '#cbd5e1', 'stroke-width': 2 }));
+  lineG.appendChild(el('line', { x1: firstExecCX, y1: forkY, x2: lastExecCX, y2: forkY, stroke: '#cbd5e1', 'stroke-width': 2 }));
+
+  var bgColors = {
+    '#0891b2': '#ecfeff', '#d946ef': '#fdf4ff',
+    '#f59e0b': '#fffbeb', '#10b981': '#ecfdf5',
+    '#f43f5e': '#fff1f2', '#6366f1': '#eef2ff'
+  };
+  var textColors = {
+    '#0891b2': '#0891b2', '#d946ef': '#d946ef',
+    '#f59e0b': '#b45309', '#10b981': '#047857',
+    '#f43f5e': '#be123c', '#6366f1': '#4338ca'
+  };
+
+  cols.forEach(function(c, i) {
+    var ex = colX[i];
+    var ecx = ex + EXEC_W / 2;
+
+    lineG.appendChild(el('line', { x1: ecx, y1: forkY, x2: ecx, y2: execY, stroke: '#cbd5e1', 'stroke-width': 2 }));
+
+    nodeG.appendChild(el('rect', {
+      x: ex, y: execY, width: EXEC_W, height: EXEC_H,
+      rx: 14, fill: 'white', filter: 'url(#s)'
+    }));
+    nodeG.appendChild(txt(c.name, ex + EXEC_W / 2, execY + 24, 13, '#1e293b', 700));
+    nodeG.appendChild(txt(c.title, ex + EXEC_W / 2, execY + 44, 9, '#94a3b8'));
+
+    var execBY = execY + EXEC_H;
+    var teamForkY = execBY + (LEVEL_GAP / 2);
+    lineG.appendChild(el('line', { x1: ecx, y1: execBY, x2: ecx, y2: teamForkY, stroke: '#cbd5e1', 'stroke-width': 1.5 }));
+
+    var teamStartX = ex + (EXEC_W - TEAM_W) / 2;
+    var treeLineX = teamStartX - 10;
+    var lastTeamIdx = c.teams.length - 1;
+
+    var turnY = teamY + TEAM_H / 2;
+    lineG.appendChild(el('path', {
+      d: 'M' + ecx + ',' + teamForkY + ' L' + ecx + ',' + turnY + ' L' + treeLineX + ',' + turnY,
+      stroke: '#cbd5e1', 'stroke-width': 1.5, fill: 'none'
+    }));
+
+    var firstTCY = teamY + TEAM_H / 2;
+    var lastTCY = teamY + lastTeamIdx * (TEAM_H + TEAM_GAP) + TEAM_H / 2;
+    lineG.appendChild(el('line', { x1: treeLineX, y1: firstTCY, x2: treeLineX, y2: lastTCY, stroke: '#cbd5e1', 'stroke-width': 1.5 }));
+
+    c.teams.forEach(function(t, ti) {
+      var ty = teamY + ti * (TEAM_H + TEAM_GAP);
+      var tcx = teamStartX + TEAM_W / 2;
+      var tcy = ty + TEAM_H / 2;
+
+      lineG.appendChild(el('line', { x1: treeLineX, y1: tcy, x2: teamStartX, y2: tcy, stroke: '#cbd5e1', 'stroke-width': 1.5 }));
+
+      var tint = c.color;
+      nodeG.appendChild(el('rect', {
+        x: teamStartX, y: ty, width: TEAM_W, height: TEAM_H,
+        rx: 8, fill: bgColors[tint] || '#f8fafc', stroke: tint, 'stroke-width': 1.5, filter: 'url(#s)'
+      }));
+      nodeG.appendChild(txt(t.name, tcx, ty + TEAM_H / 2, 10, textColors[tint] || tint, 600));
+    });
+  });
+
+  document.body.appendChild(svg);
+})();
+</script>
+</body>
+</html>

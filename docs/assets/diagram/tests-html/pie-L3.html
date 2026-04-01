@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1200, height=800">
+<title>技术栈使用分布</title>
+<link rel="stylesheet" href="lib/base.css">
+<style>
+  body {
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .title { font-size: 22px; font-weight: 700; color: #1a1a2e; margin-top: 28px; }
+  .subtitle { font-size: 14px; color: #888; margin-top: 6px; }
+  .chart-wrap { margin-top: 20px; position: relative; }
+</style>
+</head>
+<body class="fixed-1200">
+  <div class="title">技术栈使用分布</div>
+  <div class="subtitle">2024 开发者调研</div>
+  <div class="chart-wrap">
+    <svg id="pie" width="1100" height="660" viewBox="0 0 1100 660"></svg>
+  </div>
+
+<script src="lib/utils.js"></script>
+<script>
+// 数据 & 配色
+const data = [
+  { value: 5200, name: 'JavaScript' },
+  { value: 4800, name: 'Python' },
+  { value: 3600, name: 'TypeScript' },
+  { value: 2400, name: 'Java' },
+  { value: 1800, name: 'C#' },
+  { value: 1200, name: 'Go' },
+  { value: 900,  name: 'Rust' },
+  { value: 600,  name: 'PHP' },
+  { value: 400,  name: 'Swift' },
+  { value: 250,  name: 'Kotlin' }
+];
+const colors = [
+  'rgba(102,126,234,0.75)', 'rgba(245,87,108,0.75)', 'rgba(79,172,254,0.75)',
+  'rgba(67,233,123,0.75)',  'rgba(250,130,49,0.75)',  'rgba(165,94,234,0.75)',
+  'rgba(252,92,101,0.75)',  'rgba(38,222,129,0.75)',  'rgba(255,165,2,0.75)',
+  'rgba(46,213,115,0.75)'
+];
+const total = data.reduce((s, d) => s + d.value, 0);
+
+// 布局参数
+const cx = 440, cy = 330, rIn = 115, rOut = 200, rLabel = 250;
+const svg = document.getElementById('pie');
+
+function polar(cx, cy, r, deg) {
+  const rad = (deg - 90) * Math.PI / 180;
+  return [cx + r * Math.cos(rad), cy + r * Math.sin(rad)];
+}
+
+// 第一轮：画扇形 + 收集标签信息
+const labels = [];
+let angle = 0;
+data.forEach((d, i) => {
+  const span = d.value / total * 360;
+  const a1 = angle;
+  const a2 = angle + span;
+  const large = span > 180 ? 1 : 0;
+
+  const [ox1, oy1] = polar(cx, cy, rOut, a1);
+  const [ox2, oy2] = polar(cx, cy, rOut, a2);
+  const [ix2, iy2] = polar(cx, cy, rIn, a2);
+  const [ix1, iy1] = polar(cx, cy, rIn, a1);
+
+  const path = document.createElementNS(svgNS, 'path');
+  path.setAttribute('d', [
+    `M ${ox1},${oy1}`,
+    `A ${rOut},${rOut} 0 ${large},1 ${ox2},${oy2}`,
+    `L ${ix2},${iy2}`,
+    `A ${rIn},${rIn} 0 ${large},0 ${ix1},${iy1}`,
+    'Z'
+  ].join(' '));
+  path.setAttribute('fill', colors[i]);
+  path.setAttribute('stroke', '#fff');
+  path.setAttribute('stroke-width', '3');
+  svg.appendChild(path);
+
+  const mid = a1 + span / 2;
+  const [lx1, ly1] = polar(cx, cy, rOut + 6, mid);
+  const [lx2, ly2] = polar(cx, cy, rLabel, mid);
+  const isRight = lx2 >= cx;
+
+  labels.push({ d, mid, lx1, ly1, lx2, y: ly2, isRight });
+  angle = a2;
+});
+
+// 第二轮：防碰撞 — 同侧标签按 y 排序，保证最小间距
+const minGap = 24;
+const minY = 40, maxY = 620;
+['left', 'right'].forEach(side => {
+  const group = labels.filter(l => side === 'right' ? l.isRight : !l.isRight);
+  group.sort((a, b) => a.y - b.y);
+  // 先做基本间距推挤
+  for (let j = 1; j < group.length; j++) {
+    if (group[j].y - group[j - 1].y < minGap) {
+      group[j].y = group[j - 1].y + minGap;
+    }
+  }
+  // 如果超出底部，均匀分布在可用空间内
+  if (group.length && group[group.length - 1].y > maxY) {
+    const n = group.length;
+    const totalRange = maxY - minY;
+    const neededRange = (n - 1) * minGap;
+    if (neededRange <= totalRange) {
+      // 有足够空间：整体上移即可
+      const overflow = group[n - 1].y - maxY;
+      group.forEach(l => l.y -= overflow);
+      // 确保不超出顶部
+      if (group[0].y < minY) {
+        const shift = minY - group[0].y;
+        group.forEach(l => l.y += shift);
+      }
+    } else {
+      // 空间不足：等间距铺满
+      const gap = totalRange / (n - 1);
+      group.forEach((l, j) => { l.y = minY + j * gap; });
+    }
+  }
+});
+
+// 第三轮：画引线 + 标签（保持原始径向 x，只调 y）
+const hLen = 36, R = 6;
+labels.forEach(({ d, lx1, ly1, lx2, y, isRight }) => {
+  const dir = isRight ? 1 : -1;
+  const lx3 = lx2 + dir * hLen;
+
+  const dx = lx2 - lx1, dy = y - ly1;
+  const len = Math.sqrt(dx * dx + dy * dy);
+  const bx = lx2 - (dx / len) * R;
+  const by = y - (dy / len) * R;
+  const hx = lx2 + dir * R;
+
+  const line = document.createElementNS(svgNS, 'path');
+  line.setAttribute('d',
+    `M ${lx1},${ly1} L ${bx},${by} Q ${lx2},${y} ${hx},${y} L ${lx3},${y}`
+  );
+  line.setAttribute('fill', 'none');
+  line.setAttribute('stroke', '#d0d0d8');
+  line.setAttribute('stroke-width', '1');
+  line.setAttribute('stroke-linecap', 'round');
+  svg.appendChild(line);
+
+  const dot = document.createElementNS(svgNS, 'circle');
+  dot.setAttribute('cx', lx3); dot.setAttribute('cy', y);
+  dot.setAttribute('r', '2'); dot.setAttribute('fill', '#d0d0d8');
+  svg.appendChild(dot);
+
+  const tx = lx3 + dir * 8;
+
+  const nameEl = document.createElementNS(svgNS, 'text');
+  nameEl.setAttribute('x', tx);
+  nameEl.setAttribute('y', y - 3);
+  nameEl.setAttribute('text-anchor', isRight ? 'start' : 'end');
+  nameEl.setAttribute('font-size', '14');
+  nameEl.setAttribute('font-weight', 'bold');
+  nameEl.setAttribute('fill', '#333');
+  nameEl.textContent = d.name;
+  svg.appendChild(nameEl);
+
+  const pctEl = document.createElementNS(svgNS, 'text');
+  pctEl.setAttribute('x', tx);
+  pctEl.setAttribute('y', y + 14);
+  pctEl.setAttribute('text-anchor', isRight ? 'start' : 'end');
+  pctEl.setAttribute('font-size', '13');
+  pctEl.setAttribute('fill', '#888');
+  pctEl.textContent = (d.value / total * 100).toFixed(1) + '%';
+  svg.appendChild(pctEl);
+});
+
+// 中心文字
+const t1 = document.createElementNS(svgNS, 'text');
+t1.setAttribute('x', cx); t1.setAttribute('y', cy - 8);
+t1.setAttribute('text-anchor', 'middle');
+t1.setAttribute('font-size', '16'); t1.setAttribute('fill', '#888');
+t1.textContent = '总计';
+svg.appendChild(t1);
+
+const t2 = document.createElementNS(svgNS, 'text');
+t2.setAttribute('x', cx); t2.setAttribute('y', cy + 20);
+t2.setAttribute('text-anchor', 'middle');
+t2.setAttribute('font-size', '24'); t2.setAttribute('font-weight', 'bold');
+t2.setAttribute('fill', '#1a1a2e');
+t2.textContent = total.toLocaleString();
+svg.appendChild(t2);
+</script>
+</body>
+</html>

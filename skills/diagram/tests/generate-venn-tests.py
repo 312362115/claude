@@ -3,7 +3,7 @@ import re
 import os
 from pathlib import Path
 
-OUTPUT_DIR = Path(__file__).parent.parent.parent.parent / 'docs' / 'assets' / 'diagram' / 'tests' / 'html'
+OUTPUT_DIR = Path(__file__).parent.parent.parent.parent / 'docs' / 'assets' / 'diagram' / 'tests-html'
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 # 读取模板

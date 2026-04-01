@@ -2,7 +2,7 @@ from pathlib import Path
 """生成 flowchart L1-L6 测试 HTML 文件（L1-L4 线性模式，L5-L6 DAG 模式）"""
 import re
 
-OUTPUT_DIR = Path(__file__).parent.parent.parent.parent / 'docs' / 'assets' / 'diagram' / 'tests' / 'html'
+OUTPUT_DIR = Path(__file__).parent.parent.parent.parent / 'docs' / 'assets' / 'diagram' / 'tests-html'
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 # 读取模板

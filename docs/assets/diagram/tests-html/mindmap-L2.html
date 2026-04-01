@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1400, height=960">
+<title>思维导图 - 微服务架构设计</title>
+<link rel="stylesheet" href="lib/base.css">
+</head>
+<body style="width:1400px;height:960px;display:inline-block;text-align:center;">
+<svg id="canvas" width="1400" height="960" viewBox="0 0 1400 960"></svg>
+
+<script src="lib/utils.js"></script>
+<script>
+
+(function() {
+  var svg = document.getElementById('canvas');
+
+  var colors = ['#667eea', '#f5576c', '#43e97b', '#4facfe', '#fa8231'];
+  var tints = ['rgba(102,126,234,0.08)', 'rgba(245,87,108,0.08)', 'rgba(67,233,123,0.08)', 'rgba(79,172,254,0.08)', 'rgba(250,130,49,0.08)'];
+
+  // 右侧 3 个分支，左侧 2 个分支
+  var rightBranches = [
+    { name: '服务拆分', color: 0, subs: [
+      { name: '拆分原则', leaves: ['单一职责', '业务边界清晰', '数据独立性'] },
+      { name: '拆分策略', leaves: ['按业务域', '按团队组织', '绞杀者模式'] },
+      { name: '典型服务', leaves: ['用户', '订单', '商品', '支付'] }
+    ]},
+    { name: '通信机制', color: 1, subs: [
+      { name: '同步通信', leaves: ['REST', 'gRPC', 'GraphQL'] },
+      { name: '异步通信', leaves: ['MQ', 'Event Bus', '发布订阅'] },
+      { name: '服务发现', leaves: ['Nacos', 'DNS', '客户端负载'] }
+    ]},
+    { name: '数据管理', color: 2, subs: [
+      { name: '数据库策略', leaves: ['独立DB', '读写分离', '分库分表'] },
+      { name: '数据一致性', leaves: ['Saga', 'TCC', '最终一致'] },
+      { name: '缓存策略', leaves: ['本地', 'Redis', '多级'] }
+    ]}
+  ];
+
+  var leftBranches = [
+    { name: '部署运维', color: 3, subs: [
+      { name: '容器化', leaves: ['Docker', 'K8s', 'Helm'] },
+      { name: 'CI/CD', leaves: ['GitLab CI', '蓝绿', '金丝雀'] },
+      { name: '可观测性', leaves: ['ELK', 'Prometheus', 'Jaeger'] }
+    ]},
+    { name: '安全治理', color: 4, subs: [
+      { name: '认证鉴权', leaves: ['OAuth2', 'JWT', 'RBAC'] },
+      { name: '流量治理', leaves: ['限流熔断', '降级', '灰度'] },
+      { name: 'API网关', leaves: ['路由', '协议转换', '安全'] }
+    ]}
+  ];
+
+  var CX = 700, CY = 480;
+
+  function textW(str, size) {
+    var w = 0;
+    for (var i = 0; i < str.length; i++) w += str.charCodeAt(i) > 127 ? size : size * 0.6;
+    return w;
+  }
+
+  // --- 布局一侧的分支 ---
+  var LEAF_H = 22;
+  var SUB_GAP = 10;
+  var BRANCH_GAP = 28;
+
+  function layoutSide(branches, dir) {
+    // dir: 1=右侧, -1=左侧
+    var branchX = CX + dir * 160;
+    var subX = CX + dir * 340;
+    var leafX = CX + dir * 530;
+
+    var layouts = [];
+    var totalH = 0;
+    branches.forEach(function(branch, bi) {
+      var subLayouts = [];
+      var branchH = 0;
+      branch.subs.forEach(function(sub, si) {
+        var subH = sub.leaves.length * LEAF_H;
+        subLayouts.push({ name: sub.name, leaves: sub.leaves, h: subH, localY: branchH });
+        branchH += subH + (si < branch.subs.length - 1 ? SUB_GAP : 0);
+      });
+      layouts.push({ name: branch.name, ci: branch.color, subs: subLayouts, h: branchH });
+      totalH += branchH + (bi < branches.length - 1 ? BRANCH_GAP : 0);
+    });
+
+    var startY;
+    if (layouts.length % 2 === 1) {
+      // 奇数个：中间分支对齐 CY
+      var midIdx = Math.floor(layouts.length / 2);
+      var aboveH = 0;
+      for (var i = 0; i < midIdx; i++) aboveH += layouts[i].h + BRANCH_GAP;
+      startY = CY - aboveH - layouts[midIdx].h / 2;
+    } else {
+      // 偶数个：整体居中
+      startY = CY - totalH / 2;
+    }
+
+    var curY = startY;
+    layouts.forEach(function(bl, bi) {
+      bl.y = curY;
+      bl.centerY = curY + bl.h / 2;
+      bl.subs.forEach(function(sl) {
+        sl.y = curY + sl.localY;
+        sl.centerY = curY + sl.localY + sl.h / 2;
+      });
+      curY += bl.h + BRANCH_GAP;
+    });
+
+    return { layouts: layouts, branchX: branchX, subX: subX, leafX: leafX, dir: dir };
+  }
+
+  var rightSide = layoutSide(rightBranches, 1);
+  var leftSide = layoutSide(leftBranches, -1);
+  var allSides = [rightSide, leftSide];
+
+  // --- 画连线（底层）---
+  var defs = el('defs', {});
+  var filter = el('filter', { id: 'shadow', x: '-10%', y: '-10%', width: '120%', height: '130%' });
+  filter.appendChild(el('feDropShadow', { dx: 0, dy: 2, stdDeviation: 3, 'flood-color': 'rgba(0,0,0,0.06)' }));
+  defs.appendChild(filter);
+  svg.appendChild(defs);
+
+  function addCurve(x1, y1, x2, y2, color, opacity, width) {
+    var cpx = (x1 + x2) / 2;
+    svg.appendChild(el('path', {
+      d: 'M' + x1 + ',' + y1 + ' C' + cpx + ',' + y1 + ' ' + cpx + ',' + y2 + ' ' + x2 + ',' + y2,
+      stroke: color, 'stroke-width': width || 2, fill: 'none', opacity: opacity || 0.4
+    }));
+  }
+
+  // 标题
+  var titleEl = el('text', { x: CX, y: 36, 'text-anchor': 'middle', 'font-size': 22, 'font-weight': 700, fill: '#1a1a2e' });
+  titleEl.textContent = '思维导图 — 微服务架构设计';
+  svg.appendChild(titleEl);
+
+  allSides.forEach(function(side) {
+    var dir = side.dir;
+    side.layouts.forEach(function(bl) {
+      var ci = bl.ci;
+      var color = colors[ci];
+      var rootEdge = CX + dir * 80;
+      // 根 → 一级
+      addCurve(rootEdge, CY, side.branchX + dir * (textW(bl.name, 14) / 2 + 14) * (-1), bl.centerY, color, 0.35, 2.5);
+
+      var bw = textW(bl.name, 14) + 28;
+      var bEdge = side.branchX + dir * bw / 2;
+      // 一级 → 二级
+      bl.subs.forEach(function(sl) {
+        var sw = textW(sl.name, 12) + 20;
+        addCurve(bEdge, bl.centerY, side.subX - dir * sw / 2, sl.centerY, color, 0.3, 1.5);
+      });
+
+      // 二级 → 叶子
+      bl.subs.forEach(function(sl) {
+        var sw = textW(sl.name, 12) + 20;
+        var sEdge = side.subX + dir * sw / 2;
+        sl.leaves.forEach(function(leaf, li) {
+          var ly = sl.y + li * LEAF_H + LEAF_H / 2;
+          addCurve(sEdge, sl.centerY, side.leafX - dir * 4, ly, color, 0.2, 1);
+        });
+      });
+    });
+  });
+
+  // --- 画节点（顶层）---
+
+  // 根节点
+  var rootLabel = '微服务架构设计';
+  var rootW = textW(rootLabel, 16) + 36;
+  svg.appendChild(el('rect', {
+    x: CX - rootW / 2, y: CY - 24, width: rootW, height: 48,
+    rx: 16, fill: '#1a1a2e', filter: 'url(#shadow)'
+  }));
+  var rtxt = el('text', { x: CX, y: CY + 1, 'text-anchor': 'middle', 'dominant-baseline': 'central', 'font-size': 16, 'font-weight': 700, fill: '#fff' });
+  rtxt.textContent = rootLabel;
+  svg.appendChild(rtxt);
+
+  allSides.forEach(function(side) {
+    var dir = side.dir;
+    side.layouts.forEach(function(bl) {
+      var ci = bl.ci;
+      var color = colors[ci];
+      var tint = tints[ci];
+
+      // 一级节点
+      var bw = textW(bl.name, 14) + 28;
+      svg.appendChild(el('rect', {
+        x: side.branchX - bw / 2, y: bl.centerY - 16, width: bw, height: 32,
+        rx: 10, fill: color, filter: 'url(#shadow)'
+      }));
+      var btxt = el('text', { x: side.branchX, y: bl.centerY + 1, 'text-anchor': 'middle', 'dominant-baseline': 'central', 'font-size': 13, 'font-weight': 600, fill: '#fff' });
+      btxt.textContent = bl.name;
+      svg.appendChild(btxt);
+
+      // 二级节点
+      bl.subs.forEach(function(sl) {
+        var sw = textW(sl.name, 12) + 20;
+        svg.appendChild(el('rect', {
+          x: side.subX - sw / 2, y: sl.centerY - 13, width: sw, height: 26,
+          rx: 6, fill: tint, stroke: color, 'stroke-width': 1, 'stroke-opacity': 0.3
+        }));
+        var stxt = el('text', { x: side.subX, y: sl.centerY + 1, 'text-anchor': 'middle', 'dominant-baseline': 'central', 'font-size': 12, 'font-weight': 600, fill: color });
+        stxt.textContent = sl.name;
+        svg.appendChild(stxt);
+
+        // 叶子
+        sl.leaves.forEach(function(leaf, li) {
+          var ly = sl.y + li * LEAF_H + LEAF_H / 2;
+          svg.appendChild(el('circle', { cx: side.leafX, cy: ly, r: 3, fill: color, opacity: 0.5 }));
+          var anchor = dir > 0 ? 'start' : 'end';
+          var offset = dir * 8;
+          var ltxt = el('text', { x: side.leafX + offset, y: ly + 1, 'text-anchor': anchor, 'dominant-baseline': 'central', 'font-size': 11, fill: '#64748b' });
+          ltxt.textContent = leaf;
+          svg.appendChild(ltxt);
+        });
+      });
+    });
+  });
+})();
+</script>
+</body>
+</html>

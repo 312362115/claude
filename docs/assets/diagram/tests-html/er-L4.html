@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, system-ui, 'PingFang SC', sans-serif;
+    background: #ffffff;
+    padding: 24px;
+    display: inline-block;
+  }
+</style>
+<script src="lib/elk.bundled.js"></script>
+<script src="lib/utils.js"></script>
+</head>
+<body>
+<svg id="canvas"></svg>
+
+<script>
+(function() {
+  var NS = 'http://www.w3.org/2000/svg';
+  var svg = document.getElementById('canvas');
+
+
+  var title = '全业务领域 ER 图';
+  var subtitle = 'L4 超级复杂 · 15 表 · 20 关系';
+
+  var tables = [
+    { id: 'users', label: '用户 users', type: 'core', fields: [
+      { name: 'id', dtype: 'BIGINT', pk: true },
+      { name: 'username', dtype: 'VARCHAR(50)' },
+      { name: 'email', dtype: 'VARCHAR(100)' },
+      { name: 'phone', dtype: 'VARCHAR(20)' },
+      { name: 'role', dtype: 'ENUM' }
+    ]},
+    { id: 'orders', label: '订单 orders', type: 'core', fields: [
+      { name: 'id', dtype: 'BIGINT', pk: true },
+      { name: 'user_id', dtype: 'BIGINT', fk: true },
+      { name: 'address_id', dtype: 'BIGINT', fk: true },
+      { name: 'coupon_id', dtype: 'BIGINT', fk: true },
+      { name: 'total', dtype: 'DECIMAL' },
+      { name: 'status', dtype: 'ENUM' }
+    ]},
+    { id: 'products', label: '商品 products', type: 'core', fields: [
+      { name: 'id', dtype: 'BIGINT', pk: true },
+      { name: 'name', dtype: 'VARCHAR(200)' },
+      { name: 'price', dtype: 'DECIMAL' },
+      { name: 'stock', dtype: 'INT' },
+      { name: 'category_id', dtype: 'BIGINT', fk: true },
+      { name: 'shop_id', dtype: 'BIGINT', fk: true }
+    ]},
+    { id: 'categories', label: '分类 categories', type: 'normal', fields: [
+      { name: 'id', dtype: 'BIGINT', pk: true },
+      { name: 'name', dtype: 'VARCHAR(100)' },
+      { name: 'parent_id', dtype: 'BIGINT' }
+    ]},
+    { id: 'order_items', label: '订单项 order_items', type: 'junction', fields: [
+      { name: 'id', dtype: 'BIGINT', pk: true },
+      { name: 'order_id', dtype: 'BIGINT', fk: true },
+      { name: 'product_id', dtype: 'BIGINT', fk: true },
+      { name: 'quantity', dtype: 'INT' },
+      { name: 'price', dtype: 'DECIMAL' }
+    ]},
+    { id: 'payments', label: '支付 payments', type: 'normal', fields: [
+      { name: 'id', dtype: 'BIGINT', pk: true },
+      { name: 'order_id', dtype: 'BIGINT', fk: true },
+      { name: 'amount', dtype: 'DECIMAL' },
+      { name: 'method', dtype: 'ENUM' },
+      { name: 'status', dtype: 'ENUM' }
+    ]},
+    { id: 'addresses', label: '地址 addresses', type: 'normal', fields: [
+      { name: 'id', dtype: 'BIGINT', pk: true },
+      { name: 'user_id', dtype: 'BIGINT', fk: true },
+      { name: 'province', dtype: 'VARCHAR(50)' },
+      { name: 'city', dtype: 'VARCHAR(50)' },
+      { name: 'detail', dtype: 'TEXT' }
+    ]},
+    { id: 'shops', label: '店铺 shops', type: 'normal', fields: [
+      { name: 'id', dtype: 'BIGINT', pk: true },
+      { name: 'owner_id', dtype: 'BIGINT', fk: true },
+      { name: 'name', dtype: 'VARCHAR(100)' },
+      { name: 'rating', dtype: 'DECIMAL' }
+    ]},
+    { id: 'reviews', label: '评价 reviews', type: 'junction', fields: [
+      { name: 'id', dtype: 'BIGINT', pk: true },
+      { name: 'user_id', dtype: 'BIGINT', fk: true },
+      { name: 'product_id', dtype: 'BIGINT', fk: true },
+      { name: 'rating', dtype: 'INT' },
+      { name: 'content', dtype: 'TEXT' }
+    ]},
+    { id: 'coupons', label: '优惠券 coupons', type: 'junction', fields: [
+      { name: 'id', dtype: 'BIGINT', pk: true },
+      { name: 'user_id', dtype: 'BIGINT', fk: true },
+      { name: 'discount', dtype: 'DECIMAL' },
+      { name: 'min_amount', dtype: 'DECIMAL' },
+      { name: 'status', dtype: 'ENUM' }
+    ]},
+    { id: 'shipping', label: '物流 shipping', type: 'normal', fields: [
+      { name: 'id', dtype: 'BIGINT', pk: true },
+      { name: 'order_id', dtype: 'BIGINT', fk: true },
+      { name: 'carrier', dtype: 'VARCHAR(50)' },
+      { name: 'tracking_no', dtype: 'VARCHAR(50)' },
+      { name: 'status', dtype: 'ENUM' }
+    ]},
+    { id: 'refunds', label: '退款 refunds', type: 'junction', fields: [
+      { name: 'id', dtype: 'BIGINT', pk: true },
+      { name: 'order_id', dtype: 'BIGINT', fk: true },
+      { name: 'payment_id', dtype: 'BIGINT', fk: true },
+      { name: 'amount', dtype: 'DECIMAL' },
+      { name: 'reason', dtype: 'TEXT' }
+    ]},
+    { id: 'cart_items', label: '购物车 cart_items', type: 'junction', fields: [
+      { name: 'id', dtype: 'BIGINT', pk: true },
+      { name: 'user_id', dtype: 'BIGINT', fk: true },
+      { name: 'product_id', dtype: 'BIGINT', fk: true },
+      { name: 'quantity', dtype: 'INT' }
+    ]},
+    { id: 'favorites', label: '收藏 favorites', type: 'junction', fields: [
+      { name: 'id', dtype: 'BIGINT', pk: true },
+      { name: 'user_id', dtype: 'BIGINT', fk: true },
+      { name: 'product_id', dtype: 'BIGINT', fk: true }
+    ]},
+    { id: 'notifications', label: '通知 notifications', type: 'junction', fields: [
+      { name: 'id', dtype: 'BIGINT', pk: true },
+      { name: 'user_id', dtype: 'BIGINT', fk: true },
+      { name: 'type', dtype: 'ENUM' },
+      { name: 'content', dtype: 'TEXT' },
+      { name: 'is_read', dtype: 'BOOLEAN' }
+    ]}
+  ];
+
+  var relations = [
+    { from: 'users', to: 'orders', label: '1 : N' },
+    { from: 'users', to: 'addresses', label: '1 : N' },
+    { from: 'users', to: 'shops', label: '1 : 1' },
+    { from: 'users', to: 'reviews', label: '1 : N' },
+    { from: 'users', to: 'coupons', label: '1 : N' },
+    { from: 'users', to: 'cart_items', label: '1 : N' },
+    { from: 'users', to: 'favorites', label: '1 : N' },
+    { from: 'users', to: 'notifications', label: '1 : N' },
+    { from: 'orders', to: 'order_items', label: '1 : N' },
+    { from: 'orders', to: 'payments', label: '1 : N' },
+    { from: 'orders', to: 'shipping', label: '1 : 1' },
+    { from: 'orders', to: 'refunds', label: '1 : N' },
+    { from: 'orders', to: 'coupons', label: 'N : 1' },
+    { from: 'addresses', to: 'orders', label: '1 : N' },
+    { from: 'products', to: 'order_items', label: '1 : N' },
+    { from: 'products', to: 'reviews', label: '1 : N' },
+    { from: 'products', to: 'cart_items', label: '1 : N' },
+    { from: 'products', to: 'favorites', label: '1 : N' },
+    { from: 'categories', to: 'products', label: '1 : N' },
+    { from: 'shops', to: 'products', label: '1 : N' }
+  ];
+
+  // ========== 主题 ==========
+  var theme = {
+    title: { color: '#1a1a2e', size: 22 },
+    subtitle: { color: '#888888', size: 14 },
+    tableTypes: {
+      core:     { headerBg: '#3B82F6', headerText: '#FFFFFF', pkColor: '#3B82F6' },
+      normal:   { headerBg: '#10B981', headerText: '#FFFFFF', pkColor: '#10B981' },
+      junction: { headerBg: '#64748B', headerText: '#FFFFFF', pkColor: '#64748B' }
+    },
+    field: { text: '#1E293B', type: '#94A3B8', fk: '#8B5CF6', divider: '#F1F5F9' },
+    table: { bg: '#FFFFFF', border: '#E2E8F0' },
+    line: { color: '#94A3B8', width: 1.5, label: '#64748B' }
+  };
+
+  // ========== 工具函数 ==========
+
+  // ========== 布局参数 ==========
+  var HEADER_H = 32;
+  var HEADER_BRIDGE = 6;        // 表头下方色块延伸
+  var FIELD_H = 23;
+  var FIELD_PAD_X = 12;
+  var TABLE_PAD_X = 0;
+  var TABLE_MIN_W = 180;
+  var TITLE_H = 56;             // 标题区高度（标题+副标题+间距）
+  var LEGEND_H = 40;            // 底部图例高度
+
+  // ========== 第一遍：计算每个表的尺寸 ==========
+  var tableMap = {};
+
+  // 先算统一表宽（所有表中最宽的）
+  var maxTableW = TABLE_MIN_W;
+  tables.forEach(function(t) {
+    var labelW = measureText(t.label, 13) + 24;
+    if (labelW > maxTableW) maxTableW = labelW;
+    t.fields.forEach(function(f) {
+      var fieldW = measureText(f.name, 12) + measureText(f.dtype + (f.pk ? ' · PK' : f.fk ? ' · FK' : ''), 11) + FIELD_PAD_X * 2 + 20;
+      if (fieldW > maxTableW) maxTableW = fieldW;
+    });
+  });
+
+  tables.forEach(function(t) {
+    var h = HEADER_H + HEADER_BRIDGE + t.fields.length * FIELD_H + 4;
+    tableMap[t.id] = { id: t.id, label: t.label, type: t.type, fields: t.fields, w: maxTableW, h: h };
+  });
+
+  // ========== ELKjs 布局 ==========
+  var elk = new ELK();
+
+  var elkGraph = {
+    id: 'root',
+    layoutOptions: {
+      'elk.algorithm': 'layered',
+      'elk.direction': 'DOWN',
+      'elk.spacing.nodeNode': '80',
+      'elk.layered.spacing.nodeNodeBetweenLayers': '80',
+      'elk.spacing.edgeNode': '30',
+      'elk.spacing.edgeEdge': '15',
+      'elk.layered.crossingMinimization.strategy': 'LAYER_SWEEP'
+    },
+    children: [],
+    edges: []
+  };
+
+  // 添加节点
+  tables.forEach(function(t) {
+    var n = tableMap[t.id];
+    elkGraph.children.push({ id: t.id, width: n.w, height: n.h });
+  });
+
+  // 添加边
+  relations.forEach(function(r, i) {
+    elkGraph.edges.push({ id: 'e' + i, sources: [r.from], targets: [r.to] });
+  });
+
+  // 执行布局（异步）
+  elk.layout(elkGraph).then(function(result) {
+
+  // 读取布局结果（ELK 返回左上角坐标）
+  result.children.forEach(function(child) {
+    var n = tableMap[child.id];
+    n.x = child.x;
+    n.y = child.y + TITLE_H;
+    n.cx = n.x + n.w / 2;
+    n.cy = n.y + n.h / 2;
+  });
+
+  // ========== 画布自适应 ==========
+  var maxX = 0, maxY = 0;
+  tables.forEach(function(t) {
+    var node = tableMap[t.id];
+    if (node.x + node.w > maxX) maxX = node.x + node.w;
+    if (node.y + node.h > maxY) maxY = node.y + node.h;
+  });
+
+  var svgW = maxX + 60;
+  var svgH = maxY + LEGEND_H + 60;
+
+  svg.setAttribute('width', svgW);
+  svg.setAttribute('height', svgH);
+  svg.setAttribute('viewBox', '0 0 ' + svgW + ' ' + svgH);
+
+  // ========== SVG Defs ==========
+  var defs = el('defs');
+  var arrow = el('marker', { id: 'arrow', markerWidth: 8, markerHeight: 6, refX: 8, refY: 3, orient: 'auto' });
+  arrow.appendChild(el('path', { d: 'M0,0.5 L7,3 L0,5.5', fill: 'none', stroke: theme.line.color, 'stroke-width': 1.2, 'stroke-linecap': 'round' }));
+  defs.appendChild(arrow);
+  svg.appendChild(defs);
+
+  // ========== 渲染层 ==========
+  var lineGroup = el('g'); svg.appendChild(lineGroup);
+  var nodeGroup = el('g'); svg.appendChild(nodeGroup);
+  var labelLayer = el('g'); svg.appendChild(labelLayer);  // 标签层（在节点之上）
+
+  // ========== 标题（左上角） ==========
+  if (title) {
+    var tEl = el('text', { x: 0, y: 18, 'font-size': 16, 'font-weight': 700, fill: theme.title.color, 'font-family': "-apple-system,system-ui,'PingFang SC',sans-serif" });
+    tEl.textContent = title; nodeGroup.appendChild(tEl);
+  }
+  if (subtitle) {
+    var stEl = el('text', { x: 0, y: 36, 'font-size': 12, fill: theme.subtitle.color, 'font-family': "-apple-system,system-ui,'PingFang SC',sans-serif" });
+    stEl.textContent = subtitle; nodeGroup.appendChild(stEl);
+  }
+
+  // ========== Crow's foot 绘制函数 ==========
+  // symbol: '||'(恰好一) '|o'(零或一) '|{'(一或多) 'o{'(零或多)
+  // x,y = 连线端点, angle = 从实体向外的方向角(弧度)
+  function drawCrowsFoot(group, x, y, angle, symbol, color, lineW) {
+    var cos = Math.cos(angle), sin = Math.sin(angle);
+    function rp(dx, dy) { return { x: x + dx * cos - dy * sin, y: y + dx * sin + dy * cos }; }
+    function addLine(p1, p2) {
+      group.appendChild(el('line', { x1: p1.x, y1: p1.y, x2: p2.x, y2: p2.y, stroke: color, 'stroke-width': lineW }));
+    }
+    function drawBar(dist) { addLine(rp(dist, -6), rp(dist, 6)); }
+    function drawCircle(dist) {
+      var c = rp(dist, 0);
+      group.appendChild(el('circle', { cx: c.x, cy: c.y, r: 4, fill: '#FFFFFF', stroke: color, 'stroke-width': lineW }));
+    }
+    function drawFork(baseDist) {
+      var tip = rp(baseDist + 10, 0);
+      addLine(tip, rp(baseDist, 0));
+      addLine(tip, rp(baseDist, -7));
+      addLine(tip, rp(baseDist, 7));
+    }
+    if (symbol === '||') { drawBar(6); drawBar(12); }
+    else if (symbol === '|o') { drawBar(6); drawCircle(16); }
+    else if (symbol === '|{') { drawBar(6); drawFork(6); }
+    else if (symbol === 'o{') { drawCircle(6); drawFork(14); }
+  }
+
+  // ========== 绘制关系连线（使用 ELK 计算的边路由） ==========
+  (result.edges || []).forEach(function(edge, ei) {
+    var rel = relations[ei];
+    if (!rel) return;
+
+    var sec = edge.sections && edge.sections[0];
+    if (!sec) return;
+
+    var hasCrows = rel.fromCard || rel.toCard;
+
+    // 构建圆弧折线路径
+    var RR = 8;
+    var pts = [{ x: sec.startPoint.x, y: sec.startPoint.y + TITLE_H }];
+    if (sec.bendPoints) sec.bendPoints.forEach(function(bp) { pts.push({ x: bp.x, y: bp.y + TITLE_H }); });
+    pts.push({ x: sec.endPoint.x, y: sec.endPoint.y + TITLE_H });
+
+    var d = 'M' + pts[0].x + ',' + pts[0].y;
+    for (var pi = 1; pi < pts.length; pi++) {
+      if (pi < pts.length - 1) {
+        var prev = pts[pi-1], cur = pts[pi], next = pts[pi+1];
+        var dx1 = cur.x-prev.x, dy1 = cur.y-prev.y, len1 = Math.sqrt(dx1*dx1+dy1*dy1);
+        var dx2 = next.x-cur.x, dy2 = next.y-cur.y, len2 = Math.sqrt(dx2*dx2+dy2*dy2);
+        var rr = Math.min(RR, len1/2, len2/2);
+        if (len1 > 0 && len2 > 0) {
+          d += ' L' + (cur.x - (dx1/len1)*rr) + ',' + (cur.y - (dy1/len1)*rr);
+          d += ' Q' + cur.x + ',' + cur.y + ' ' + (cur.x + (dx2/len2)*rr) + ',' + (cur.y + (dy2/len2)*rr);
+        } else { d += ' L' + cur.x + ',' + cur.y; }
+      } else { d += ' L' + pts[pi].x + ',' + pts[pi].y; }
+    }
+
+    var edgeAttrs = { d: d, stroke: theme.line.color, 'stroke-width': theme.line.width, fill: 'none' };
+    if (!hasCrows) edgeAttrs['marker-end'] = 'url(#arrow)';
+    if (rel.identifying === false) edgeAttrs['stroke-dasharray'] = '5,3';
+    lineGroup.appendChild(el('path', edgeAttrs));
+
+    // Crow's foot 符号绘制
+    if (hasCrows) {
+      // 根据端点在实体框哪条边来确定符号方向（上/下/左/右）
+      function edgeAngle(px, py, node) {
+        var dTop = Math.abs(py - node.y);
+        var dBot = Math.abs(py - (node.y + node.h));
+        var dLeft = Math.abs(px - node.x);
+        var dRight = Math.abs(px - (node.x + node.w));
+        var minD = Math.min(dTop, dBot, dLeft, dRight);
+        if (minD === dBot) return Math.PI / 2;    // 下边出：向下
+        if (minD === dTop) return -Math.PI / 2;   // 上边出：向上
+        if (minD === dRight) return 0;             // 右边出：向右
+        return Math.PI;                            // 左边出：向左
+      }
+      var sp = { x: sec.startPoint.x, y: sec.startPoint.y + TITLE_H };
+      var ep = { x: sec.endPoint.x, y: sec.endPoint.y + TITLE_H };
+      var fromNode = tableMap[rel.from], toNode = tableMap[rel.to];
+
+      if (rel.fromCard && fromNode) {
+        drawCrowsFoot(lineGroup, sp.x, sp.y, edgeAngle(sp.x, sp.y, fromNode), rel.fromCard, theme.line.color, theme.line.width);
+      }
+      if (rel.toCard && toNode) {
+        drawCrowsFoot(lineGroup, ep.x, ep.y, edgeAngle(ep.x, ep.y, toNode), rel.toCard, theme.line.color, theme.line.width);
+      }
+    } else {
+      // 文本标签模式（向后兼容）
+      var allPts = [sec.startPoint];
+      if (sec.bendPoints) sec.bendPoints.forEach(function(bp) { allPts.push(bp); });
+      allPts.push(sec.endPoint);
+
+      var midIdx = Math.floor(allPts.length / 2);
+      var labelX, labelY;
+      if (allPts.length % 2 === 1) {
+        labelX = allPts[midIdx].x;
+        labelY = allPts[midIdx].y + TITLE_H;
+      } else {
+        labelX = (allPts[midIdx - 1].x + allPts[midIdx].x) / 2;
+        labelY = (allPts[midIdx - 1].y + allPts[midIdx].y) / 2 + TITLE_H;
+      }
+
+      var lw = measureText(rel.label, 10) + 10;
+      labelLayer.appendChild(el('rect', {
+        x: labelX - lw / 2, y: labelY - 8, width: lw, height: 14,
+        rx: 3, fill: '#ffffff'
+      }));
+      var lt = el('text', {
+        x: labelX, y: labelY, 'text-anchor': 'middle',
+        'font-size': 10, fill: theme.line.label,
+        'font-family': "-apple-system,system-ui,'PingFang SC',sans-serif"
+      });
+      lt.textContent = rel.label; labelLayer.appendChild(lt);
+    }
+  });
+
+  // ========== 绘制表 ==========
+  tables.forEach(function(t) {
+    var node = tableMap[t.id];
+    var x = node.x, y = node.y, w = node.w, h = node.h;
+    var ts = theme.tableTypes[node.type] || theme.tableTypes.junction;
+
+    // 外边框
+    nodeGroup.appendChild(el('rect', {
+      x: x, y: y, width: w, height: h,
+      rx: 6, fill: theme.table.bg, stroke: theme.table.border, 'stroke-width': 1
+    }));
+
+    // 表头背景
+    nodeGroup.appendChild(el('rect', {
+      x: x, y: y, width: w, height: HEADER_H,
+      rx: 6, fill: ts.headerBg
+    }));
+    // 表头下方色块延伸（填补圆角间隙）
+    nodeGroup.appendChild(el('rect', {
+      x: x, y: y + HEADER_H - 4, width: w, height: HEADER_BRIDGE + 4,
+      fill: ts.headerBg
+    }));
+
+    // 表头文字
+    var headerText = el('text', {
+      x: x + w / 2, y: y + HEADER_H / 2 + 2,
+      'text-anchor': 'middle', 'dominant-baseline': 'central',
+      'font-size': 13, 'font-weight': 700, fill: ts.headerText,
+      'font-family': "-apple-system,system-ui,'PingFang SC',sans-serif"
+    });
+    headerText.textContent = node.label; nodeGroup.appendChild(headerText);
+
+    // 字段列表
+    var fieldStartY = y + HEADER_H + HEADER_BRIDGE;
+    node.fields.forEach(function(f, fi) {
+      var fy = fieldStartY + fi * FIELD_H;
+
+      // 字段名
+      var nameColor = f.pk ? ts.pkColor : f.fk ? theme.field.fk : theme.field.text;
+      var nameWeight = (f.pk || f.fk) ? 600 : 400;
+      var nameEl = el('text', {
+        x: x + FIELD_PAD_X, y: fy + FIELD_H / 2 + 1,
+        'dominant-baseline': 'central',
+        'font-size': 12, 'font-weight': nameWeight, fill: nameColor,
+        'font-family': "-apple-system,system-ui,'PingFang SC',sans-serif"
+      });
+      nameEl.textContent = f.name; nodeGroup.appendChild(nameEl);
+
+      // 类型
+      var typeStr = f.dtype + (f.pk ? ' · PK' : f.fk ? ' · FK' : '');
+      var typeEl = el('text', {
+        x: x + w - FIELD_PAD_X, y: fy + FIELD_H / 2 + 1,
+        'text-anchor': 'end', 'dominant-baseline': 'central',
+        'font-size': 11, fill: theme.field.type,
+        'font-family': "-apple-system,system-ui,'PingFang SC',sans-serif"
+      });
+      typeEl.textContent = typeStr; nodeGroup.appendChild(typeEl);
+
+      // 分隔线（最后一行不加）
+      if (fi < node.fields.length - 1) {
+        nodeGroup.appendChild(el('line', {
+          x1: x + FIELD_PAD_X, y1: fy + FIELD_H,
+          x2: x + w - FIELD_PAD_X, y2: fy + FIELD_H,
+          stroke: theme.field.divider, 'stroke-width': 1
+        }));
+      }
+    });
+  });
+
+  // ========== 图例 ==========
+  var legendY = maxY + 24;
+  var legendItems = [
+    { color: theme.tableTypes.core.headerBg, label: '核心表' },
+    { color: theme.tableTypes.normal.headerBg, label: '业务表' },
+    { color: theme.tableTypes.junction.headerBg, label: '关联/辅助表' }
+  ];
+  var lx = 0;
+  legendItems.forEach(function(item) {
+    nodeGroup.appendChild(el('rect', { x: lx, y: legendY, width: 16, height: 12, rx: 3, fill: item.color }));
+    var lt = el('text', { x: lx + 22, y: legendY + 10, 'font-size': 11, fill: '#64748B', 'font-family': "-apple-system,system-ui,'PingFang SC',sans-serif" });
+    lt.textContent = item.label; nodeGroup.appendChild(lt);
+    lx += measureText(item.label, 11) + 42;
+  });
+  // FK 标注说明
+  var fkLabel = el('text', { x: lx, y: legendY + 10, 'font-size': 12, 'font-weight': 500, fill: theme.field.fk, 'font-family': "-apple-system,system-ui,'PingFang SC',sans-serif" });
+  fkLabel.textContent = 'FK字段'; nodeGroup.appendChild(fkLabel);
+  var fkDesc = el('text', { x: lx + measureText('FK字段', 12) + 8, y: legendY + 10, 'font-size': 11, fill: '#64748B', 'font-family': "-apple-system,system-ui,'PingFang SC',sans-serif" });
+  fkDesc.textContent = '外键用紫色标注'; nodeGroup.appendChild(fkDesc);
+  lx += measureText('FK字段', 12) + 8 + measureText('外键用紫色标注', 11) + 10;
+
+  // 图例可能超出画布，更新 SVG 尺寸
+  var legendRight = lx + 10;
+  var legendBottom = legendY + 30;
+  if (legendRight > svgW) {
+    svgW = legendRight;
+    svg.setAttribute('width', svgW);
+  }
+  if (legendBottom > svgH) {
+    svgH = legendBottom;
+    svg.setAttribute('height', svgH);
+  }
+  svg.setAttribute('viewBox', '0 0 ' + svgW + ' ' + svgH);
+
+  }); // end elk.layout().then()
+})();
+</script>
+</body>
+</html>

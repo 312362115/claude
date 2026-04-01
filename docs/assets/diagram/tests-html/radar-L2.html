@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1200, height=800">
+<title>技术方案评估对比</title>
+<link rel="stylesheet" href="lib/base.css">
+<style>
+  body {
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .title { font-size: 22px; font-weight: 700; color: #1a1a2e; margin-top: 28px; }
+  .subtitle { font-size: 14px; color: #888; margin-top: 6px; }
+  .legend { display: flex; gap: 28px; margin-top: 18px; }
+  .legend-item { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #555; }
+  .legend-rect { width: 20px; height: 12px; border-radius: 3px; }
+  .chart-wrap { margin-top: 12px; }
+</style>
+</head>
+<body class="fixed-1200">
+  <div class="title">技术方案评估对比</div>
+  <div class="subtitle">多维度综合评分（满分 100）</div>
+  <div class="legend">
+    <div class="legend-item">
+      <div class="legend-rect" style="background: rgba(102,126,234,0.7)"></div>方案 A — 微服务
+    </div>
+    <div class="legend-item">
+      <div class="legend-rect" style="background: rgba(245,87,108,0.7)"></div>方案 B — Serverless
+    </div>
+    <div class="legend-item">
+      <div class="legend-rect" style="background: rgba(67,233,123,0.7)"></div>方案 C — 单体优化
+    </div>
+  </div>
+
+  <div class="chart-wrap">
+    <svg id="radar" width="1100" height="640" viewBox="0 0 1100 640"></svg>
+  </div>
+
+<script src="lib/utils.js"></script>
+<script>
+const svg = document.getElementById('radar');
+
+const cx = 500, cy = 310, R = 220;
+const axes = 6;
+const levels = 5;
+const labels = ['性能', '可维护性', '扩展性', '安全性', '成本', '学习曲线'];
+
+const series = [
+  { name: 'A', values: [90, 70, 95, 85, 50, 45], color: 'rgba(102,126,234,0.8)', fill: 'rgba(102,126,234,0.12)' },
+  { name: 'B', values: [75, 85, 80, 70, 90, 60], color: 'rgba(245,87,108,0.8)', fill: 'rgba(245,87,108,0.12)' },
+  { name: 'C', values: [65, 90, 55, 80, 85, 90], color: 'rgba(67,233,123,0.8)', fill: 'rgba(67,233,123,0.12)' }
+];
+
+function pt(angle, r) {
+  const rad = (angle - 90) * Math.PI / 180;
+  return [cx + r * Math.cos(rad), cy + r * Math.sin(rad)];
+}
+
+function polyPoints(r) {
+  return Array.from({ length: axes }, (_, i) => pt(i * 360 / axes, r).join(',')).join(' ');
+}
+
+// 网格多边形（交替填色）
+for (let lv = levels; lv >= 1; lv--) {
+  const r = R * lv / levels;
+  const pg = document.createElementNS(svgNS, 'polygon');
+  pg.setAttribute('points', polyPoints(r));
+  pg.setAttribute('fill', lv % 2 === 1 ? 'rgba(102,126,234,0.03)' : 'rgba(102,126,234,0.06)');
+  pg.setAttribute('stroke', '#e0e3ef');
+  pg.setAttribute('stroke-width', '1');
+  svg.appendChild(pg);
+}
+
+// 轴线
+for (let i = 0; i < axes; i++) {
+  const [x, y] = pt(i * 360 / axes, R);
+  const line = document.createElementNS(svgNS, 'line');
+  line.setAttribute('x1', cx); line.setAttribute('y1', cy);
+  line.setAttribute('x2', x); line.setAttribute('y2', y);
+  line.setAttribute('stroke', '#d0d3df'); line.setAttribute('stroke-width', '1');
+  svg.appendChild(line);
+}
+
+// 轴标签
+const labelOffset = 36;
+for (let i = 0; i < axes; i++) {
+  const ang = i * 360 / axes;
+  const [x, y] = pt(ang, R + labelOffset);
+  const txt = document.createElementNS(svgNS, 'text');
+  txt.setAttribute('x', x); txt.setAttribute('y', y);
+  txt.setAttribute('text-anchor', 'middle');
+  txt.setAttribute('dominant-baseline', 'middle');
+  txt.setAttribute('font-size', '15');
+  txt.setAttribute('font-weight', 'bold');
+  txt.setAttribute('fill', '#444');
+  txt.textContent = labels[i];
+  svg.appendChild(txt);
+}
+
+// 数据系列
+series.forEach(s => {
+  // 面积
+  const pts = s.values.map((v, i) => pt(i * 360 / axes, R * v / 100).join(',')).join(' ');
+  const area = document.createElementNS(svgNS, 'polygon');
+  area.setAttribute('points', pts);
+  area.setAttribute('fill', s.fill);
+  area.setAttribute('stroke', s.color);
+  area.setAttribute('stroke-width', '2');
+  area.setAttribute('stroke-linejoin', 'round');
+  svg.appendChild(area);
+
+  // 数据点
+  s.values.forEach((v, i) => {
+    const [x, y] = pt(i * 360 / axes, R * v / 100);
+    const c = document.createElementNS(svgNS, 'circle');
+    c.setAttribute('cx', x); c.setAttribute('cy', y);
+    c.setAttribute('r', '5');
+    c.setAttribute('fill', s.color);
+    c.setAttribute('stroke', '#fff');
+    c.setAttribute('stroke-width', '2.5');
+    svg.appendChild(c);
+  });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>文氏图</title>
+<link rel="stylesheet" href="lib/base.css">
+<style>
+  .title { font-size: 16px; font-weight: 700; color: #1a1a2e; }
+  .subtitle { font-size: 12px; color: #888; margin-top: 2px; }
+</style>
+</head>
+<body class="auto-size">
+
+<div class="title">文氏图</div>
+<div class="subtitle">集合关系与交集分析</div>
+<svg id="canvas"></svg>
+
+<script src="lib/utils.js"></script>
+<script>
+// ===== 数据 =====
+var circles = [
+  { label: '前端', items: ['React', 'Vue', 'CSS'], color: 0 },
+  { label: '后端', items: ['Node.js', 'Go', 'SQL'], color: 1 },
+  { label: '运维', items: ['Docker', 'K8s', 'CI/CD'], color: 2 }
+];
+var intersection = ['全栈工程师'];
+// ===== 数据结束 =====
+var svg = document.getElementById('canvas');
+
+// 主题色（C-1 Blue, C-2 Emerald, C-3 Amber, C-5 Violet, C-6 Cyan, C-4 Rose）
+var palette = [
+  { fill: '#3B82F6', stroke: '#3B82F6', textDark: '#1E40AF' },  // C-1 Blue
+  { fill: '#10B981', stroke: '#10B981', textDark: '#065F46' },  // C-2 Emerald
+  { fill: '#F59E0B', stroke: '#F59E0B', textDark: '#92400E' },  // C-3 Amber
+  { fill: '#F43F5E', stroke: '#F43F5E', textDark: '#9F1239' },  // C-4 Rose
+  { fill: '#8B5CF6', stroke: '#8B5CF6', textDark: '#5B21B6' },  // C-5 Violet
+  { fill: '#06B6D4', stroke: '#06B6D4', textDark: '#0E7490' }   // C-6 Cyan
+];
+
+function addText(parent, x, y, text, attrs) {
+  var t = el('text', Object.assign({
+    x: x, y: y, 'text-anchor': 'middle',
+    'font-family': "-apple-system, system-ui, 'PingFang SC', sans-serif"
+  }, attrs || {}));
+  t.textContent = text;
+  parent.appendChild(t);
+  return t;
+}
+
+// 布局参数
+var R = 150;           // 圆半径
+var OVERLAP = 0.55;    // 重叠比例（越大重叠越多）
+var dist = R * (2 - OVERLAP * 2); // 圆心到中心的距离
+
+// 计算圆心位置（三角形排列）
+var n = circles.length;
+var cx, cy;
+if (n <= 1) {
+  cx = [R + 20]; cy = [R + 20];
+} else if (n === 2) {
+  cx = [R + 20, R + 20 + dist]; cy = [R + 20, R + 20];
+} else {
+  // 三角形：上方两个，下方一个
+  var centerX = R + dist / 2 + 20;
+  var centerY = R + dist * 0.4 + 20;
+  var angleOffset = -Math.PI / 2; // 从顶部开始
+  cx = []; cy = [];
+  for (var i = 0; i < n; i++) {
+    var angle = angleOffset + (2 * Math.PI * i) / n;
+    cx.push(centerX + dist * 0.65 * Math.cos(angle));
+    cy.push(centerY + dist * 0.65 * Math.sin(angle));
+  }
+}
+
+// 计算 SVG 尺寸
+var minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+for (var i = 0; i < n; i++) {
+  minX = Math.min(minX, cx[i] - R); maxX = Math.max(maxX, cx[i] + R);
+  minY = Math.min(minY, cy[i] - R); maxY = Math.max(maxY, cy[i] + R);
+}
+var svgW = maxX - minX + 60;
+var svgH = maxY - minY + 60;
+var offsetX = -minX + 30;
+var offsetY = -minY + 30;
+
+svg.setAttribute('width', svgW);
+svg.setAttribute('height', svgH);
+svg.setAttribute('viewBox', '0 0 ' + svgW + ' ' + svgH);
+svg.style.marginTop = '12px';
+
+// 画圆
+circles.forEach(function(c, i) {
+  var p = palette[c.color % palette.length];
+  svg.appendChild(el('circle', {
+    cx: cx[i] + offsetX, cy: cy[i] + offsetY, r: R,
+    fill: p.fill, 'fill-opacity': '0.12',
+    stroke: p.stroke, 'stroke-width': '2'
+  }));
+});
+
+// 在每个圆的"独有区域"放置标签和列表
+// 独有区域 = 远离其他圆心的方向偏移
+circles.forEach(function(c, i) {
+  var p = palette[c.color % palette.length];
+
+  // 计算独有方向（远离所有其他圆心）
+  var dx = 0, dy = 0;
+  for (var j = 0; j < n; j++) {
+    if (j !== i) {
+      dx += cx[i] - cx[j];
+      dy += cy[i] - cy[j];
+    }
+  }
+  var len = Math.sqrt(dx * dx + dy * dy) || 1;
+  dx /= len; dy /= len;
+
+  // 标签位置（偏向独有区域）
+  var labelX = cx[i] + offsetX + dx * R * 0.55;
+  var labelY = cy[i] + offsetY + dy * R * 0.55;
+
+  // 圆圈标签
+  addText(svg, labelX, labelY - 6, c.label, {
+    'font-size': '16', 'font-weight': '700', fill: p.textDark
+  });
+
+  // 列表项
+  c.items.forEach(function(item, k) {
+    addText(svg, labelX, labelY + 14 + k * 18, item, {
+      'font-size': '12', fill: p.textDark, 'fill-opacity': '0.8'
+    });
+  });
+});
+
+// 交集文本（中心）
+if (intersection && intersection.length > 0) {
+  var icx = 0, icy = 0;
+  for (var i = 0; i < n; i++) { icx += cx[i]; icy += cy[i]; }
+  icx = icx / n + offsetX;
+  icy = icy / n + offsetY;
+
+  // 白色背景圆
+  svg.appendChild(el('circle', {
+    cx: icx, cy: icy, r: 36,
+    fill: '#fff', 'fill-opacity': '0.9',
+    stroke: '#1E293B', 'stroke-width': '1.5'
+  }));
+
+  intersection.forEach(function(text, k) {
+    var lineHeight = 16;
+    var startY = icy - ((intersection.length - 1) * lineHeight) / 2 + 5;
+    addText(svg, icx, startY + k * lineHeight, text, {
+      'font-size': '12', 'font-weight': '700', fill: '#1E293B'
+    });
+  });
+}
+</script>
+</body>
+</html>

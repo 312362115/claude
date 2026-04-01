@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, system-ui, 'PingFang SC', sans-serif; background: #fff; display: flex; flex-direction: column; align-items: center; }
+  .title { font-size: 22px; font-weight: 700; color: #1a1a2e; margin-top: 28px; }
+  .subtitle { font-size: 14px; color: #888; margin-top: 6px; }
+  .chart-wrap { margin-top: 20px; position: relative; }
+</style>
+<script src="lib/utils.js"></script>
+</head>
+<body>
+<div class="title" id="title"></div>
+<div class="subtitle" id="subtitle"></div>
+<div class="chart-wrap">
+  <svg id="canvas"></svg>
+</div>
+<script>
+(function() {
+  var svg = document.getElementById('canvas');
+  var SANS = "-apple-system, system-ui, 'PingFang SC', sans-serif";
+
+
+  document.getElementById('title').textContent = '上半年营收与增长趋势';
+  document.getElementById('subtitle').textContent = 'L3 复杂 · 6 类别 · 2 柱 + 2 折线 · 双 Y 轴';
+  var data = {
+    categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+    series: [
+      { name: '产品A（万元）', type: 'bar', values: [90, 105, 130, 145, 160, 175] },
+      { name: '产品B（万元）', type: 'bar', values: [60, 72, 85, 93, 110, 125] },
+      { name: '同比增长', type: 'line', values: [0.12, 0.15, 0.18, 0.22, 0.25, 0.28], yAxis: 'right', format: 'percent' },
+      { name: '环比增长', type: 'line', values: [0.05, 0.08, 0.11, 0.09, 0.13, 0.10], yAxis: 'right', format: 'percent' }
+    ]
+  };
+
+  // ========== 配色 ==========
+  var colors = ['#667eea', '#f5576c', '#43e97b', '#4facfe', '#fa8231', '#a55eea'];
+  var barGradients = [
+    ['#667eea', '#764ba2'],
+    ['#f093fb', '#f5576c'],
+    ['#4facfe', '#00f2fe'],
+    ['#43e97b', '#38f9d7']
+  ];
+
+  // ========== 布局常量 ==========
+  var CHART_LEFT = 80;
+  var CHART_RIGHT = 60;   // 右 Y 轴空间
+  var CHART_TOP = 20;
+  var CHART_BOTTOM = 50;
+  var CHART_W = 900;
+  var CHART_H = 440;
+  var TOTAL_W = CHART_LEFT + CHART_W + CHART_RIGHT + 20;
+  var TOTAL_H = CHART_TOP + CHART_H + CHART_BOTTOM;
+  var GRID_LINES = 5;
+
+  svg.setAttribute('width', TOTAL_W);
+  svg.setAttribute('height', TOTAL_H);
+  svg.setAttribute('viewBox', '0 0 ' + TOTAL_W + ' ' + TOTAL_H);
+
+  // ========== 分离 bar 和 line 系列 ==========
+  var barSeries = [];
+  var lineSeries = [];
+  data.series.forEach(function(s, i) {
+    s._color = colors[i % colors.length];
+    s._grad = barGradients[i % barGradients.length];
+    if (s.type === 'bar') barSeries.push(s);
+    else lineSeries.push(s);
+  });
+
+  var hasRightAxis = lineSeries.some(function(s) { return s.yAxis === 'right'; });
+
+  // ========== 计算 Y 轴范围 ==========
+  function calcRange(series) {
+    var max = 0;
+    series.forEach(function(s) { s.values.forEach(function(v) { if (v > max) max = v; }); });
+    // 漂亮的上限
+    var magnitude = Math.pow(10, Math.floor(Math.log10(max || 1)));
+    var nice = Math.ceil(max / magnitude) * magnitude;
+    if (nice < max * 1.1) nice += magnitude;
+    return { min: 0, max: nice };
+  }
+
+  var leftRange = calcRange(barSeries);
+  var rightRange = hasRightAxis ? calcRange(lineSeries) : leftRange;
+
+  function leftY(v) { return CHART_TOP + CHART_H - (v / leftRange.max) * CHART_H; }
+  function rightY(v) { return CHART_TOP + CHART_H - (v / rightRange.max) * CHART_H; }
+
+  // ========== Defs ==========
+  var defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+  barSeries.forEach(function(s, i) {
+    var grad = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient');
+    grad.setAttribute('id', 'bar-grad-' + i);
+    grad.setAttribute('x1', '0'); grad.setAttribute('y1', '0');
+    grad.setAttribute('x2', '0'); grad.setAttribute('y2', '1');
+    var s1 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+    s1.setAttribute('offset', '0%'); s1.setAttribute('stop-color', s._grad[0]);
+    var s2 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+    s2.setAttribute('offset', '100%'); s2.setAttribute('stop-color', s._grad[1]);
+    grad.appendChild(s1); grad.appendChild(s2);
+    defs.appendChild(grad);
+  });
+  svg.appendChild(defs);
+
+  var n = data.categories.length;
+  var groupW = CHART_W / n;
+  var barW = Math.min(groupW * 0.6 / Math.max(barSeries.length, 1), 40);
+  var barGroupW = barW * barSeries.length + 4 * (barSeries.length - 1);
+
+  // ========== 背景 + 网格 ==========
+  svg.appendChild(el('rect', { x: CHART_LEFT, y: CHART_TOP, width: CHART_W, height: CHART_H, fill: '#fafbfe', stroke: '#eef0f5', rx: 4 }));
+
+  for (var gi = 0; gi <= GRID_LINES; gi++) {
+    var gy = CHART_TOP + (CHART_H / GRID_LINES) * gi;
+    svg.appendChild(el('line', { x1: CHART_LEFT, y1: gy, x2: CHART_LEFT + CHART_W, y2: gy, stroke: '#e8e8ef', 'stroke-dasharray': '4,3' }));
+    // 左 Y 轴标签
+    var lv = leftRange.max - (leftRange.max / GRID_LINES) * gi;
+    svg.appendChild(el('text', { x: CHART_LEFT - 8, y: gy + 4, 'text-anchor': 'end', 'font-size': 12, fill: '#888', 'font-family': SANS })).textContent = lv;
+    // 右 Y 轴标签
+    if (hasRightAxis) {
+      var rv = rightRange.max - (rightRange.max / GRID_LINES) * gi;
+      var rvText = lineSeries[0] && lineSeries[0].format === 'percent' ? (rv * 100).toFixed(0) + '%' : rv;
+      svg.appendChild(el('text', { x: CHART_LEFT + CHART_W + 8, y: gy + 4, 'text-anchor': 'start', 'font-size': 12, fill: '#888', 'font-family': SANS })).textContent = rvText;
+    }
+  }
+
+  // ========== X 轴标签 ==========
+  data.categories.forEach(function(cat, ci) {
+    var cx = CHART_LEFT + groupW * ci + groupW / 2;
+    svg.appendChild(el('text', { x: cx, y: CHART_TOP + CHART_H + 20, 'text-anchor': 'middle', 'font-size': 13, fill: '#666', 'font-family': SANS })).textContent = cat;
+  });
+
+  // ========== 绘制柱状图 ==========
+  barSeries.forEach(function(s, si) {
+    data.categories.forEach(function(cat, ci) {
+      var cx = CHART_LEFT + groupW * ci + groupW / 2;
+      var bx = cx - barGroupW / 2 + si * (barW + 4);
+      var by = leftY(s.values[ci]);
+      var bh = CHART_TOP + CHART_H - by;
+      svg.appendChild(el('rect', { x: bx, y: by, width: barW, height: bh, rx: 2, fill: 'url(#bar-grad-' + si + ')' }));
+      // 数据标签
+      if (bh > 20) {
+        svg.appendChild(el('text', { x: bx + barW / 2, y: by - 6, 'text-anchor': 'middle', 'font-size': 11, 'font-weight': 600, fill: s._color, 'font-family': SANS })).textContent = s.values[ci];
+      }
+    });
+  });
+
+  // ========== 绘制折线图 ==========
+  lineSeries.forEach(function(s, si) {
+    var yFn = s.yAxis === 'right' ? rightY : leftY;
+    var points = [];
+    data.categories.forEach(function(cat, ci) {
+      var cx = CHART_LEFT + groupW * ci + groupW / 2;
+      points.push({ x: cx, y: yFn(s.values[ci]) });
+    });
+
+    // 折线
+    var d = 'M' + points[0].x + ',' + points[0].y;
+    for (var pi = 1; pi < points.length; pi++) {
+      d += ' L' + points[pi].x + ',' + points[pi].y;
+    }
+    svg.appendChild(el('path', { d: d, fill: 'none', stroke: s._color, 'stroke-width': 2.5, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }));
+
+    // 数据点 + 标签
+    points.forEach(function(p, pi) {
+      svg.appendChild(el('circle', { cx: p.x, cy: p.y, r: 4, fill: '#fff', stroke: s._color, 'stroke-width': 2 }));
+      var valText = s.format === 'percent' ? (s.values[pi] * 100).toFixed(0) + '%' : s.values[pi];
+      svg.appendChild(el('text', { x: p.x, y: p.y - 10, 'text-anchor': 'middle', 'font-size': 11, 'font-weight': 600, fill: s._color, 'font-family': SANS })).textContent = valText;
+    });
+  });
+
+  // ========== 图例 ==========
+  var legendY = TOTAL_H - 12;
+  var legendX = CHART_LEFT;
+  data.series.forEach(function(s, i) {
+    if (s.type === 'bar') {
+      svg.appendChild(el('rect', { x: legendX, y: legendY - 10, width: 16, height: 10, rx: 2, fill: s._color }));
+    } else {
+      svg.appendChild(el('line', { x1: legendX, y1: legendY - 5, x2: legendX + 16, y2: legendY - 5, stroke: s._color, 'stroke-width': 2.5, 'stroke-linecap': 'round' }));
+    }
+    svg.appendChild(el('text', { x: legendX + 22, y: legendY, 'font-size': 12, fill: '#555', 'font-family': SANS })).textContent = s.name;
+    legendX += mt(s.name, 12) + 42;
+  });
+})();
+</script>
+</body>
+</html>

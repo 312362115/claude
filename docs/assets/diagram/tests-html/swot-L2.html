@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>SWOT 分析</title>
+<link rel="stylesheet" href="lib/base.css">
+<style>
+  .title { font-size: 16px; font-weight: 700; color: #1a1a2e; }
+  .subtitle { font-size: 12px; color: #888; margin-top: 2px; }
+  .grid {
+    display: grid; grid-template-columns: auto auto;
+    gap: 12px; margin-top: 16px;
+  }
+  .card {
+    border-radius: 12px; overflow: hidden; min-width: 220px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+  }
+  .card-header {
+    padding: 10px 16px; font-size: 14px; font-weight: 700; color: #fff;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .card-header .en { font-size: 11px; font-weight: 500; opacity: 0.85; }
+  .card-body { background: #fff; padding: 12px 16px; }
+  .card-body ul { list-style: none; }
+  .card-body li {
+    font-size: 13px; line-height: 1.7; color: #334155;
+    display: flex; align-items: center; gap: 8px;
+  }
+</style>
+</head>
+<body class="auto-size">
+
+<div class="title">SWOT 分析</div>
+<div class="subtitle">战略环境分析矩阵</div>
+<div class="grid" id="grid"></div>
+
+<script>
+// ===== 数据 =====
+var data = {
+  strengths: ['技术团队强', '产品口碑好', '用户基数大'],
+  weaknesses: ['资金有限', '市场覆盖不足', '运营团队小'],
+  opportunities: ['新兴市场增长', 'AI 技术赋能', '政策支持'],
+  threats: ['竞争加剧', '用户增长放缓', '监管趋严']
+};
+// ===== 数据结束 =====
+
+var quadrants = [
+  { key: 'strengths',     label: '优势', en: 'Strengths',     color: '#10B981', dot: '#10B981' },  // C-2 Emerald
+  { key: 'weaknesses',    label: '劣势', en: 'Weaknesses',    color: '#F43F5E', dot: '#F43F5E' },  // C-4 Rose
+  { key: 'opportunities', label: '机会', en: 'Opportunities', color: '#3B82F6', dot: '#3B82F6' },  // C-1 Blue
+  { key: 'threats',       label: '威胁', en: 'Threats',       color: '#F59E0B', dot: '#F59E0B' }   // C-3 Amber
+];
+
+var grid = document.getElementById('grid');
+
+quadrants.forEach(function(q) {
+  var items = data[q.key] || [];
+  var card = document.createElement('div');
+  card.className = 'card';
+
+  var header = document.createElement('div');
+  header.className = 'card-header';
+  header.style.background = q.color;
+  header.innerHTML = q.label + ' <span class="en">' + q.en + '</span>';
+
+  var body = document.createElement('div');
+  body.className = 'card-body';
+  var ul = document.createElement('ul');
+  items.forEach(function(item) {
+    var li = document.createElement('li');
+    li.innerHTML = '<span style="width:5px;height:5px;border-radius:50%;flex-shrink:0;background:' + q.dot + ';display:inline-block;"></span>' + item;
+    ul.appendChild(li);
+  });
+  body.appendChild(ul);
+
+  card.appendChild(header);
+  card.appendChild(body);
+  grid.appendChild(card);
+});
+</script>
+</body>
+</html>

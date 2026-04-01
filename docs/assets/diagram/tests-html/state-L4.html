@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, system-ui, 'PingFang SC', sans-serif;
+    background: #ffffff;
+    padding: 24px;
+    display: inline-block;
+  }
+</style>
+<script src="lib/elk.bundled.js"></script>
+<script src="lib/utils.js"></script>
+</head>
+<body>
+<svg id="canvas"></svg>
+
+<script>
+(function() {
+  var NS = 'http://www.w3.org/2000/svg';
+  var svg = document.getElementById('canvas');
+  var SANS = "-apple-system, system-ui, 'PingFang SC', sans-serif";
+
+
+  // ========== 数据定义 ==========
+  var title = '订单全链路状态机';
+  var subtitle = 'L4 超级复杂 · composite + choice + fork/join';
+
+  var states = [
+    { id: 'start', label: '●', type: 'start' },
+    { id: 'created', label: '已创建', type: 'state' },
+    { id: 'c1', label: '', type: 'choice' },
+    { id: 'payment', label: '支付处理', type: 'composite', children: [
+      { id: 'validating', label: '验证中', type: 'state' },
+      { id: 'charging', label: '扣款中', type: 'state' },
+      { id: 'confirmed', label: '已确认', type: 'state' }
+    ]},
+    { id: 'fork1', label: '', type: 'fork' },
+    { id: 'packing', label: '打包中', type: 'state' },
+    { id: 'notifying', label: '通知中', type: 'state' },
+    { id: 'join1', label: '', type: 'join' },
+    { id: 'shipping', label: '配送中', type: 'state' },
+    { id: 'delivered', label: '已签收', type: 'state' },
+    { id: 'cancelled', label: '已取消', type: 'state' },
+    { id: 'end', label: '◎', type: 'end' }
+  ];
+
+  var transitions = [
+    { from: 'start', to: 'created', label: '下单' },
+    { from: 'created', to: 'c1', label: '提交' },
+    { from: 'c1', to: 'payment', label: '[在线支付]' },
+    { from: 'c1', to: 'cancelled', label: '[取消订单]' },
+    { from: 'validating', to: 'charging', label: '验证通过' },
+    { from: 'charging', to: 'confirmed', label: '扣款成功' },
+    { from: 'payment', to: 'fork1', label: '支付完成' },
+    { from: 'fork1', to: 'packing', label: '仓库' },
+    { from: 'fork1', to: 'notifying', label: '通知' },
+    { from: 'packing', to: 'join1' },
+    { from: 'notifying', to: 'join1' },
+    { from: 'join1', to: 'shipping', label: '发货' },
+    { from: 'shipping', to: 'delivered', label: '签收' },
+    { from: 'delivered', to: 'end', label: '完成' },
+    { from: 'cancelled', to: 'end', label: '关闭' }
+  ];
+
+  // ========== 常量 ==========
+  var TITLE_H = 48;
+  var STATE_H = 36;
+  var STATE_PAD_X = 24;
+  var CIRCLE_R = 12;
+  var CIRCLE_SIZE = CIRCLE_R * 2 + 4;
+  var CHOICE_SIZE = 28;
+  var FORK_W = 60;
+  var FORK_H = 4;
+  var NOTE_W = 140;
+  var NOTE_H = 36;
+  var COMPOSITE_PAD_TOP = 40;
+  var COMPOSITE_PAD_SIDE = 16;
+  var COMPOSITE_PAD_BOTTOM = 16;
+
+  // 层级色（composite 容器背景）
+  var layerColors = [
+    { bg: '#EFF6FF', border: '#BFDBFE', label: '#1E40AF' },
+    { bg: '#ECFDF5', border: '#A7F3D0', label: '#065F46' },
+    { bg: '#FFFBEB', border: '#FDE68A', label: '#92400E' }
+  ];
+
+  // ========== 递归处理状态树 ==========
+  var stateMap = {};
+  var compositeIds = [];
+
+  function processStates(stateList, depth) {
+    stateList.forEach(function(s) {
+      var node = { id: s.id, label: s.label, type: s.type, depth: depth || 0 };
+
+      if (s.type === 'start' || s.type === 'end') {
+        node.w = CIRCLE_SIZE;
+        node.h = CIRCLE_SIZE;
+      } else if (s.type === 'choice') {
+        node.w = CHOICE_SIZE;
+        node.h = CHOICE_SIZE;
+      } else if (s.type === 'fork' || s.type === 'join') {
+        node.w = FORK_W;
+        node.h = FORK_H;
+      } else if (s.type === 'note') {
+        var noteTextW = mt(s.label, 11);
+        node.w = Math.max(noteTextW + 20, NOTE_W);
+        node.h = NOTE_H;
+        node.attachTo = s.attachTo;
+      } else if (s.type === 'concurrent') {
+        // 并发状态：类似 composite 但有多个 regions
+        node.w = 0; node.h = 0;
+        node.regions = s.regions || [];
+        compositeIds.push(s.id);
+        s.regions.forEach(function(r) {
+          processStates([{ id: r.id, label: r.label, type: 'composite', children: r.children }], (depth || 0) + 1);
+        });
+      } else if (s.type === 'composite') {
+        // composite 尺寸由 ELK 自动计算
+        node.w = 0;
+        node.h = 0;
+        node.children = s.children || [];
+        compositeIds.push(s.id);
+        // 递归处理子节点
+        processStates(s.children, (depth || 0) + 1);
+      } else {
+        var textW = mt(s.label, 13);
+        node.w = Math.max(textW + STATE_PAD_X * 2, 80);
+        node.h = STATE_H;
+      }
+      stateMap[s.id] = node;
+    });
+  }
+  processStates(states, 0);
+
+  // ========== 构建 ELKjs 图 ==========
+  function buildElkChildren(stateList) {
+    var children = [];
+    stateList.forEach(function(s) {
+      var n = stateMap[s.id];
+      var elkNode = { id: s.id, width: n.w, height: n.h };
+
+      if (s.type === 'concurrent') {
+        // 并发状态：regions 作为子 compound nodes
+        elkNode.layoutOptions = {
+          'elk.algorithm': 'layered',
+          'elk.direction': 'DOWN',
+          'elk.spacing.nodeNode': '40',
+          'elk.edgeRouting': 'ORTHOGONAL',
+          'elk.padding': '[top=' + COMPOSITE_PAD_TOP + ',left=' + COMPOSITE_PAD_SIDE + ',bottom=' + COMPOSITE_PAD_BOTTOM + ',right=' + COMPOSITE_PAD_SIDE + ']'
+        };
+        elkNode.children = [];
+        s.regions.forEach(function(r) {
+          elkNode.children.push(buildElkChildren([{ id: r.id, label: r.label, type: 'composite', children: r.children }])[0]);
+        });
+        elkNode.edges = [];
+      } else if (s.type === 'composite') {
+        elkNode.layoutOptions = {
+          'elk.algorithm': 'layered',
+          'elk.direction': 'RIGHT',
+          'elk.spacing.nodeNode': '80',
+          'elk.layered.spacing.nodeNodeBetweenLayers': '60',
+          'elk.spacing.edgeNode': '35',
+          'elk.spacing.edgeEdge': '30',
+          'elk.edgeRouting': 'ORTHOGONAL',
+          'elk.padding': '[top=' + COMPOSITE_PAD_TOP + ',left=' + COMPOSITE_PAD_SIDE + ',bottom=' + COMPOSITE_PAD_BOTTOM + ',right=' + COMPOSITE_PAD_SIDE + ']'
+        };
+        elkNode.children = buildElkChildren(s.children);
+        // 把跨越此 composite 内部的 edges 也加进来
+        elkNode.edges = [];
+        var childIds = {};
+        (function collectIds(list) {
+          list.forEach(function(c) {
+            childIds[c.id] = true;
+            if (c.children) collectIds(c.children);
+          });
+        })(s.children);
+        transitions.forEach(function(t, i) {
+          if (childIds[t.from] && childIds[t.to]) {
+            elkNode.edges.push({ id: 'e' + i, sources: [t.from], targets: [t.to] });
+          }
+        });
+      }
+      children.push(elkNode);
+    });
+    return children;
+  }
+
+  // 收集内部 edges 的 id 集合，避免在顶层重复添加
+  var internalEdgeIds = {};
+  function collectInternalEdges(stateList) {
+    stateList.forEach(function(s) {
+      if (s.type === 'composite' || s.type === 'concurrent') {
+        var childIds = {};
+        var childList = s.type === 'concurrent'
+          ? [].concat.apply([], s.regions.map(function(r) { return r.children || []; }))
+          : s.children;
+        (function collectIds(list) {
+          list.forEach(function(c) {
+            childIds[c.id] = true;
+            if (c.children) collectIds(c.children);
+          });
+        })(childList);
+        transitions.forEach(function(t, i) {
+          if (childIds[t.from] && childIds[t.to]) {
+            internalEdgeIds['e' + i] = true;
+          }
+        });
+        if (s.type === 'concurrent') {
+          s.regions.forEach(function(r) {
+            collectInternalEdges([{ id: r.id, type: 'composite', children: r.children }]);
+          });
+        } else {
+          collectInternalEdges(s.children);
+        }
+      }
+    });
+  }
+  collectInternalEdges(states);
+
+  var elkGraph = {
+    id: 'root',
+    layoutOptions: {
+      'elk.algorithm': 'layered',
+      'elk.direction': 'RIGHT',
+      'elk.spacing.nodeNode': '110',
+      'elk.layered.spacing.nodeNodeBetweenLayers': '80',
+      'elk.spacing.edgeNode': '45',
+      'elk.spacing.edgeEdge': '35',
+      'elk.layered.spacing.edgeNodeBetweenLayers': '35',
+      'elk.layered.nodePlacement.strategy': 'NETWORK_SIMPLEX',
+      'elk.layered.compaction.postCompaction.strategy': 'NONE',
+      'elk.layered.crossingMinimization.strategy': 'LAYER_SWEEP',
+      'elk.edgeRouting': 'ORTHOGONAL'
+    },
+    children: buildElkChildren(states),
+    edges: []
+  };
+
+  // 只添加非 internal 的顶层 edges
+  transitions.forEach(function(t, i) {
+    if (!internalEdgeIds['e' + i]) {
+      elkGraph.edges.push({ id: 'e' + i, sources: [t.from], targets: [t.to] });
+    }
+  });
+
+  // ========== 执行布局并渲染 ==========
+  var elk = new ELK();
+  elk.layout(elkGraph).then(function(result) {
+
+    // 递归读取布局结果
+    function readLayout(elkChildren, offsetX, offsetY) {
+      elkChildren.forEach(function(child) {
+        var n = stateMap[child.id];
+        if (!n) return;
+        n.x = child.x + offsetX;
+        n.y = child.y + offsetY;
+        n.w = child.width;
+        n.h = child.height;
+        n.cx = n.x + n.w / 2;
+        n.cy = n.y + n.h / 2;
+        if (child.children) {
+          readLayout(child.children, n.x, n.y);
+        }
+      });
+    }
+    readLayout(result.children, 0, TITLE_H);
+
+    // 画布自适应
+    var maxX = 0, maxY = 0;
+    Object.keys(stateMap).forEach(function(id) {
+      var n = stateMap[id];
+      if (n.x + n.w > maxX) maxX = n.x + n.w;
+      if (n.y + n.h > maxY) maxY = n.y + n.h;
+    });
+    var svgW = maxX + 40;
+    var svgH = maxY + 40;
+
+    svg.setAttribute('width', svgW);
+    svg.setAttribute('height', svgH);
+    svg.setAttribute('viewBox', '0 0 ' + svgW + ' ' + svgH);
+
+    // ========== Defs ==========
+    var defs = el('defs');
+    var arr = el('marker', { id: 'arrow', markerWidth: 10, markerHeight: 8, refX: 9, refY: 4, orient: 'auto', markerUnits: 'userSpaceOnUse' });
+    arr.appendChild(el('path', { d: 'M0,0.5 L8.5,4 L0,7.5', fill: 'none', stroke: '#94A3B8', 'stroke-width': 1.5, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }));
+    defs.appendChild(arr);
+    svg.appendChild(defs);
+
+    // ========== 渲染层 ==========
+    var bgGroup = el('g'); svg.appendChild(bgGroup);
+    var edgeGroup = el('g'); svg.appendChild(edgeGroup);
+    var nodeGroup = el('g'); svg.appendChild(nodeGroup);
+    var labelGroup = el('g'); svg.appendChild(labelGroup);
+
+    // ========== 标题 ==========
+    nodeGroup.appendChild(el('text', { x: 0, y: 18, 'font-size': 16, 'font-weight': 700, fill: '#0F172A', 'font-family': SANS })).textContent = title;
+    nodeGroup.appendChild(el('text', { x: 0, y: 36, 'font-size': 12, fill: '#64748B', 'font-family': SANS })).textContent = subtitle;
+
+    // ========== 绘制 composite 容器背景 ==========
+    compositeIds.forEach(function(id) {
+      var n = stateMap[id];
+      var lc = layerColors[n.depth % layerColors.length];
+      bgGroup.appendChild(el('rect', {
+        x: n.x, y: n.y, width: n.w, height: n.h,
+        rx: 8, fill: lc.bg, stroke: lc.border, 'stroke-width': 1.5
+      }));
+      bgGroup.appendChild(el('text', {
+        x: n.x + 12, y: n.y + 22,
+        'font-size': 13, 'font-weight': 700, fill: lc.label, 'font-family': SANS
+      })).textContent = n.label;
+    });
+
+    // 绘制并发状态的区域分隔虚线
+    states.forEach(function(s) {
+      if (s.type === 'concurrent' && s.regions && s.regions.length > 1) {
+        var parent = stateMap[s.id];
+        if (!parent) return;
+        for (var ri = 0; ri < s.regions.length - 1; ri++) {
+          var region = stateMap[s.regions[ri].id];
+          if (!region) continue;
+          var sepY = region.y + region.h + 8;
+          bgGroup.appendChild(el('line', {
+            x1: parent.x + 8, y1: sepY, x2: parent.x + parent.w - 8, y2: sepY,
+            stroke: '#94A3B8', 'stroke-width': 1.5, 'stroke-dasharray': '6,4'
+          }));
+        }
+      }
+    });
+
+    // ========== 绘制边 ==========
+    function renderEdges(elkNode, offsetX, offsetY) {
+      (elkNode.edges || []).forEach(function(edge) {
+        var ei = parseInt(edge.id.substring(1));
+        var t = transitions[ei];
+        if (!t) return;
+
+        var sec = edge.sections && edge.sections[0];
+        if (!sec) return;
+
+        var sp = sec.startPoint;
+        var ep = sec.endPoint;
+        var R = 8;
+        var pts = [{ x: sp.x + offsetX, y: sp.y + offsetY }];
+        if (sec.bendPoints) {
+          sec.bendPoints.forEach(function(bp) { pts.push({ x: bp.x + offsetX, y: bp.y + offsetY }); });
+        }
+        pts.push({ x: ep.x + offsetX, y: ep.y + offsetY });
+
+        // 过滤共线点
+        if (pts.length > 2) {
+          var filtered = [pts[0]];
+          for (var fi = 1; fi < pts.length - 1; fi++) {
+            var pA = filtered[filtered.length - 1], pB = pts[fi], pC = pts[fi + 1];
+            var cross = Math.abs((pB.x - pA.x) * (pC.y - pA.y) - (pB.y - pA.y) * (pC.x - pA.x));
+            var segLen = Math.sqrt(Math.pow(pC.x - pA.x, 2) + Math.pow(pC.y - pA.y, 2));
+            if (segLen > 0 && cross / segLen > 2) filtered.push(pB);
+          }
+          filtered.push(pts[pts.length - 1]);
+          pts = filtered;
+        }
+
+        var d = 'M' + pts[0].x + ',' + pts[0].y;
+        for (var pi = 1; pi < pts.length; pi++) {
+          if (pi < pts.length - 1) {
+            var prev = pts[pi - 1], cur = pts[pi], next = pts[pi + 1];
+            var dx1 = cur.x - prev.x, dy1 = cur.y - prev.y, len1 = Math.sqrt(dx1 * dx1 + dy1 * dy1);
+            var r1 = Math.min(R, len1 / 2);
+            var dx2 = next.x - cur.x, dy2 = next.y - cur.y, len2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
+            var r2 = Math.min(R, len2 / 2);
+            var rr = Math.min(r1, r2);
+            d += ' L' + (cur.x - (dx1 / len1) * rr) + ',' + (cur.y - (dy1 / len1) * rr);
+            d += ' Q' + cur.x + ',' + cur.y + ' ' + (cur.x + (dx2 / len2) * rr) + ',' + (cur.y + (dy2 / len2) * rr);
+          } else {
+            d += ' L' + pts[pi].x + ',' + pts[pi].y;
+          }
+        }
+
+        edgeGroup.appendChild(el('path', {
+          d: d, stroke: '#94A3B8', 'stroke-width': 1.5, fill: 'none', 'marker-end': 'url(#arrow)'
+        }));
+
+        // 标签（边中点）
+        if (t.label) {
+          var totalLen = 0, segs = [];
+          for (var i = 1; i < pts.length; i++) {
+            var dx = pts[i].x - pts[i - 1].x, dy = pts[i].y - pts[i - 1].y;
+            var sLen = Math.sqrt(dx * dx + dy * dy);
+            segs.push({ len: sLen, from: pts[i - 1], to: pts[i] });
+            totalLen += sLen;
+          }
+          var halfLen = totalLen / 2, acc = 0, midX = 0, midY = 0;
+          for (var j = 0; j < segs.length; j++) {
+            if (acc + segs[j].len >= halfLen) {
+              var ratio = (halfLen - acc) / segs[j].len;
+              midX = segs[j].from.x + (segs[j].to.x - segs[j].from.x) * ratio;
+              midY = segs[j].from.y + (segs[j].to.y - segs[j].from.y) * ratio;
+              break;
+            }
+            acc += segs[j].len;
+          }
+
+          var labelW = mt(t.label, 10) + 8;
+          var labelH = 16;
+          labelGroup.appendChild(el('rect', { x: midX - labelW / 2, y: midY - labelH / 2, width: labelW, height: labelH, rx: 3, fill: '#FFFFFF' }));
+          labelGroup.appendChild(el('text', {
+            x: midX, y: midY, 'text-anchor': 'middle', 'dominant-baseline': 'central',
+            'font-size': 10, fill: '#64748B', 'font-family': SANS
+          })).textContent = t.label;
+        }
+      });
+
+      // 递归渲染 composite 内部 edges
+      (elkNode.children || []).forEach(function(child) {
+        if (child.children && child.children.length > 0) {
+          var n = stateMap[child.id];
+          if (n) renderEdges(child, n.x, n.y);
+        }
+      });
+    }
+    renderEdges(result, 0, TITLE_H);
+
+    // ========== 绘制状态节点 ==========
+    Object.keys(stateMap).forEach(function(id) {
+      var n = stateMap[id];
+      if (n.type === 'composite') return; // 已绘制为背景
+
+      if (n.type === 'start') {
+        nodeGroup.appendChild(el('circle', { cx: n.cx, cy: n.cy, r: CIRCLE_R, fill: '#1E293B' }));
+      } else if (n.type === 'end') {
+        nodeGroup.appendChild(el('circle', { cx: n.cx, cy: n.cy, r: CIRCLE_R, fill: 'none', stroke: '#1E293B', 'stroke-width': 2 }));
+        nodeGroup.appendChild(el('circle', { cx: n.cx, cy: n.cy, r: 6, fill: '#1E293B' }));
+      } else if (n.type === 'choice') {
+        var hw = CHOICE_SIZE / 2, hh = CHOICE_SIZE / 2;
+        nodeGroup.appendChild(el('polygon', {
+          points: n.cx + ',' + (n.cy - hh) + ' ' + (n.cx + hw) + ',' + n.cy + ' ' + n.cx + ',' + (n.cy + hh) + ' ' + (n.cx - hw) + ',' + n.cy,
+          fill: '#FFFBEB', stroke: '#FCD34D', 'stroke-width': 1.5
+        }));
+      } else if (n.type === 'fork' || n.type === 'join') {
+        // 黑色粗横条
+        nodeGroup.appendChild(el('rect', {
+          x: n.x, y: n.y, width: n.w, height: n.h,
+          rx: 2, fill: '#1E293B'
+        }));
+      } else if (n.type === 'note') {
+        // 左边框注释卡片
+        nodeGroup.appendChild(el('rect', {
+          x: n.x, y: n.y, width: n.w, height: n.h,
+          rx: 4, fill: '#F8FAFC', stroke: '#E2E8F0', 'stroke-width': 1
+        }));
+        nodeGroup.appendChild(el('rect', {
+          x: n.x, y: n.y, width: 3, height: n.h,
+          fill: '#3B82F6'
+        }));
+        nodeGroup.appendChild(el('text', {
+          x: n.x + 10, y: n.cy, 'dominant-baseline': 'central',
+          'font-size': 11, fill: '#64748B', 'font-family': SANS
+        })).textContent = n.label;
+      } else {
+        // 容器内的子状态用白底
+        var isInsideComposite = n.depth > 0;
+        var bgColor = isInsideComposite ? '#FFFFFF' : '#EFF6FF';
+        nodeGroup.appendChild(el('rect', {
+          x: n.x, y: n.y, width: n.w, height: n.h,
+          rx: 20, fill: bgColor, stroke: '#93C5FD', 'stroke-width': 1.5
+        }));
+        nodeGroup.appendChild(el('text', {
+          x: n.cx, y: n.cy, 'text-anchor': 'middle', 'dominant-baseline': 'central',
+          'font-size': 13, 'font-weight': 500, fill: '#1E293B', 'font-family': SANS
+        })).textContent = n.label;
+      }
+    });
+
+  }); // end elk.layout().then()
+})();
+</script>
+</body>
+</html>

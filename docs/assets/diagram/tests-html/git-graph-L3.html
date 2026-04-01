@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, system-ui, 'PingFang SC', sans-serif; background: #fff; display: flex; flex-direction: column; align-items: center; }
+  .title { font-size: 22px; font-weight: 700; color: #1a1a2e; margin-top: 28px; }
+  .subtitle { font-size: 14px; color: #888; margin-top: 6px; }
+  .chart-wrap { margin-top: 20px; position: relative; }
+</style>
+<script src="lib/utils.js"></script>
+</head>
+<body>
+<div class="title" id="title"></div>
+<div class="subtitle" id="subtitle"></div>
+<div class="chart-wrap">
+  <svg id="canvas"></svg>
+</div>
+<script>
+(function() {
+  var svg = document.getElementById('canvas');
+  var SANS = "-apple-system, system-ui, 'PingFang SC', sans-serif";
+
+
+  document.getElementById('title').textContent = 'Git 分支工作流';
+  document.getElementById('subtitle').textContent = 'L3 复杂 · 3 分支 · 10 提交 · 2 合并';
+  var branches = ['main', 'develop', 'feature/auth'];
+
+  var commits = [
+    { id: 'c1', message: 'Initial commit', branch: 'main' },
+    { id: 'c2', message: 'Setup CI/CD', branch: 'main', parent: 'c1' },
+    { id: 'c3', message: 'Create develop', branch: 'develop', parent: 'c2' },
+    { id: 'c4', message: 'Add auth module', branch: 'feature/auth', parent: 'c3' },
+    { id: 'c5', message: 'Implement JWT', branch: 'feature/auth', parent: 'c4' },
+    { id: 'c6', message: 'Add middleware', branch: 'develop', parent: 'c3' },
+    { id: 'c7', message: 'Auth tests', branch: 'feature/auth', parent: 'c5' },
+    { id: 'c8', message: 'Merge auth', branch: 'develop', parent: ['c6', 'c7'], merge: true },
+    { id: 'c9', message: 'Release prep', branch: 'develop', parent: 'c8' },
+    { id: 'c10', message: 'v1.0.0', branch: 'main', parent: ['c2', 'c9'], merge: true }
+  ];
+
+  // ========== 配色（按 branch） ==========
+  var branchColors = ['#3B82F6', '#10B981', '#F59E0B', '#F43F5E', '#8B5CF6', '#06B6D4'];
+  var branchColorMap = {};
+  branches.forEach(function(b, i) { branchColorMap[b] = branchColors[i % branchColors.length]; });
+
+  // ========== 布局常量 ==========
+  var COMMIT_GAP = 80;
+  var BRANCH_GAP = 40;
+  var CIRCLE_R = 8;
+  var PAD_LEFT = 120;
+  var PAD_TOP = 20;
+  var PAD_RIGHT = 200;
+  var PAD_BOTTOM = 20;
+
+  // branch → row index
+  var branchRow = {};
+  branches.forEach(function(b, i) { branchRow[b] = i; });
+
+  // commit → column index (sequential)
+  var commitCol = {};
+  commits.forEach(function(c, i) { commitCol[c.id] = i; });
+
+  // 坐标计算
+  function cx(commitId) { return PAD_LEFT + commitCol[commitId] * COMMIT_GAP; }
+  function cy(branch) { return PAD_TOP + branchRow[branch] * BRANCH_GAP; }
+
+  var totalW = PAD_LEFT + (commits.length - 1) * COMMIT_GAP + PAD_RIGHT;
+  var totalH = PAD_TOP + (branches.length - 1) * BRANCH_GAP + PAD_BOTTOM + 40;
+
+  svg.setAttribute('width', totalW);
+  svg.setAttribute('height', totalH);
+  svg.setAttribute('viewBox', '0 0 ' + totalW + ' ' + totalH);
+
+  // ========== 分支标签 ==========
+  branches.forEach(function(b, i) {
+    var color = branchColorMap[b];
+    var y = cy(b);
+    // 标签背景
+    var tw = mt(b, 11) + 16;
+    svg.appendChild(el('rect', { x: 4, y: y - 10, width: tw, height: 20, rx: 10, fill: color }));
+    svg.appendChild(el('text', { x: 4 + tw / 2, y: y + 1, 'text-anchor': 'middle', 'dominant-baseline': 'central', 'font-size': 11, 'font-weight': 600, fill: '#FFFFFF', 'font-family': SANS })).textContent = b;
+  });
+
+  // ========== 分支线（连接同一 branch 的连续 commits） ==========
+  var branchCommits = {};
+  commits.forEach(function(c) {
+    if (!branchCommits[c.branch]) branchCommits[c.branch] = [];
+    branchCommits[c.branch].push(c.id);
+  });
+
+  Object.keys(branchCommits).forEach(function(b) {
+    var ids = branchCommits[b];
+    var color = branchColorMap[b];
+    if (ids.length < 2) return;
+    for (var i = 0; i < ids.length - 1; i++) {
+      svg.appendChild(el('line', {
+        x1: cx(ids[i]), y1: cy(b), x2: cx(ids[i + 1]), y2: cy(b),
+        stroke: color, 'stroke-width': 3, 'stroke-linecap': 'round'
+      }));
+    }
+  });
+
+  // ========== 父子连线（跨 branch 的连线） ==========
+  commits.forEach(function(c) {
+    if (!c.parent) return;
+    var parents = Array.isArray(c.parent) ? c.parent : [c.parent];
+    parents.forEach(function(pid) {
+      var parentCommit = commits.find(function(pc) { return pc.id === pid; });
+      if (!parentCommit) return;
+      // 只画跨 branch 的连线（同 branch 的已经画了直线）
+      if (parentCommit.branch === c.branch) return;
+      var x1 = cx(pid), y1 = cy(parentCommit.branch);
+      var x2 = cx(c.id), y2 = cy(c.branch);
+      // 用曲线连接
+      var midX = (x1 + x2) / 2;
+      svg.appendChild(el('path', {
+        d: 'M' + x1 + ',' + y1 + ' C' + midX + ',' + y1 + ' ' + midX + ',' + y2 + ' ' + x2 + ',' + y2,
+        fill: 'none', stroke: branchColorMap[c.branch], 'stroke-width': 2, 'stroke-dasharray': '4,3', opacity: 0.6
+      }));
+    });
+  });
+
+  // ========== Commit 圆点 ==========
+  commits.forEach(function(c) {
+    var x = cx(c.id), y = cy(c.branch);
+    var color = branchColorMap[c.branch];
+
+    if (c.merge) {
+      // Merge commit：大圆 + 内部双色
+      svg.appendChild(el('circle', { cx: x, cy: y, r: CIRCLE_R + 2, fill: '#FFFFFF', stroke: color, 'stroke-width': 2.5 }));
+      svg.appendChild(el('circle', { cx: x, cy: y, r: 4, fill: color }));
+    } else {
+      svg.appendChild(el('circle', { cx: x, cy: y, r: CIRCLE_R, fill: color, stroke: '#FFFFFF', 'stroke-width': 2 }));
+    }
+
+    // Commit message
+    svg.appendChild(el('text', {
+      x: x, y: y + CIRCLE_R + 14,
+      'text-anchor': 'middle', 'font-size': 10, fill: '#64748B', 'font-family': SANS
+    })).textContent = c.message;
+  });
+})();
+</script>
+</body>
+</html>
