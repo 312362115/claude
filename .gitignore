@@ -49,8 +49,8 @@ debug/
 # 统计缓存
 stats-cache.json
 
-# 文档不需要在全局目录
-README.md
+# 子目录的 README（插件缓存等）
+plugins/**/README.md
 
 # 下载目录
 downloads/

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="../../skills/diagram/templates/html/lib/base.css">
+</head>
+<body class="auto-size">
+<svg id="canvas"></svg>
+<script src="../../skills/diagram/templates/html/lib/utils.js"></script>
+<script>
+(function() {
+  var svg = document.getElementById('canvas');
+  var FONT = "-apple-system, system-ui, 'PingFang SC', sans-serif";
+
+  // ========== 主题（来自 design-system） ==========
+  var theme = {
+    title: { color: '#1a1a2e' },
+    subtitle: { color: '#888888' },
+    line: { color: '#94A3B8', width: 1.5 },
+    phases: [
+      { headerBg: '#3B82F6', headerText: '#FFFFFF', border: '#93C5FD', dotColor: 'rgba(59,130,246,0.4)' },
+      { headerBg: '#10B981', headerText: '#FFFFFF', border: '#6EE7B7', dotColor: 'rgba(16,185,129,0.4)' },
+      { headerBg: '#F59E0B', headerText: '#FFFFFF', border: '#FCD34D', dotColor: 'rgba(245,158,11,0.4)' }
+    ]
+  };
+
+  // ========== 数据 ==========
+  var phases = [
+    { name: 'task-start', subtitle: '启动', items: ['需求对焦', 'UI 原型', '方案设计'] },
+    { name: 'task-execute', subtitle: '执行', items: ['持续编码', '进度管理', '跨会话状态'] },
+    { name: 'task-finish', subtitle: '收尾', items: ['CR 自检', '复盘沉淀', '经验记录'] }
+  ];
+
+  // ========== 布局参数 ==========
+  var PAD = 24;
+  var TITLE_H = 52;
+  var CARD_W = 180;
+  var CARD_HEADER_H = 36;
+  var CARD_ITEM_H = 28;
+  var CARD_BODY_PAD_TOP = 14;
+  var CARD_BODY_PAD_BOTTOM = 14;
+  var CARD_GAP = 64;
+  var ARROW_GAP = CARD_GAP;
+
+  var cardBodyH = CARD_BODY_PAD_TOP + phases[0].items.length * CARD_ITEM_H + CARD_BODY_PAD_BOTTOM;
+  var CARD_H = CARD_HEADER_H + cardBodyH;
+
+  var totalW = phases.length * CARD_W + (phases.length - 1) * CARD_GAP;
+  var canvasW = PAD * 2 + totalW;
+  var canvasH = PAD + TITLE_H + CARD_H + PAD;
+
+  svg.setAttribute('width', canvasW);
+  svg.setAttribute('height', canvasH);
+  svg.setAttribute('viewBox', '0 0 ' + canvasW + ' ' + canvasH);
+
+  // ========== defs ==========
+  var defs = el('defs');
+  var marker = el('marker', { id: 'arrow', markerWidth: 8, markerHeight: 6, refX: 8, refY: 3, orient: 'auto' });
+  marker.appendChild(el('path', { d: 'M0,0.5 L7,3 L0,5.5', fill: 'none', stroke: theme.line.color, 'stroke-width': 1.2, 'stroke-linecap': 'round' }));
+  defs.appendChild(marker);
+  // 阴影
+  var shadow = el('filter', { id: 'shadow', x: '-10%', y: '-10%', width: '130%', height: '140%' });
+  shadow.appendChild(el('feDropShadow', { dx: 0, dy: 2, stdDeviation: 4, 'flood-color': 'rgba(0,0,0,0.06)' }));
+  defs.appendChild(shadow);
+  svg.appendChild(defs);
+
+  // ========== 图层 ==========
+  var bgGroup = el('g');  svg.appendChild(bgGroup);
+  var lineGroup = el('g'); svg.appendChild(lineGroup);
+  var nodeGroup = el('g'); svg.appendChild(nodeGroup);
+
+  // ========== 标题 ==========
+  nodeGroup.appendChild(el('text', { x: PAD, y: PAD + 18, 'font-size': 16, 'font-weight': 'bold', fill: theme.title.color, 'font-family': FONT })).textContent = '任务工作流';
+  nodeGroup.appendChild(el('text', { x: PAD, y: PAD + 36, 'font-size': 12, fill: theme.subtitle.color, 'font-family': FONT })).textContent = 'Task Workflow';
+
+  // ========== 绘制卡片 ==========
+  var cardY = PAD + TITLE_H;
+
+  phases.forEach(function(phase, i) {
+    var x = PAD + i * (CARD_W + CARD_GAP);
+    var pc = theme.phases[i];
+
+    // 卡片背景（白底 + 阴影）
+    bgGroup.appendChild(el('rect', { x: x, y: cardY, width: CARD_W, height: CARD_H, rx: 8, fill: '#FFFFFF', stroke: pc.border, 'stroke-width': 1, filter: 'url(#shadow)' }));
+
+    // 卡片头部（clip-path 保持顶部圆角）
+    var clipId = 'clip-h-' + i;
+    var clip = el('clipPath', { id: clipId });
+    clip.appendChild(el('rect', { x: x, y: cardY, width: CARD_W, height: CARD_H, rx: 8 }));
+    defs.appendChild(clip);
+    bgGroup.appendChild(el('rect', { x: x, y: cardY, width: CARD_W, height: CARD_HEADER_H, fill: pc.headerBg, 'clip-path': 'url(#' + clipId + ')' }));
+
+    // 头部文字
+    nodeGroup.appendChild(el('text', { x: x + CARD_W / 2, y: cardY + CARD_HEADER_H / 2 + 1, 'text-anchor': 'middle', 'dominant-baseline': 'central', 'font-size': 14, 'font-weight': 700, fill: pc.headerText, 'font-family': FONT })).textContent = phase.name;
+
+    // 列表项
+    phase.items.forEach(function(item, j) {
+      var itemY = cardY + CARD_HEADER_H + CARD_BODY_PAD_TOP + j * CARD_ITEM_H;
+      // 圆点
+      nodeGroup.appendChild(el('circle', { cx: x + 20, cy: itemY + 10, r: 3, fill: pc.dotColor }));
+      // 文字
+      nodeGroup.appendChild(el('text', { x: x + 32, y: itemY + 11, 'dominant-baseline': 'central', 'font-size': 13, fill: '#334155', 'font-family': FONT })).textContent = item;
+    });
+
+    // 阶段间箭头
+    if (i < phases.length - 1) {
+      var arrowX1 = x + CARD_W + 8;
+      var arrowX2 = x + CARD_W + CARD_GAP - 8;
+      var arrowY = cardY + CARD_H / 2;
+      lineGroup.appendChild(el('line', { x1: arrowX1, y1: arrowY, x2: arrowX2, y2: arrowY, stroke: theme.line.color, 'stroke-width': theme.line.width, 'marker-end': 'url(#arrow)' }));
+    }
+  });
+
+})();
+</script>
+</body>
+</html>
