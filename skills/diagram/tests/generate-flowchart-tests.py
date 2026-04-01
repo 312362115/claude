@@ -1,4 +1,4 @@
-"""生成 flowchart L1-L4 测试 HTML 文件"""
+"""生成 flowchart L1-L6 测试 HTML 文件（L1-L4 线性模式，L5-L6 DAG 模式）"""
 import re
 
 # 读取模板
@@ -9,7 +9,7 @@ with open('../templates/html/flowchart.html', 'r') as f:
 engine_match = re.search(r'(  // ========== 主题 ==========.*)</script>', template, re.DOTALL)
 engine = engine_match.group(1)
 
-# 公共 HTML 头
+# 公共 HTML 头（线性模式）
 header = '''<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -29,6 +29,34 @@ header = '''<!DOCTYPE html>
 <svg id="canvas"></svg>
 
 <script src="lib/utils.js"></script>
+<script>
+(function() {
+  var NS = 'http://www.w3.org/2000/svg';
+  var svg = document.getElementById('canvas');
+
+'''
+
+# DAG 模式 HTML 头（包含 ELKjs）
+header_dag = '''<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="lib/base.css">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, system-ui, 'PingFang SC', sans-serif;
+    background: #ffffff;
+    padding: 24px;
+    display: inline-block;
+  }
+</style>
+</head>
+<body>
+<svg id="canvas"></svg>
+
+<script src="lib/utils.js"></script>
+<script src="lib/elk.bundled.js"></script>
 <script>
 (function() {
   var NS = 'http://www.w3.org/2000/svg';
@@ -161,15 +189,99 @@ L4 = '''
   ];
 '''
 
-test_data = {
+# L5: DAG 简单（多根节点 + 汇聚，3 个独立入口）
+L5 = '''
+  var title = '多渠道获客转化';
+  var subtitle = 'L5 DAG · 3 入口 · 汇聚 · 9 节点';
+  var dagMode = true;
+  var nodes = [
+    { id: 'sem', label: 'SEM 投放', type: 'start' },
+    { id: 'seo', label: 'SEO 自然流量', type: 'start' },
+    { id: 'ref', label: '老客推荐', type: 'start' },
+    { id: 'land', label: '落地页', type: 'process' },
+    { id: 'reg', label: '注册转化', type: 'process' },
+    { id: 'trial', label: '试用体验', type: 'process' },
+    { id: 'pay', label: '付费转化', type: 'success' },
+    { id: 'crm', label: 'CRM 客户池', type: 'datastore' },
+    { id: 'churn', label: '流失召回', type: 'external' }
+  ];
+  var edges = [
+    { from: 'sem', to: 'land', label: '广告点击' },
+    { from: 'seo', to: 'land', label: '搜索进入' },
+    { from: 'ref', to: 'reg', label: '邀请码' },
+    { from: 'land', to: 'reg' },
+    { from: 'reg', to: 'trial' },
+    { from: 'trial', to: 'pay', label: '转化' },
+    { from: 'trial', to: 'churn', label: '流失' },
+    { from: 'pay', to: 'crm' },
+    { from: 'churn', to: 'reg', label: '召回' }
+  ];
+  var steps = null;
+  var groups = null;
+  var sideNodes = [];
+'''
+
+# L6: DAG 复杂（多根 + 汇聚 + 多终点）
+L6 = '''
+  var title = '微服务请求链路';
+  var subtitle = 'L6 DAG 复杂 · 多根 + 汇聚 + 12 节点';
+  var dagMode = true;
+  var nodes = [
+    { id: 'web', label: 'Web 客户端', type: 'start' },
+    { id: 'mobile', label: 'Mobile 客户端', type: 'start' },
+    { id: 'gw', label: 'API Gateway', type: 'highlight' },
+    { id: 'auth', label: '认证服务', type: 'process' },
+    { id: 'user', label: '用户服务', type: 'process' },
+    { id: 'order', label: '订单服务', type: 'process' },
+    { id: 'pay', label: '支付服务', type: 'external' },
+    { id: 'db_user', label: 'User DB', type: 'datastore' },
+    { id: 'db_order', label: 'Order DB', type: 'datastore' },
+    { id: 'cache', label: 'Redis 缓存', type: 'datastore' },
+    { id: 'mq', label: '消息队列', type: 'process' },
+    { id: 'notify', label: '通知服务', type: 'success' }
+  ];
+  var edges = [
+    { from: 'web', to: 'gw' },
+    { from: 'mobile', to: 'gw' },
+    { from: 'gw', to: 'auth', label: '鉴权' },
+    { from: 'auth', to: 'user' },
+    { from: 'auth', to: 'order' },
+    { from: 'user', to: 'db_user' },
+    { from: 'user', to: 'cache', label: '缓存' },
+    { from: 'order', to: 'db_order' },
+    { from: 'order', to: 'pay', label: '支付' },
+    { from: 'pay', to: 'mq', label: '回调' },
+    { from: 'mq', to: 'notify' },
+    { from: 'mq', to: 'order', label: '更新状态' }
+  ];
+  var steps = null;
+  var groups = null;
+  var sideNodes = [];
+'''
+
+# 线性模式测试
+linear_tests = {
     'L1': L1,
     'L2': L2,
     'L3': L3,
     'L4': L4
 }
 
-for level, data in test_data.items():
+# DAG 模式测试
+dag_tests = {
+    'L5': L5,
+    'L6': L6
+}
+
+for level, data in linear_tests.items():
     content = header + data + '\n' + engine + '</script>\n</body>\n</html>\n'
+    filename = f'flowchart-{level}.html'
+    with open(filename, 'w') as f:
+        f.write(content)
+    print(f'Generated {filename}')
+
+for level, data in dag_tests.items():
+    content = header_dag + data + '\n' + engine + '</script>\n</body>\n</html>\n'
     filename = f'flowchart-{level}.html'
     with open(filename, 'w') as f:
         f.write(content)

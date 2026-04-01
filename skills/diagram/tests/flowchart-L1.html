@@ -65,7 +65,167 @@
     return theme[map[type] || 'node'];
   }
 
-  // ========== 工具函数 ==========
+  // ========== DAG 模式（ELKjs 自动布局）==========
+  if (typeof dagMode !== 'undefined' && dagMode && typeof nodes !== 'undefined' && nodes && typeof edges !== 'undefined' && edges) {
+    var FONT_SIZE_DAG = 13;
+    var NODE_PAD_X_DAG = 24;
+    var NODE_MIN_W_DAG = 120;
+    var NODE_H_DAG = 40;
+    var TERMINAL_H_DAG = 36;
+    var TITLE_AREA_H_DAG = 52;
+    var SANS_DAG = "-apple-system, system-ui, 'PingFang SC', sans-serif";
+
+    // 计算节点尺寸
+    var dagNodeMaxW = 0;
+    nodes.forEach(function(n) {
+      var w = Math.max(measureText(n.label, FONT_SIZE_DAG) + NODE_PAD_X_DAG * 2, NODE_MIN_W_DAG);
+      n._w = w;
+      n._h = (n.type === 'start' || n.type === 'end') ? TERMINAL_H_DAG : NODE_H_DAG;
+      if (w > dagNodeMaxW) dagNodeMaxW = w;
+    });
+    // 统一宽度
+    nodes.forEach(function(n) { n._w = dagNodeMaxW; });
+
+    // 构建 ELK graph
+    var elkNodes = nodes.map(function(n) {
+      return { id: n.id, width: n._w, height: n._h };
+    });
+    var elkEdges = edges.map(function(e, i) {
+      return { id: 'e' + i, sources: [e.from], targets: [e.to] };
+    });
+    var elkGraph = {
+      id: 'root',
+      layoutOptions: {
+        'elk.algorithm': 'layered',
+        'elk.direction': 'DOWN',
+        'elk.spacing.nodeNode': '80',
+        'elk.layered.spacing.nodeNodeBetweenLayers': '80',
+        'elk.spacing.edgeNode': '40',
+        'elk.spacing.edgeEdge': '30',
+        'elk.layered.spacing.edgeNodeBetweenLayers': '30',
+        'elk.layered.nodePlacement.strategy': 'NETWORK_SIMPLEX',
+        'elk.layered.compaction.postCompaction.strategy': 'NONE',
+        'elk.edgeRouting': 'ORTHOGONAL',
+        'elk.layered.crossingMinimization.strategy': 'LAYER_SWEEP'
+      },
+      children: elkNodes,
+      edges: elkEdges
+    };
+
+    var elk = new ELK();
+    elk.layout(elkGraph).then(function(layout) {
+      var pad = 40;
+      var svgW = layout.width + pad * 2;
+      var svgH = layout.height + pad * 2 + TITLE_AREA_H_DAG;
+      svg.setAttribute('width', svgW);
+      svg.setAttribute('height', svgH);
+      svg.setAttribute('viewBox', '0 0 ' + svgW + ' ' + svgH);
+
+      var offsetX = pad;
+      var offsetY = pad + TITLE_AREA_H_DAG;
+
+      // Defs: arrow markers
+      var defs = el('defs');
+      function addArrowDAG(id, color) {
+        var marker = el('marker', { id: id, markerWidth: 8, markerHeight: 6, refX: 8, refY: 3, orient: 'auto' });
+        marker.appendChild(el('path', { d: 'M0,0.5 L7,3 L0,5.5', fill: 'none', stroke: color, 'stroke-width': 1.2, 'stroke-linecap': 'round' }));
+        defs.appendChild(marker);
+      }
+      addArrowDAG('arrow', theme.line.color);
+      svg.appendChild(defs);
+
+      // 渲染层
+      var lineGroup = el('g');
+      svg.appendChild(lineGroup);
+      var nodeGroup = el('g');
+      svg.appendChild(nodeGroup);
+
+      // 标题
+      nodeGroup.appendChild(el('text', { x: pad, y: 18 + pad / 2, 'font-size': 16, 'font-weight': 700, fill: theme.title.color, 'font-family': SANS_DAG })).textContent = title;
+      nodeGroup.appendChild(el('text', { x: pad, y: 36 + pad / 2, 'font-size': 12, fill: theme.subtitle.color, 'font-family': SANS_DAG })).textContent = subtitle;
+
+      // 节点位置映射
+      var dagPosMap = {};
+      layout.children.forEach(function(ln) {
+        dagPosMap[ln.id] = { x: ln.x + offsetX, y: ln.y + offsetY, w: ln.width, h: ln.height };
+      });
+
+      // 绘制连线（10px 圆角 Q 贝塞尔转折，符合设计规范）
+      var RR = 10;
+      layout.edges.forEach(function(le, i) {
+        if (!le.sections || le.sections.length === 0) return;
+        var sec = le.sections[0];
+
+        // 构建点列表（含 offset）
+        var pts = [{ x: sec.startPoint.x + offsetX, y: sec.startPoint.y + offsetY }];
+        if (sec.bendPoints) sec.bendPoints.forEach(function(bp) {
+          pts.push({ x: bp.x + offsetX, y: bp.y + offsetY });
+        });
+        pts.push({ x: sec.endPoint.x + offsetX, y: sec.endPoint.y + offsetY });
+
+        // 构建圆弧折线路径（与 ER 模板一致）
+        var d = 'M' + pts[0].x + ',' + pts[0].y;
+        for (var pi = 1; pi < pts.length; pi++) {
+          if (pi < pts.length - 1) {
+            var prev = pts[pi-1], cur = pts[pi], next = pts[pi+1];
+            var dx1 = cur.x-prev.x, dy1 = cur.y-prev.y, len1 = Math.sqrt(dx1*dx1+dy1*dy1);
+            var dx2 = next.x-cur.x, dy2 = next.y-cur.y, len2 = Math.sqrt(dx2*dx2+dy2*dy2);
+            var rr = Math.min(RR, len1/2, len2/2);
+            if (len1 > 0 && len2 > 0) {
+              d += ' L' + (cur.x - (dx1/len1)*rr) + ',' + (cur.y - (dy1/len1)*rr);
+              d += ' Q' + cur.x + ',' + cur.y + ' ' + (cur.x + (dx2/len2)*rr) + ',' + (cur.y + (dy2/len2)*rr);
+            } else { d += ' L' + cur.x + ',' + cur.y; }
+          } else { d += ' L' + pts[pi].x + ',' + pts[pi].y; }
+        }
+        lineGroup.appendChild(el('path', {
+          d: d, fill: 'none', stroke: theme.line.color,
+          'stroke-width': theme.line.width, 'marker-end': 'url(#arrow)'
+        }));
+
+        // 边标签（放在路径中点）
+        if (edges[i].label) {
+          var allPts = [sec.startPoint];
+          if (sec.bendPoints) sec.bendPoints.forEach(function(bp) { allPts.push(bp); });
+          allPts.push(sec.endPoint);
+          var midIdx = Math.floor(allPts.length / 2);
+          var mx, my;
+          if (allPts.length % 2 === 1) {
+            mx = allPts[midIdx].x + offsetX;
+            my = allPts[midIdx].y + offsetY;
+          } else {
+            mx = (allPts[midIdx-1].x + allPts[midIdx].x) / 2 + offsetX;
+            my = (allPts[midIdx-1].y + allPts[midIdx].y) / 2 + offsetY;
+          }
+          var lw = measureText(edges[i].label, 11) + 8;
+          lineGroup.appendChild(el('rect', { x: mx - lw / 2, y: my - 8, width: lw, height: 16, rx: 3, fill: '#ffffff' }));
+          var lt = el('text', { x: mx, y: my + 1, 'text-anchor': 'middle', 'dominant-baseline': 'central', 'font-size': 11, 'font-weight': 500, fill: theme.line.label, 'font-family': SANS_DAG });
+          lt.textContent = edges[i].label;
+          lineGroup.appendChild(lt);
+        }
+      });
+
+      // 绘制节点
+      nodes.forEach(function(n) {
+        var pos = dagPosMap[n.id];
+        if (!pos) return;
+        var style = getStyle(n.type);
+        var rx = (n.type === 'start' || n.type === 'end') ? pos.h / 2 : 6;
+        nodeGroup.appendChild(el('rect', {
+          x: pos.x, y: pos.y, width: pos.w, height: pos.h, rx: rx,
+          fill: style.bg, stroke: style.border, 'stroke-width': 1.5
+        }));
+        var fw = n.type === 'highlight' ? 700 : 500;
+        nodeGroup.appendChild(el('text', {
+          x: pos.x + pos.w / 2, y: pos.y + pos.h / 2 + 1,
+          'text-anchor': 'middle', 'dominant-baseline': 'central',
+          'font-size': FONT_SIZE_DAG, 'font-weight': fw, fill: style.text, 'font-family': SANS_DAG
+        })).textContent = n.label;
+      });
+    });
+    return;  // DAG 模式完成，跳过线性模式
+  }
+
+  // ========== 以下为线性模式 ==========
 
   // ========== 布局参数 ==========
   var FONT_SIZE = 13;
@@ -244,10 +404,30 @@
     });
   }
 
-  var contentW = maxX - minX + pad * 2;
-  var svgW = contentW;
+  // 计算主路径中心范围（不含侧分支）
+  var mainMinX = Infinity, mainMaxX = -Infinity;
+  steps.forEach(function(s) {
+    var n = nodeMap[s.id];
+    var left = n.cx - n.w / 2, right = n.cx + n.w / 2;
+    if (left < mainMinX) mainMinX = left;
+    if (right > mainMaxX) mainMaxX = right;
+  });
+  if (hasGroups) {
+    groupMeta.forEach(function(gm) {
+      if (gm.bgLeft < mainMinX) mainMinX = gm.bgLeft;
+      if (gm.bgRight > mainMaxX) mainMaxX = gm.bgRight;
+    });
+  }
+
+  // 侧分支额外宽度
+  var sideExtra = maxX - mainMaxX;
+  if (sideExtra < 0) sideExtra = 0;
+
+  // 画布宽度：主路径居中 + 侧分支向右扩展
+  var mainW = mainMaxX - mainMinX;
+  var svgW = mainW + pad * 2 + sideExtra;
   var svgH = maxY + pad + 20;
-  var offsetX = -minX + pad;
+  var offsetX = -mainMinX + pad;
 
   svg.setAttribute('width', svgW);
   svg.setAttribute('height', svgH);
@@ -304,7 +484,11 @@
     var aid = isAfterDecision ? 'arrow-g' : 'arrow';
 
     lineGroup.appendChild(el('line', { x1: sx, y1: sy, x2: tx, y2: ty, stroke: lc, 'stroke-width': lw, 'marker-end': 'url(#' + aid + ')' }));
-    if (isAfterDecision) drawLabel(sx + 16, sy + (ty - sy) * 0.4, '是', theme.lineYes.color);
+    if (isAfterDecision) {
+      // "是"标签放在线左侧，紧贴 decision 节点下方，避免与下方节点重叠
+      var labelY = Math.min(sy + 18, sy + (ty - sy) * 0.3);
+      drawLabel(sx - 18, labelY, '是', theme.lineYes.color);
+    }
   }
 
   // ========== 侧分支连线 ==========
@@ -317,7 +501,8 @@
       var r = 10;
       var d = 'M' + dx + ',' + dy + ' L' + (tx - r) + ',' + dy + ' Q' + tx + ',' + dy + ' ' + tx + ',' + (dy + r) + ' L' + tx + ',' + ty;
       lineGroup.appendChild(el('path', { d: d, stroke: theme.lineNo.color, 'stroke-width': theme.lineNo.width, fill: 'none', 'marker-end': 'url(#arrow-r)' }));
-      drawLabel((dx + tx) / 2, dy - 1, '否', theme.lineNo.color);
+      // "否"标签放在水平线上方，靠近 decision 出口
+      drawLabel(dx + 24, dy - 14, '否', theme.lineNo.color);
 
       if (sn.nextNodes && sn.nextNodes.length > 0) {
         var prev = sn;

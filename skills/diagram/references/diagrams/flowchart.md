@@ -89,7 +89,27 @@ mmdc -i input.mmd -o output.png -b white -s 2
 
 使用内联 JS 动态计算节点坐标，支持任意数量的步骤和判断分支。
 
-### 数据结构
+### 模式选择：线性模式 vs DAG 模式
+
+流程图有两种数据结构模式，根据图的拓扑结构选择：
+
+| 特征 | 线性模式（steps） | DAG 模式（nodes + edges） |
+|------|-----------------|------------------------|
+| 入口节点 | 单个起点 | **多个独立起点** |
+| 路径结构 | 一条主路径 + 决策侧分支 | 任意有向无环图 |
+| 汇聚 | 不支持（一个节点只有一个父节点） | **支持多入边汇聚** |
+| 布局引擎 | 手动布局（主路径向下，否分支向右） | **ELKjs 自动布局** |
+| 适用场景 | 审批流、处理流程、决策链 | 关系图、资源流转、多源汇聚 |
+
+**判断规则**：
+1. 是否有 **多个独立入口**（多个节点没有入边）？→ DAG 模式
+2. 是否有 **汇聚**（一个节点接收多条入边）？→ DAG 模式
+3. 是否有 **非决策分支**（普通节点分出多条路径）？→ DAG 模式
+4. 以上都不是 → 线性模式
+
+> **核心原则：忠实还原原图拓扑。** 不存在的连线绝不添加，多个独立入口不能强行归到同一个根节点。
+
+### 数据结构（线性模式）
 
 ```javascript
 // 标题
@@ -143,7 +163,61 @@ var steps = null;  // 分组模式时设为 null
 
 分组背景使用 `theme.layers` 配色（6 色循环），每组一个圆角矩形 + 左上角标签。
 
-### 布局算法
+### 数据结构（DAG 模式）
+
+当流程图有多个独立入口、汇聚节点或非决策分支时，使用 `nodes` + `edges` 数据结构 + ELKjs 自动布局：
+
+```javascript
+// 标题
+var title = '多渠道获客转化';
+var subtitle = 'Multi-channel Acquisition Funnel';
+
+// DAG 模式标志
+var dagMode = true;
+
+// 节点列表（无需关心顺序，ELKjs 自动排列）
+// type: 'start' | 'process' | 'decision' | 'highlight' | 'error' | 'success' | 'datastore' | 'external' | 'end'
+var nodes = [
+  { id: 'sem', label: 'SEM 投放', type: 'start' },
+  { id: 'seo', label: 'SEO 自然流量', type: 'start' },
+  { id: 'ref', label: '老客推荐', type: 'start' },
+  { id: 'land', label: '落地页', type: 'process' },
+  { id: 'reg', label: '注册转化', type: 'process' },
+  { id: 'trial', label: '试用体验', type: 'process' },
+  { id: 'pay', label: '付费转化', type: 'success' },
+  { id: 'crm', label: 'CRM 客户池', type: 'datastore' },
+  { id: 'churn', label: '流失召回', type: 'external' },
+];
+
+// 边列表（from → to，可选标签）
+var edges = [
+  { from: 'sem', to: 'land', label: '广告点击' },
+  { from: 'seo', to: 'land', label: '搜索进入' },
+  { from: 'ref', to: 'reg', label: '邀请码' },
+  { from: 'land', to: 'reg' },
+  { from: 'reg', to: 'trial' },
+  { from: 'trial', to: 'pay', label: '转化' },
+  { from: 'trial', to: 'churn', label: '流失' },
+  { from: 'pay', to: 'crm' },
+  { from: 'churn', to: 'reg', label: '召回' },
+];
+
+// 线性模式变量设为 null
+var steps = null;
+var groups = null;
+var sideNodes = [];
+```
+
+**DAG 模式关键规则**：
+- `nodes` 数组定义所有节点，无需考虑排列顺序
+- `edges` 数组定义所有连线，每条边有 `from`、`to`、可选 `label`
+- 不存在的连线**绝不添加**，严格按原图拓扑
+- 多个节点可以没有入边（多根节点），多个节点可以没有出边（多终点）
+- **节点类型忠实原图**：同层级/同角色的节点使用相同 type。`highlight` 仅用于原图明确标注为关键/核心的节点，不要用 `highlight` 来区分"不同类别"——类别差异用 `process`/`external`/`datastore` 等语义类型表达
+- 使用 ELKjs 自动布局，流向默认从上到下（`elk.direction: 'DOWN'`）
+- 引入 `lib/elk.bundled.js`
+
+### 布局算法（线性模式）
 
 - **主路径**：所有非决策矩形节点统一宽度（取最大值），自顶向下排列
 - **决策节点**：菱形，宽高根据文字动态计算
@@ -156,7 +230,17 @@ var steps = null;  // 分组模式时设为 null
 - **连线**：主路径直线，决策后绿色；"否"路径折线（Q 圆角），红色；子流程连线红色 1.5px
 - **渲染顺序**：分组背景层 → 连线层 → 节点层
 
-### "是/否"标签定位规则
+### 布局算法（DAG 模式）
+
+- **引擎**：ELKjs（`lib/elk.bundled.js`），所有渲染代码在 `.then()` 回调中
+- **流向**：`'elk.direction': 'DOWN'`（从上到下）
+- **间距**：`'elk.spacing.nodeNode': '80'`，`'elk.layered.spacing.nodeNodeBetweenLayers': '80'`，`'elk.spacing.edgeNode': '40'`
+- **节点尺寸**：矩形统一宽度（取最大值），高度 40px，terminal 36px
+- **连线**：正交路由 + 10px 圆角 Q 贝塞尔转折（与设计规范一致），边标签放在路径中点
+- **画布**：根据 ELK 返回的布局尺寸自适应
+- **渲染顺序**：连线层 → 节点层 → 标签层
+
+### "是/否"标签定位规则（仅线性模式）
 
 标签必须放在连线旁边，**禁止压在连线上或与节点重叠**：
 

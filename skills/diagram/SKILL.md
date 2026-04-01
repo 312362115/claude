@@ -55,7 +55,8 @@ description: >
 
 | 要展示什么 | 图表类型 | 布局策略 | 专属规范 |
 |-----------|---------|---------|---------|
-| 工作流程、决策逻辑 | 流程图 | 手动布局 | `references/diagrams/flowchart.md` |
+| 工作流程、决策逻辑（单路径） | 流程图（线性） | 手动布局 | `references/diagrams/flowchart.md` |
+| 多源汇聚、资源流转、关系图 | 流程图（DAG） | **ELKjs** | `references/diagrams/flowchart.md` |
 | 多角色协作流程 | 泳道图 | 手动网格 | `references/diagrams/swimlane.md` |
 | API 调用、消息交互 | 时序图 | 自定义顺序堆叠 | `references/diagrams/sequence.md` |
 | 系统分层、技术栈 | 架构图 | 手动层堆叠 | `references/diagrams/architecture.md` |
@@ -283,9 +284,16 @@ async (page) => {
 ### ELKjs 使用说明
 
 ELKjs 仅用于**自由图布局**（节点和边的位置需要算法优化的场景）。以下图表类型**不用 ELKjs**：
-- 流程图（领域规则：主路径向下，否分支向右）
+- 流程图 **线性模式**（领域规则：主路径向下，否分支向右）
 - 泳道图（领域规则：泳道固定行序）
 - 架构图（领域规则：层级预定义）
 - 时序图（领域规则：参与者横排，消息纵向）
 
 原因：这些图表有明确的领域布局规则，ELKjs 的自动优化会打破这些规则（比如重排泳道顺序、改变分组位置）。
+
+**例外**：流程图的 **DAG 模式**（多根节点、汇聚、非决策分支）使用 ELKjs，因为此类拓扑无法用简单的"主路径+侧分支"手动布局。详见 `references/diagrams/flowchart.md`。
+
+### 流程图 DAG 模式注意事项
+
+- **忠实还原拓扑**：不存在的连线绝不添加，多个独立入口不能强行归到同一根节点
+- **节点类型忠实原图**：同层级/同角色的节点用相同 type。`highlight` 仅用于原图明确标注为关键/核心的节点，不要用它来区分"不同类别"——类别差异用 `process`/`external`/`datastore` 等语义类型表达
