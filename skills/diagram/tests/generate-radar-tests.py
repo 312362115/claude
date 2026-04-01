@@ -1,5 +1,10 @@
 """生成 radar L1-L4 测试 HTML 文件"""
 
+from pathlib import Path
+
+OUTPUT_DIR = Path(__file__).parent.parent.parent.parent / "docs" / "assets" / "diagram" / "tests" / "html"
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+
 # 读取模板
 with open('../templates/html/radar.html', 'r') as f:
     template = f.read()
@@ -133,6 +138,6 @@ for level, (series_list, data_js) in test_data.items():
     legend_html = make_legend_html(series_list)
     content = make_html(legend_html, data_js)
     filename = f'radar-{level}.html'
-    with open(filename, 'w') as f:
+    with open(str(OUTPUT_DIR / filename), 'w') as f:
         f.write(content)
     print(f'Generated {filename}')

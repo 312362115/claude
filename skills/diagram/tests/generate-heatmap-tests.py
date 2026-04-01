@@ -1,5 +1,9 @@
+from pathlib import Path
 """生成 heatmap L1-L4 测试 HTML 文件"""
 import re
+
+OUTPUT_DIR = Path(__file__).parent.parent.parent.parent / 'docs' / 'assets' / 'diagram' / 'tests' / 'html'
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 # 读取模板
 with open('../templates/html/heatmap.html', 'r') as f:
@@ -165,6 +169,6 @@ for level, data in test_data.items():
         )
     content = head + script_prefix + data + engine + tail
     filename = f'heatmap-{level}.html'
-    with open(filename, 'w') as f:
+    with open(str(OUTPUT_DIR / filename), 'w') as f:
         f.write(content)
     print(f'Generated {filename}')

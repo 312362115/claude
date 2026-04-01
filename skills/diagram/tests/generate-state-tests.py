@@ -1,6 +1,10 @@
 """生成 state L1-L4 测试 HTML 文件"""
 import re
 import os
+from pathlib import Path
+
+OUTPUT_DIR = Path(__file__).parent.parent.parent.parent / 'docs' / 'assets' / 'diagram' / 'tests' / 'html'
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 # 确保 lib 软链接存在
 if not os.path.exists('lib'):
@@ -179,6 +183,6 @@ test_data = {
 for level, data in test_data.items():
     content = header + data + '\n' + engine + '</script>\n</body>\n</html>\n'
     filename = f'state-{level}.html'
-    with open(filename, 'w') as f:
+    with open(str(OUTPUT_DIR / filename), 'w') as f:
         f.write(content)
     print(f'Generated {filename}')

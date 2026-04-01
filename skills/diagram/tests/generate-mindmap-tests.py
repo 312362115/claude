@@ -1,5 +1,10 @@
 """生成 mindmap L1-L4 测试 HTML 文件"""
 
+from pathlib import Path
+
+OUTPUT_DIR = Path(__file__).parent.parent.parent.parent / "docs" / "assets" / "diagram" / "tests" / "html"
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+
 # 读取模板
 with open('../templates/html/mindmap.html', 'r') as f:
     template = f.read()
@@ -678,6 +683,6 @@ test_data = {
 for level, (html_head, script) in test_data.items():
     content = html_head + script + '\n</script>\n</body>\n</html>\n'
     filename = f'mindmap-{level}.html'
-    with open(filename, 'w') as f:
+    with open(str(OUTPUT_DIR / filename), 'w') as f:
         f.write(content)
     print(f'Generated {filename}')

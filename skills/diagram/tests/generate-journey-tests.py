@@ -1,6 +1,10 @@
 """生成 journey L1-L4 测试 HTML 文件"""
 import re
 import os
+from pathlib import Path
+
+OUTPUT_DIR = Path(__file__).parent.parent.parent.parent / 'docs' / 'assets' / 'diagram' / 'tests' / 'html'
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 # 读取模板
 with open('../templates/html/journey.html', 'r') as f:
@@ -139,6 +143,6 @@ test_data = {
 for level, data in test_data.items():
     content = html_head + data + engine + '</script>\n</body>\n</html>\n'
     filename = f'journey-{level}.html'
-    with open(filename, 'w') as f:
+    with open(str(OUTPUT_DIR / filename), 'w') as f:
         f.write(content)
     print(f'Generated {filename}')

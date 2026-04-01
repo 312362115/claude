@@ -1,4 +1,8 @@
 """生成 waterfall L1-L4 测试 HTML 文件"""
+from pathlib import Path
+
+OUTPUT_DIR = Path(__file__).parent.parent.parent.parent / 'docs' / 'assets' / 'diagram' / 'tests' / 'html'
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 # 瀑布图模板头部
 HEAD = '''<!DOCTYPE html>
@@ -243,6 +247,6 @@ test_data = {
 for level, data_block in test_data.items():
     content = HEAD + data_block + ENGINE + TAIL
     filename = f'waterfall-{level}.html'
-    with open(filename, 'w') as f:
+    with open(str(OUTPUT_DIR / filename), 'w') as f:
         f.write(content)
     print(f'Generated {filename}')

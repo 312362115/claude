@@ -1,5 +1,10 @@
 """生成 gantt L1-L4 测试 HTML 文件（full script replacement 方式）"""
 
+from pathlib import Path
+
+OUTPUT_DIR = Path(__file__).parent.parent.parent.parent / "docs" / "assets" / "diagram" / "tests" / "html"
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+
 # 读取模板
 with open('../templates/html/gantt.html', 'r') as f:
     template = f.read()
@@ -641,6 +646,6 @@ test_data = {'L1': L1, 'L2': L2, 'L3': L3, 'L4': L4}
 for level, script in test_data.items():
     content = head + script + '\n' + tail
     filename = f'gantt-{level}.html'
-    with open(filename, 'w') as f:
+    with open(str(OUTPUT_DIR / filename), 'w') as f:
         f.write(content)
     print(f'Generated {filename}')

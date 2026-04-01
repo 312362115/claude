@@ -1,5 +1,10 @@
 """生成 decision-tree L1-L4 测试 HTML 文件"""
 
+from pathlib import Path
+
+OUTPUT_DIR = Path(__file__).parent.parent.parent.parent / "docs" / "assets" / "diagram" / "tests" / "html"
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+
 # 读取模板
 with open('../templates/html/decision-tree.html', 'r') as f:
     template = f.read()
@@ -249,6 +254,6 @@ for level, data in test_data.items():
     full_engine = engine_before_title + "titleEl.textContent = '" + title + "';\n  " + engine_after_title_line
     content = head + '\n' + data + full_engine + '\n' + tail
     filename = f'decision-tree-{level}.html'
-    with open(filename, 'w') as f:
+    with open(str(OUTPUT_DIR / filename), 'w') as f:
         f.write(content)
     print(f'Generated {filename}')

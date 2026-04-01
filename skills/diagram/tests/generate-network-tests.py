@@ -1,5 +1,10 @@
 """生成 network L1-L4 测试 HTML 文件（完整脚本替换方式）"""
 
+from pathlib import Path
+
+OUTPUT_DIR = Path(__file__).parent.parent.parent.parent / "docs" / "assets" / "diagram" / "tests" / "html"
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+
 HEAD = '''<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -834,6 +839,6 @@ test_data = {
 for level, script in test_data.items():
     content = HEAD + script + '\n' + TAIL
     filename = f'network-{level}.html'
-    with open(filename, 'w') as f:
+    with open(str(OUTPUT_DIR / filename), 'w') as f:
         f.write(content)
     print(f'Generated {filename}')

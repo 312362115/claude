@@ -1,6 +1,10 @@
 """生成 combo L1-L4 测试 HTML 文件"""
 import re
 import os
+from pathlib import Path
+
+OUTPUT_DIR = Path(__file__).parent.parent.parent.parent / 'docs' / 'assets' / 'diagram' / 'tests' / 'html'
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 if not os.path.exists('lib'):
     os.symlink('../templates/html/lib', 'lib')
@@ -98,6 +102,6 @@ test_data = {'L1': L1, 'L2': L2, 'L3': L3, 'L4': L4}
 for level, data in test_data.items():
     content = header + data + '\n' + engine + tail
     filename = f'combo-{level}.html'
-    with open(filename, 'w') as f:
+    with open(str(OUTPUT_DIR / filename), 'w') as f:
         f.write(content)
     print(f'Generated {filename}')

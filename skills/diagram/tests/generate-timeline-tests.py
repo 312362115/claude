@@ -1,4 +1,8 @@
 """生成 timeline L1-L4 测试 HTML 文件"""
+from pathlib import Path
+
+OUTPUT_DIR = Path(__file__).parent.parent.parent.parent / 'docs' / 'assets' / 'diagram' / 'tests' / 'html'
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 # 读取模板
 with open('../templates/html/timeline.html', 'r') as f:
@@ -229,6 +233,6 @@ for level, meta in level_meta.items():
     script = level_data[level] + engine
     content = level_head + '\n' + script + '\n' + tail
     filename = f'timeline-{level}.html'
-    with open(filename, 'w') as f:
+    with open(str(OUTPUT_DIR / filename), 'w') as f:
         f.write(content)
     print(f'Generated {filename} (svgH={svgH}, sectionH={sectionH}, eventGap={meta["eventGap"]})')

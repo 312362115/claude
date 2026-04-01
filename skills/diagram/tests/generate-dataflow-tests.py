@@ -1,5 +1,10 @@
 """生成 dataflow L1-L4 测试 HTML 文件（完整 HTML 替换方式）"""
 
+from pathlib import Path
+
+OUTPUT_DIR = Path(__file__).parent.parent.parent.parent / "docs" / "assets" / "diagram" / "tests" / "html"
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+
 # dataflow 模板使用 HTML head（含 title/subtitle）+ script 结构
 # 数据与引擎在同一 script 内，采用完整 HTML 方式生成每个级别
 
@@ -137,6 +142,9 @@ links.forEach(link => {
   const from = nodePos[link.from];
   const to = nodePos[link.to];
   if (!from || !to) return;
+
+OUTPUT_DIR = Path(__file__).parent.parent.parent.parent / 'docs' / 'assets' / 'diagram' / 'tests' / 'html'
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
   const x1 = from.x + from.w;
   const y1 = from.y + from.h / 2;
@@ -583,6 +591,6 @@ for level in ['L1', 'L2', 'L3', 'L4']:
     script_body = LAYOUT_AND_COLORS + data_blocks[level] + ENGINE
     content = make_html(title, subtitle, script_body)
     filename = f'dataflow-{level}.html'
-    with open(filename, 'w') as f:
+    with open(str(OUTPUT_DIR / filename), 'w') as f:
         f.write(content)
     print(f'Generated {filename}')
