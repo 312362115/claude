@@ -1,9 +1,11 @@
 ---
 priority: P2
-status: open
+status: done
 ---
 
 # MD Preview 升级 — 样式统一 + 图表实时渲染
+
+> **需求一（样式统一）已完成**。需求二、三已拆分至 [2026-04-01-diagram-mermaid-integration.md](2026-04-01-diagram-mermaid-integration.md)。
 
 ## 背景
 

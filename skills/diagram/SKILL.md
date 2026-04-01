@@ -6,6 +6,7 @@ description: >
   和统计图（柱状图、折线图、饼图、雷达图、热力图、桑基图、漏斗图、瀑布图等）。
   统一工具：HTML/SVG + 内联 JS 布局计算。ER/类图使用 ELKjs 布局引擎。
   所有图表遵循统一的设计规范（配色/字体/组件/间距），风格现代简洁。
+  支持三种输出：PNG（默认）、HTML（富文档嵌入）、DSL（Mermaid/Graphviz 文本，嵌入 MD 文档）。
   触发词：画图、画一个、生成图表、流程图、架构图、时序图、柱状图、对比图、关系图。
   即使用户没有说"画图"，只要需求中涉及可视化展示（流程、架构、数据对比、关系），都应触发此技能。
   被 deep-research 等其他技能调用时，同样遵循本规范生成图表。
@@ -178,6 +179,74 @@ description: >
 - 矢量：SVG 无损缩放，文字可选中/搜索
 - 适用场景：嵌入 HTML 报告、做交互式架构文档、需要二次编辑的图表
 - 生成方式：`python scripts/capture.py input.html -f html`
+
+**DSL（可选）** — 用于嵌入 Markdown 文档，文本可 diff、可版本控制：
+- 仅限**结构图**，统计图不支持（继续用 PNG）
+- 输出为 Mermaid 或 Graphviz (DOT) 语法的纯文本
+- 适用场景：MD 文档配图不想维护 PNG 文件、需要 preview-md 实时渲染、GitHub/GitLab 原生渲染
+- 生成方式：直接输出文本，用户复制到 MD 文件的代码块中
+
+DSL 选择规则：
+
+| 图表类型 | DSL | 代码块标记 |
+|---------|-----|----------|
+| flowchart / sequence / class / state / er | Mermaid | ` ```mermaid ` |
+| gantt / mindmap / timeline / c4 / sankey | Mermaid | ` ```mermaid ` |
+| architecture / swimlane | Graphviz (DOT) | ` ```dot ` |
+| 统计图（bar/line/pie/radar 等） | **不支持** | 继续用 PNG |
+
+DSL 输出格式示例：
+
+```
+用户：画一个用户登录的流程图，输出 mermaid
+
+输出：
+` ` `mermaid
+flowchart TD
+    A[用户访问登录页] --> B{已有账号?}
+    B -->|是| C[输入用户名密码]
+    B -->|否| D[跳转注册页]
+    C --> E{验证通过?}
+    E -->|是| F[跳转首页]
+    E -->|否| G[提示错误]
+    G --> C
+` ` `
+```
+
+```
+用户：画一个微服务架构图，输出 dot
+
+输出：
+` ` `dot
+digraph architecture {
+    rankdir=TB; compound=true;
+    node [shape=box, style="rounded,filled", fontname="PingFang SC"];
+
+    subgraph cluster_gateway {
+        label="网关层"; style="dashed"; color="#94A3B8";
+        nginx [label="Nginx\n负载均衡", fillcolor="#EFF6FF"];
+        api_gw [label="API Gateway", fillcolor="#EFF6FF"];
+    }
+
+    subgraph cluster_services {
+        label="服务层"; style="dashed"; color="#94A3B8";
+        user_svc [label="用户服务", fillcolor="#F0FDF4"];
+        order_svc [label="订单服务", fillcolor="#F0FDF4"];
+        pay_svc [label="支付服务", fillcolor="#F0FDF4"];
+    }
+
+    subgraph cluster_data {
+        label="数据层"; style="dashed"; color="#94A3B8";
+        mysql [label="MySQL", fillcolor="#FEF3C7"];
+        redis [label="Redis", fillcolor="#FEF3C7"];
+    }
+
+    nginx -> api_gw;
+    api_gw -> user_svc; api_gw -> order_svc; api_gw -> pay_svc;
+    user_svc -> mysql; order_svc -> mysql; pay_svc -> redis;
+}
+` ` `
+```
 
 ### 3.2 截图方式
 
