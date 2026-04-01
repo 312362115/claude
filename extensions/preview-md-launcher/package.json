@@ -1,0 +1,49 @@
+{
+  "name": "preview-md-launcher",
+  "displayName": "Preview MD in Browser",
+  "description": "在浏览器中预览 Markdown 文件（报告风格 + Mermaid 图表 + TOC）",
+  "version": "0.1.0",
+  "publisher": "renlongyu",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "previewMd.openInBrowser",
+        "title": "Preview MD in Browser",
+        "icon": "$(open-preview)"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "previewMd.openInBrowser",
+          "when": "resourceLangId == markdown",
+          "group": "navigation"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "previewMd.openInBrowser",
+          "when": "resourceLangId == markdown",
+          "group": "navigation"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "previewMd.openInBrowser",
+          "when": "resourceLangId == markdown"
+        }
+      ]
+    }
+  },
+  "devDependencies": {
+    "@vscode/vsce": "^3.7.1"
+  }
+}
