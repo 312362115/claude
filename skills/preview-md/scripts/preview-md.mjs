@@ -647,6 +647,43 @@ window.__mermaidResolve();
         const c = PALETTE[i % PALETTE.length];
         node.querySelectorAll('.label-container, rect.basic').forEach(r => colorize(r, c));
       });
+
+      // XY Chart — 柱状图条形 + 折线颜色
+      // diagram skill 色板（实色，用于柱状图和折线图）
+      const CHART_COLORS = ['#3B82F6', '#10B981', '#8B5CF6', '#F59E0B', '#F43F5E', '#0EA5E9'];
+      const CHART_LIGHT = ['#DBEAFE', '#D1FAE5', '#EDE9FE', '#FEF3C7', '#FECDD3', '#CFFAFE'];
+
+      // 检测 xychart：有 .background 类的 rect 且没有 .node
+      const bgRect = svg.querySelector('rect.background');
+      const hasNodes = svg.querySelector('.node');
+      if (bgRect && !hasNodes) {
+        // 柱状图 — 所有非背景/非轴线 rect
+        const allRects = svg.querySelectorAll('rect:not(.background)');
+        const barRects = [...allRects].filter(r => {
+          const fill = r.getAttribute('fill');
+          // 排除轴线区域的 rect（通常是透明或白色）
+          return fill && fill !== '#ffffff' && fill !== 'none' && !r.getAttribute('class');
+        });
+        barRects.forEach((r, i) => {
+          r.style.fill = CHART_COLORS[0];
+          r.style.opacity = (0.65 + 0.35 * (i / Math.max(barRects.length - 1, 1))).toFixed(2);
+          r.style.rx = '3';
+          r.style.ry = '3';
+        });
+
+        // 折线图 — 非轴线的 path（排除 stroke="#1E293B" 的轴线）
+        const allPaths = svg.querySelectorAll('path');
+        let lineIdx = 0;
+        allPaths.forEach(p => {
+          const stroke = p.getAttribute('stroke');
+          const fill = p.getAttribute('fill');
+          if (stroke && stroke !== '#1E293B' && stroke !== 'none' && fill === 'none') {
+            p.style.stroke = CHART_COLORS[lineIdx % CHART_COLORS.length];
+            p.style.strokeWidth = '2.5px';
+            lineIdx++;
+          }
+        });
+      }
     });
   }
 
