@@ -197,7 +197,7 @@ ${baseCSS}
   font-family: var(--font-mono);
 }
 
-.pdf-btn {
+.export-btn {
   position: fixed;
   top: 16px;
   right: 20px;
@@ -216,11 +216,11 @@ ${baseCSS}
   box-shadow: 0 1px 3px rgba(0,0,0,0.08);
   transition: all 0.15s ease;
 }
-.pdf-btn:hover { background: var(--c-border-light); border-color: var(--c-primary); color: var(--c-primary); }
-.pdf-btn svg { width: 16px; height: 16px; fill: currentColor; }
+.export-btn:hover { background: var(--c-border-light); border-color: var(--c-primary); color: var(--c-primary); }
+.export-btn svg { width: 16px; height: 16px; fill: currentColor; }
 
 @media print {
-  .pdf-btn, .file-path { display: none !important; }
+  .export-btn, .file-path { display: none !important; }
 }
 </style>
 </head>
@@ -231,9 +231,9 @@ ${baseCSS}
   <ul class="toc-list" id="toc"></ul>
 </nav>
 
-<button class="pdf-btn" onclick="window.print()" title="下载为 PDF">
-  <svg viewBox="0 0 16 16"><path d="M4.75 7.5a.75.75 0 000 1.5h6.5a.75.75 0 000-1.5h-6.5zM4.75 10.5a.75.75 0 000 1.5h4.5a.75.75 0 000-1.5h-4.5zM13.5 1h-11A1.5 1.5 0 001 2.5v11A1.5 1.5 0 002.5 15h11a1.5 1.5 0 001.5-1.5v-11A1.5 1.5 0 0013.5 1zm0 1.5v2h-11v-2h11zm-11 11V6h11v7.5h-11z"/></svg>
-  下载 PDF
+<button class="export-btn" onclick="exportHTML()" title="下载为 HTML">
+  <svg viewBox="0 0 16 16"><path d="M3.5 1.75a.25.25 0 01.25-.25h3.168a.75.75 0 01.536.222l5.25 5.168a.75.75 0 01.226.534v6.826a.25.25 0 01-.25.25h-8.93a.25.25 0 01-.25-.25V1.75zM3.75 0A1.75 1.75 0 002 1.75v12.5c0 .966.784 1.75 1.75 1.75h8.5A1.75 1.75 0 0014 14.25V7.422a1.75 1.75 0 00-.512-1.243l-5.25-5.168A1.75 1.75 0 006.918 0H3.75z"/></svg>
+  下载 HTML
 </button>
 
 <main class="content">
@@ -811,6 +811,47 @@ window.__mermaidResolve();
     const res = await fetch('/api/content?file=' + FILE_PATH);
     const md = await res.text();
     await renderMarkdown(md);
+  }
+
+  // 导出自包含 HTML（含渲染好的图表 + 目录 + 滚动高亮）
+  function exportHTML() {
+    // 克隆当前页面，移除不需要的元素
+    const clone = document.documentElement.cloneNode(true);
+    // 移除导出按钮、文件路径、SSE 脚本、Mermaid/marked CDN 脚本
+    clone.querySelectorAll('.export-btn, .file-path, script').forEach(el => el.remove());
+    // 注入目录滚动高亮脚本
+    const tocScript = clone.ownerDocument.createElement('script');
+    tocScript.textContent = '(' + function() {
+      var items = document.querySelectorAll('.toc-item');
+      var headings = document.querySelectorAll('#content h1,#content h2,#content h3,#content h4');
+      function update() {
+        var cur = '';
+        for (var h of headings) { if (h.getBoundingClientRect().top <= 80) cur = h.id; }
+        items.forEach(function(item) {
+          var a = item.querySelector('a');
+          item.classList.toggle('active', a && a.dataset.id === cur);
+        });
+      }
+      window.addEventListener('scroll', update, { passive: true });
+      update();
+      items.forEach(function(item) {
+        var a = item.querySelector('a');
+        if (a) a.addEventListener('click', function(e) {
+          e.preventDefault();
+          var t = document.getElementById(a.dataset.id);
+          if (t) t.scrollIntoView({ behavior: 'smooth' });
+        });
+      });
+    } + ')();';
+    clone.querySelector('body').appendChild(tocScript);
+
+    const html = '<!DOCTYPE html>\\n' + clone.outerHTML;
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = document.title + '.html';
+    a.click();
+    URL.revokeObjectURL(a.href);
   }
 
   loadAndRender();
