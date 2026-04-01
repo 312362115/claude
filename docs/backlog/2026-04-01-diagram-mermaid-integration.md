@@ -1,6 +1,6 @@
 ---
 priority: P1
-status: open
+status: done
 ---
 
 # 图表 DSL 联动 — Mermaid 输出 + MD 渲染
