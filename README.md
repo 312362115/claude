@@ -1,19 +1,9 @@
 # Claude Code Skills
 
-<p align="center">
-  <a href="https://github.com/312362115/claude/stargazers">
-    <img src="https://img.shields.io/github/stars/312362115/claude?style=social" alt="GitHub Stars">
-  </a>
-  <a href="https://github.com/312362115/claude/network/members">
-    <img src="https://img.shields.io/github/forks/312362115/claude?style=social" alt="GitHub Forks">
-  </a>
-  <a href="https://github.com/312362115/claude/issues">
-    <img src="https://img.shields.io/github/issues/312362115/claude" alt="GitHub Issues">
-  </a>
-  <a href="https://github.com/312362115/claude/blob/main/LICENSE">
-    <img src="https://img.shields.io/github/license/312362115/claude" alt="License">
-  </a>
-</p>
+[![GitHub Stars](https://img.shields.io/github/stars/312362115/claude?style=social)](https://github.com/312362115/claude/stargazers)&nbsp;&nbsp;
+[![GitHub Forks](https://img.shields.io/github/forks/312362115/claude?style=social)](https://github.com/312362115/claude/network/members)&nbsp;&nbsp;
+[![GitHub Issues](https://img.shields.io/github/issues/312362115/claude)](https://github.com/312362115/claude/issues)&nbsp;&nbsp;
+[![License](https://img.shields.io/github/license/312362115/claude)](https://github.com/312362115/claude/blob/main/LICENSE)
 
 > **做好比做完重要** — 以字节范（ByteStyle）核心价值观驱动的 AI 辅助开发体系
 
