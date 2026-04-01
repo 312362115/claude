@@ -65,6 +65,8 @@
     error:     { bg: '#FFF1F2', border: '#FDA4AF', text: '#9F1239' },
     external:  { bg: '#F8FAFC', border: '#CBD5E1', text: '#64748B' },
     datastore: { bg: '#F5F3FF', border: '#C4B5FD', text: '#5B21B6' },
+    trapezoid: { bg: '#ECFEFF', border: '#67E8F9', text: '#155E75' },
+    flag:      { bg: '#FFF7ED', border: '#FDBA74', text: '#9A3412' },
     line: { color: '#94A3B8', width: 1.5, label: '#64748B' },
     lineYes: { color: '#10B981', width: 2 },
     lineNo:  { color: '#F43F5E', width: 2 },
@@ -80,8 +82,42 @@
 
   function getStyle(type) {
     var map = { start: 'success', end: 'success', process: 'node', decision: 'decision',
-      highlight: 'highlight', error: 'error', success: 'success', external: 'external', datastore: 'datastore' };
+      highlight: 'highlight', error: 'error', success: 'success', external: 'external', datastore: 'datastore',
+      io: 'node', parallelogram: 'node', document: 'node', 'double-circle': 'success', trapezoid: 'trapezoid', flag: 'flag' };
     return theme[map[type] || 'node'];
+  }
+
+  // ========== 共享节点绘制函数（线性 + DAG 共用）==========
+  function drawNodeShape(group, x, y, w, h, cx, cy, type, style, label, fontSize, fontFamily) {
+    var t = type;
+    if (t === 'decision') {
+      var hw = w / 2, hh = h / 2;
+      group.appendChild(el('polygon', { points: cx + ',' + (cy - hh) + ' ' + (cx + hw) + ',' + cy + ' ' + cx + ',' + (cy + hh) + ' ' + (cx - hw) + ',' + cy, fill: style.bg, stroke: style.border, 'stroke-width': 1.5 }));
+      group.appendChild(el('text', { x: cx, y: cy + 1, 'text-anchor': 'middle', 'dominant-baseline': 'central', 'font-size': fontSize - 1, 'font-weight': 500, fill: style.text, 'font-family': fontFamily })).textContent = label;
+    } else if (t === 'io' || t === 'parallelogram') {
+      var sk = 12;
+      group.appendChild(el('polygon', { points: (x+sk)+','+y+' '+(x+w)+','+y+' '+(x+w-sk)+','+(y+h)+' '+x+','+(y+h), fill: style.bg, stroke: style.border, 'stroke-width': 1.5 }));
+    } else if (t === 'document') {
+      var bh = h - 8;
+      group.appendChild(el('path', { d: 'M'+x+','+y+' L'+(x+w)+','+y+' L'+(x+w)+','+(y+bh)+' Q'+(x+w*0.75)+','+(y+bh+12)+' '+(x+w*0.5)+','+(y+bh)+' Q'+(x+w*0.25)+','+(y+bh-12)+' '+x+','+(y+bh)+' Z', fill: style.bg, stroke: style.border, 'stroke-width': 1.5 }));
+    } else if (t === 'double-circle') {
+      var r = Math.min(w, h) / 2;
+      group.appendChild(el('circle', { cx: cx, cy: cy, r: r, fill: style.bg, stroke: style.border, 'stroke-width': 1.5 }));
+      group.appendChild(el('circle', { cx: cx, cy: cy, r: r - 4, fill: 'none', stroke: style.border, 'stroke-width': 1.5 }));
+    } else if (t === 'trapezoid') {
+      var ins = 16;
+      group.appendChild(el('polygon', { points: (x+ins)+','+y+' '+(x+w-ins)+','+y+' '+(x+w)+','+(y+h)+' '+x+','+(y+h), fill: style.bg, stroke: style.border, 'stroke-width': 1.5 }));
+    } else if (t === 'flag') {
+      var nt = 10;
+      group.appendChild(el('polygon', { points: x+','+y+' '+(x+w)+','+y+' '+(x+w-nt)+','+(cy)+' '+(x+w)+','+(y+h)+' '+x+','+(y+h), fill: style.bg, stroke: style.border, 'stroke-width': 1.5 }));
+    } else {
+      var rx = (t === 'start' || t === 'end') ? h / 2 : 6;
+      group.appendChild(el('rect', { x: x, y: y, width: w, height: h, rx: rx, fill: style.bg, stroke: style.border, 'stroke-width': 1.5 }));
+    }
+    if (t !== 'decision') {
+      var fw = t === 'highlight' ? 700 : 500;
+      group.appendChild(el('text', { x: cx, y: cy + 1, 'text-anchor': 'middle', 'dominant-baseline': 'central', 'font-size': fontSize, 'font-weight': fw, fill: style.text, 'font-family': fontFamily })).textContent = label;
+    }
   }
 
   // ========== DAG 模式（ELKjs 自动布局）==========
@@ -228,17 +264,7 @@
         var pos = dagPosMap[n.id];
         if (!pos) return;
         var style = getStyle(n.type);
-        var rx = (n.type === 'start' || n.type === 'end') ? pos.h / 2 : 6;
-        nodeGroup.appendChild(el('rect', {
-          x: pos.x, y: pos.y, width: pos.w, height: pos.h, rx: rx,
-          fill: style.bg, stroke: style.border, 'stroke-width': 1.5
-        }));
-        var fw = n.type === 'highlight' ? 700 : 500;
-        nodeGroup.appendChild(el('text', {
-          x: pos.x + pos.w / 2, y: pos.y + pos.h / 2 + 1,
-          'text-anchor': 'middle', 'dominant-baseline': 'central',
-          'font-size': FONT_SIZE_DAG, 'font-weight': fw, fill: style.text, 'font-family': SANS_DAG
-        })).textContent = n.label;
+        drawNodeShape(nodeGroup, pos.x, pos.y, pos.w, pos.h, pos.x + pos.w / 2, pos.y + pos.h / 2, n.type, style, n.label, FONT_SIZE_DAG, SANS_DAG);
       });
     });
     return;  // DAG 模式完成，跳过线性模式
@@ -537,17 +563,7 @@
   function drawNode(n) {
     var x = n.cx - n.w / 2 + offsetX, y = n.y;
     var style = getStyle(n.type);
-    if (n.type === 'decision') {
-      var cx = n.cx + offsetX, ncy = n.cy;
-      var hw = n.w / 2, hh = n.h / 2;
-      nodeGroup.appendChild(el('polygon', { points: cx + ',' + (ncy - hh) + ' ' + (cx + hw) + ',' + ncy + ' ' + cx + ',' + (ncy + hh) + ' ' + (cx - hw) + ',' + ncy, fill: style.bg, stroke: style.border, 'stroke-width': 1.5 }));
-      nodeGroup.appendChild(el('text', { x: cx, y: ncy + 1, 'text-anchor': 'middle', 'dominant-baseline': 'central', 'font-size': 12, 'font-weight': 500, fill: style.text, 'font-family': SANS })).textContent = n.label;
-    } else {
-      var rx = (n.type === 'start' || n.type === 'end') ? n.h / 2 : 6;
-      nodeGroup.appendChild(el('rect', { x: x, y: y, width: n.w, height: n.h, rx: rx, fill: style.bg, stroke: style.border, 'stroke-width': 1.5 }));
-      var fw = n.type === 'highlight' ? 700 : 500;
-      nodeGroup.appendChild(el('text', { x: n.cx + offsetX, y: y + n.h / 2 + 1, 'text-anchor': 'middle', 'dominant-baseline': 'central', 'font-size': FONT_SIZE, 'font-weight': fw, fill: style.text, 'font-family': SANS })).textContent = n.label;
-    }
+    drawNodeShape(nodeGroup, x, y, n.w, n.h, n.cx + offsetX, n.cy, n.type, style, n.label, FONT_SIZE, SANS);
   }
 
   steps.forEach(function(s) { drawNode(nodeMap[s.id]); });

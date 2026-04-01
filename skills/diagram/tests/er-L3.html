@@ -170,8 +170,8 @@
       'elk.algorithm': 'layered',
       'elk.direction': 'DOWN',
       'elk.spacing.nodeNode': '80',
-      'elk.layered.spacing.nodeNodeBetweenLayers': '60',
-      'elk.spacing.edgeNode': '20',
+      'elk.layered.spacing.nodeNodeBetweenLayers': '80',
+      'elk.spacing.edgeNode': '30',
       'elk.spacing.edgeEdge': '15',
       'elk.layered.crossingMinimization.strategy': 'LAYER_SWEEP'
     },
@@ -239,6 +239,32 @@
     stEl.textContent = subtitle; nodeGroup.appendChild(stEl);
   }
 
+  // ========== Crow's foot 绘制函数 ==========
+  // symbol: '||'(恰好一) '|o'(零或一) '|{'(一或多) 'o{'(零或多)
+  // x,y = 连线端点, angle = 从实体向外的方向角(弧度)
+  function drawCrowsFoot(group, x, y, angle, symbol, color, lineW) {
+    var cos = Math.cos(angle), sin = Math.sin(angle);
+    function rp(dx, dy) { return { x: x + dx * cos - dy * sin, y: y + dx * sin + dy * cos }; }
+    function addLine(p1, p2) {
+      group.appendChild(el('line', { x1: p1.x, y1: p1.y, x2: p2.x, y2: p2.y, stroke: color, 'stroke-width': lineW }));
+    }
+    function drawBar(dist) { addLine(rp(dist, -6), rp(dist, 6)); }
+    function drawCircle(dist) {
+      var c = rp(dist, 0);
+      group.appendChild(el('circle', { cx: c.x, cy: c.y, r: 4, fill: '#FFFFFF', stroke: color, 'stroke-width': lineW }));
+    }
+    function drawFork(baseDist) {
+      var tip = rp(baseDist + 10, 0);
+      addLine(tip, rp(baseDist, 0));
+      addLine(tip, rp(baseDist, -7));
+      addLine(tip, rp(baseDist, 7));
+    }
+    if (symbol === '||') { drawBar(6); drawBar(12); }
+    else if (symbol === '|o') { drawBar(6); drawCircle(16); }
+    else if (symbol === '|{') { drawBar(6); drawFork(6); }
+    else if (symbol === 'o{') { drawCircle(6); drawFork(14); }
+  }
+
   // ========== 绘制关系连线（使用 ELK 计算的边路由） ==========
   (result.edges || []).forEach(function(edge, ei) {
     var rel = relations[ei];
@@ -246,6 +272,8 @@
 
     var sec = edge.sections && edge.sections[0];
     if (!sec) return;
+
+    var hasCrows = rel.fromCard || rel.toCard;
 
     // 构建圆弧折线路径
     var RR = 8;
@@ -267,40 +295,63 @@
       } else { d += ' L' + pts[pi].x + ',' + pts[pi].y; }
     }
 
-    lineGroup.appendChild(el('path', {
-      d: d, stroke: theme.line.color, 'stroke-width': theme.line.width,
-      fill: 'none', 'marker-end': 'url(#arrow)'
-    }));
+    var edgeAttrs = { d: d, stroke: theme.line.color, 'stroke-width': theme.line.width, fill: 'none' };
+    if (!hasCrows) edgeAttrs['marker-end'] = 'url(#arrow)';
+    if (rel.identifying === false) edgeAttrs['stroke-dasharray'] = '5,3';
+    lineGroup.appendChild(el('path', edgeAttrs));
 
-    // 计算边路径中点位置，用于放置标签
-    var allPts = [sec.startPoint];
-    if (sec.bendPoints) {
-      sec.bendPoints.forEach(function(bp) { allPts.push(bp); });
-    }
-    allPts.push(sec.endPoint);
+    // Crow's foot 符号绘制
+    if (hasCrows) {
+      // 根据端点在实体框哪条边来确定符号方向（上/下/左/右）
+      function edgeAngle(px, py, node) {
+        var dTop = Math.abs(py - node.y);
+        var dBot = Math.abs(py - (node.y + node.h));
+        var dLeft = Math.abs(px - node.x);
+        var dRight = Math.abs(px - (node.x + node.w));
+        var minD = Math.min(dTop, dBot, dLeft, dRight);
+        if (minD === dBot) return Math.PI / 2;    // 下边出：向下
+        if (minD === dTop) return -Math.PI / 2;   // 上边出：向上
+        if (minD === dRight) return 0;             // 右边出：向右
+        return Math.PI;                            // 左边出：向左
+      }
+      var sp = { x: sec.startPoint.x, y: sec.startPoint.y + TITLE_H };
+      var ep = { x: sec.endPoint.x, y: sec.endPoint.y + TITLE_H };
+      var fromNode = tableMap[rel.from], toNode = tableMap[rel.to];
 
-    var midIdx = Math.floor(allPts.length / 2);
-    var labelX, labelY;
-    if (allPts.length % 2 === 1) {
-      labelX = allPts[midIdx].x;
-      labelY = allPts[midIdx].y + TITLE_H;
+      if (rel.fromCard && fromNode) {
+        drawCrowsFoot(lineGroup, sp.x, sp.y, edgeAngle(sp.x, sp.y, fromNode), rel.fromCard, theme.line.color, theme.line.width);
+      }
+      if (rel.toCard && toNode) {
+        drawCrowsFoot(lineGroup, ep.x, ep.y, edgeAngle(ep.x, ep.y, toNode), rel.toCard, theme.line.color, theme.line.width);
+      }
     } else {
-      labelX = (allPts[midIdx - 1].x + allPts[midIdx].x) / 2;
-      labelY = (allPts[midIdx - 1].y + allPts[midIdx].y) / 2 + TITLE_H;
-    }
+      // 文本标签模式（向后兼容）
+      var allPts = [sec.startPoint];
+      if (sec.bendPoints) sec.bendPoints.forEach(function(bp) { allPts.push(bp); });
+      allPts.push(sec.endPoint);
 
-    // 绘制关系标签（白底 + 文字，放在 labelLayer 上层）
-    var lw = measureText(rel.label, 10) + 10;
-    labelLayer.appendChild(el('rect', {
-      x: labelX - lw / 2, y: labelY - 8, width: lw, height: 14,
-      rx: 3, fill: '#ffffff'
-    }));
-    var lt = el('text', {
-      x: labelX, y: labelY, 'text-anchor': 'middle',
-      'font-size': 10, fill: theme.line.label,
-      'font-family': "-apple-system,system-ui,'PingFang SC',sans-serif"
-    });
-    lt.textContent = rel.label; labelLayer.appendChild(lt);
+      var midIdx = Math.floor(allPts.length / 2);
+      var labelX, labelY;
+      if (allPts.length % 2 === 1) {
+        labelX = allPts[midIdx].x;
+        labelY = allPts[midIdx].y + TITLE_H;
+      } else {
+        labelX = (allPts[midIdx - 1].x + allPts[midIdx].x) / 2;
+        labelY = (allPts[midIdx - 1].y + allPts[midIdx].y) / 2 + TITLE_H;
+      }
+
+      var lw = measureText(rel.label, 10) + 10;
+      labelLayer.appendChild(el('rect', {
+        x: labelX - lw / 2, y: labelY - 8, width: lw, height: 14,
+        rx: 3, fill: '#ffffff'
+      }));
+      var lt = el('text', {
+        x: labelX, y: labelY, 'text-anchor': 'middle',
+        'font-size': 10, fill: theme.line.label,
+        'font-family': "-apple-system,system-ui,'PingFang SC',sans-serif"
+      });
+      lt.textContent = rel.label; labelLayer.appendChild(lt);
+    }
   });
 
   // ========== 绘制表 ==========
