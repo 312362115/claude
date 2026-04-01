@@ -82,6 +82,7 @@ description: >
 | 矩阵数据 | 热力图 | 网格 | `references/diagrams/heatmap.md` |
 | 流量路径 | 桑基图 | 流带分层 | `references/diagrams/sankey.md` |
 | 分布关系 | 散点图 | 笛卡尔坐标 | `references/diagrams/scatter.md` |
+| 数据占比/层级面积 | 矩形树图 | Squarified | `references/diagrams/treemap.md` |
 
 ---
 

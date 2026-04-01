@@ -141,10 +141,77 @@
     // 统一宽度
     nodes.forEach(function(n) { n._w = dagNodeMaxW; });
 
-    // 构建 ELK graph
-    var elkNodes = nodes.map(function(n) {
-      return { id: n.id, width: n._w, height: n._h };
-    });
+    // ── DAG 子图嵌套支持（groups 定义层级，最多 3 层）──
+    var dagGroups = (typeof groups !== 'undefined' && groups) ? groups : null;
+    var GROUP_PAD_TOP_DAG = 40;
+    var GROUP_PAD_SIDE_DAG = 16;
+    var GROUP_PAD_BOTTOM_DAG = 16;
+    var dagLayerColors = [
+      { bg: '#EFF6FF', border: '#BFDBFE', label: '#1E40AF' },
+      { bg: '#ECFDF5', border: '#A7F3D0', label: '#065F46' },
+      { bg: '#FFFBEB', border: '#FDE68A', label: '#92400E' }
+    ];
+
+    // 建立 group id → group 映射 + 收集所有 group ids（含嵌套）
+    var dagGroupMap = {};
+    var dagGroupOrder = []; // 渲染顺序（先外后内）
+    function indexGroups(gList, depth) {
+      (gList || []).forEach(function(g) {
+        dagGroupMap[g.id] = { label: g.label, depth: depth, childGroupIds: [] };
+        dagGroupOrder.push(g.id);
+        if (g.children) {
+          g.children.forEach(function(c) { dagGroupMap[g.id].childGroupIds.push(c.id); });
+          indexGroups(g.children, depth + 1);
+        }
+      });
+    }
+    if (dagGroups) indexGroups(dagGroups, 0);
+
+    // 构建 ELK compound graph
+    function buildDagElkChildren(gList) {
+      var elkChildren = [];
+      (gList || []).forEach(function(g) {
+        var elkGroup = {
+          id: g.id,
+          layoutOptions: {
+            'elk.algorithm': 'layered',
+            'elk.direction': 'DOWN',
+            'elk.spacing.nodeNode': '60',
+            'elk.layered.spacing.nodeNodeBetweenLayers': '60',
+            'elk.spacing.edgeNode': '30',
+            'elk.edgeRouting': 'ORTHOGONAL',
+            'elk.padding': '[top=' + GROUP_PAD_TOP_DAG + ',left=' + GROUP_PAD_SIDE_DAG + ',bottom=' + GROUP_PAD_BOTTOM_DAG + ',right=' + GROUP_PAD_SIDE_DAG + ']'
+          },
+          children: []
+        };
+        // 添加属于此 group 的节点
+        nodes.forEach(function(n) {
+          if (n.group === g.id) {
+            elkGroup.children.push({ id: n.id, width: n._w, height: n._h });
+          }
+        });
+        // 递归添加子 group
+        if (g.children) {
+          buildDagElkChildren(g.children).forEach(function(c) { elkGroup.children.push(c); });
+        }
+        elkChildren.push(elkGroup);
+      });
+      return elkChildren;
+    }
+
+    var elkChildren;
+    if (dagGroups) {
+      elkChildren = buildDagElkChildren(dagGroups);
+      // 不属于任何 group 的节点放顶层
+      nodes.forEach(function(n) {
+        if (!n.group) elkChildren.push({ id: n.id, width: n._w, height: n._h });
+      });
+    } else {
+      elkChildren = nodes.map(function(n) {
+        return { id: n.id, width: n._w, height: n._h };
+      });
+    }
+
     var elkEdges = edges.map(function(e, i) {
       return { id: 'e' + i, sources: [e.from], targets: [e.to] };
     });
@@ -163,7 +230,7 @@
         'elk.edgeRouting': 'ORTHOGONAL',
         'elk.layered.crossingMinimization.strategy': 'LAYER_SWEEP'
       },
-      children: elkNodes,
+      children: elkChildren,
       edges: elkEdges
     };
 
@@ -187,9 +254,31 @@
         defs.appendChild(marker);
       }
       addArrowDAG('arrow', theme.line.color);
+      // 反向箭头（双向连线用）
+      function addArrowRevDAG(id, color) {
+        var marker = el('marker', { id: id, markerWidth: 8, markerHeight: 6, refX: 0, refY: 3, orient: 'auto-start-reverse' });
+        marker.appendChild(el('path', { d: 'M7,0.5 L0,3 L7,5.5', fill: 'none', stroke: color, 'stroke-width': 1.2, 'stroke-linecap': 'round' }));
+        defs.appendChild(marker);
+      }
+      addArrowRevDAG('arrow-rev', theme.line.color);
+      // 圆头
+      function addCircleMarkerDAG(id, color) {
+        var marker = el('marker', { id: id, markerWidth: 8, markerHeight: 8, refX: 4, refY: 4, orient: 'auto' });
+        marker.appendChild(el('circle', { cx: 4, cy: 4, r: 3, fill: color }));
+        defs.appendChild(marker);
+      }
+      addCircleMarkerDAG('circle-end', theme.line.color);
+      // 叉头
+      function addCrossMarkerDAG(id, color) {
+        var marker = el('marker', { id: id, markerWidth: 10, markerHeight: 10, refX: 5, refY: 5, orient: 'auto' });
+        marker.appendChild(el('path', { d: 'M2,2 L8,8 M8,2 L2,8', fill: 'none', stroke: color, 'stroke-width': 1.5, 'stroke-linecap': 'round' }));
+        defs.appendChild(marker);
+      }
+      addCrossMarkerDAG('cross-end', theme.line.color);
       svg.appendChild(defs);
 
       // 渲染层
+      var bgGroupLayer = el('g'); svg.appendChild(bgGroupLayer);
       var lineGroup = el('g');
       svg.appendChild(lineGroup);
       var nodeGroup = el('g');
@@ -199,11 +288,34 @@
       nodeGroup.appendChild(el('text', { x: pad, y: 18 + pad / 2, 'font-size': 16, 'font-weight': 700, fill: theme.title.color, 'font-family': SANS_DAG })).textContent = title;
       nodeGroup.appendChild(el('text', { x: pad, y: 36 + pad / 2, 'font-size': 12, fill: theme.subtitle.color, 'font-family': SANS_DAG })).textContent = subtitle;
 
-      // 节点位置映射
+      // 递归读取节点位置（支持 compound nodes）
       var dagPosMap = {};
-      layout.children.forEach(function(ln) {
-        dagPosMap[ln.id] = { x: ln.x + offsetX, y: ln.y + offsetY, w: ln.width, h: ln.height };
-      });
+      function readDagLayout(elkChildren, ox, oy) {
+        elkChildren.forEach(function(ln) {
+          var ax = ln.x + ox, ay = ln.y + oy;
+          dagPosMap[ln.id] = { x: ax, y: ay, w: ln.width, h: ln.height };
+          if (ln.children) readDagLayout(ln.children, ax, ay);
+        });
+      }
+      readDagLayout(layout.children, offsetX, offsetY);
+
+      // 绘制 group 背景（按声明顺序，先外后内）
+      if (dagGroups) {
+        dagGroupOrder.forEach(function(gid) {
+          var pos = dagPosMap[gid];
+          var gInfo = dagGroupMap[gid];
+          if (!pos || !gInfo) return;
+          var lc = dagLayerColors[gInfo.depth % dagLayerColors.length];
+          bgGroupLayer.appendChild(el('rect', {
+            x: pos.x, y: pos.y, width: pos.w, height: pos.h,
+            rx: 8, fill: lc.bg, stroke: lc.border, 'stroke-width': 1.5
+          }));
+          bgGroupLayer.appendChild(el('text', {
+            x: pos.x + 12, y: pos.y + 22,
+            'font-size': 13, 'font-weight': 700, fill: lc.label, 'font-family': SANS_DAG
+          })).textContent = gInfo.label;
+        });
+      }
 
       // 绘制连线（10px 圆角 Q 贝塞尔转折，符合设计规范）
       var RR = 10;
@@ -232,10 +344,24 @@
             } else { d += ' L' + cur.x + ',' + cur.y; }
           } else { d += ' L' + pts[pi].x + ',' + pts[pi].y; }
         }
-        lineGroup.appendChild(el('path', {
-          d: d, fill: 'none', stroke: theme.line.color,
-          'stroke-width': theme.line.width, 'marker-end': 'url(#arrow)'
-        }));
+        // 根据 edgeType 选择 marker 和线宽
+        var et = edges[i].edgeType || 'arrow';
+        var edgeAttrs = { d: d, fill: 'none', stroke: theme.line.color, 'stroke-width': theme.line.width };
+        if (et === 'bidirectional') {
+          edgeAttrs['marker-end'] = 'url(#arrow)';
+          edgeAttrs['marker-start'] = 'url(#arrow-rev)';
+        } else if (et === 'circle') {
+          edgeAttrs['marker-end'] = 'url(#circle-end)';
+        } else if (et === 'cross') {
+          edgeAttrs['marker-end'] = 'url(#cross-end)';
+        } else if (et === 'thick') {
+          edgeAttrs['stroke-width'] = 3;
+          edgeAttrs['marker-end'] = 'url(#arrow)';
+        } else {
+          edgeAttrs['marker-end'] = 'url(#arrow)';
+        }
+        if (edges[i].dashed) edgeAttrs['stroke-dasharray'] = '6,3';
+        lineGroup.appendChild(el('path', edgeAttrs));
 
         // 边标签（放在路径中点）
         if (edges[i].label) {
@@ -488,6 +614,27 @@
   addArrow('arrow', theme.line.color);
   addArrow('arrow-g', theme.lineYes.color);
   addArrow('arrow-r', theme.lineNo.color);
+  // 反向箭头（双向连线用）
+  function addArrowRev(id, color) {
+    var marker = el('marker', { id: id, markerWidth: 8, markerHeight: 6, refX: 0, refY: 3, orient: 'auto-start-reverse' });
+    marker.appendChild(el('path', { d: 'M7,0.5 L0,3 L7,5.5', fill: 'none', stroke: color, 'stroke-width': 1.2, 'stroke-linecap': 'round' }));
+    defs.appendChild(marker);
+  }
+  addArrowRev('arrow-rev', theme.line.color);
+  // 圆头
+  function addCircleMarker(id, color) {
+    var marker = el('marker', { id: id, markerWidth: 8, markerHeight: 8, refX: 4, refY: 4, orient: 'auto' });
+    marker.appendChild(el('circle', { cx: 4, cy: 4, r: 3, fill: color }));
+    defs.appendChild(marker);
+  }
+  addCircleMarker('circle-end', theme.line.color);
+  // 叉头
+  function addCrossMarker(id, color) {
+    var marker = el('marker', { id: id, markerWidth: 10, markerHeight: 10, refX: 5, refY: 5, orient: 'auto' });
+    marker.appendChild(el('path', { d: 'M2,2 L8,8 M8,2 L2,8', fill: 'none', stroke: color, 'stroke-width': 1.5, 'stroke-linecap': 'round' }));
+    defs.appendChild(marker);
+  }
+  addCrossMarker('cross-end', theme.line.color);
   svg.appendChild(defs);
 
   // ========== 渲染层 ==========

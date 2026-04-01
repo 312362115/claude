@@ -222,6 +222,55 @@ var sideNodes = [];
 - 使用 ELKjs 自动布局，流向默认从上到下（`elk.direction: 'DOWN'`）
 - 引入 `lib/elk.bundled.js`
 
+### 连线类型扩展（DAG 模式）
+
+边可通过 `edgeType` 字段指定连线样式，通过 `dashed: true` 指定虚线：
+
+| edgeType | 视觉效果 | 用途 |
+|----------|---------|------|
+| `'arrow'`（默认） | 标准箭头 → | 普通流向 |
+| `'bidirectional'` | 双向箭头 ←→ | 双向数据流 |
+| `'circle'` | 圆头 ─● | 关联关系 |
+| `'cross'` | 叉头 ─✕ | 拒绝/终止 |
+| `'thick'` | 粗线 ═→ | 强调/主路径 |
+
+```javascript
+var edges = [
+  { from: 'a', to: 'b', edgeType: 'bidirectional', label: '同步' },
+  { from: 'b', to: 'c', edgeType: 'circle' },
+  { from: 'c', to: 'd', edgeType: 'cross', label: '拒绝' },
+  { from: 'd', to: 'e', edgeType: 'thick' },
+  { from: 'e', to: 'f', dashed: true, label: '回退' },
+];
+```
+
+### 子图嵌套（DAG 模式，最多 3 层）
+
+DAG 模式支持 `groups` 定义层级分组，节点通过 `group` 字段归属：
+
+```javascript
+var dagMode = true;
+var groups = [
+  { id: 'frontend', label: '前端服务', children: [
+    { id: 'react', label: 'React 模块' }
+  ]},
+  { id: 'backend', label: '后端服务' }
+];
+var nodes = [
+  { id: 'a', label: 'Step A', type: 'process', group: 'frontend' },
+  { id: 'b', label: 'Step B', type: 'process', group: 'react' },
+  { id: 'c', label: 'Step C', type: 'process', group: 'backend' },
+  { id: 'd', label: 'Step D', type: 'process' },  // 不属于任何 group
+];
+```
+
+**子图规则**：
+- 最多 3 层嵌套（系统 → 模块 → 子模块）
+- 层级色按深度：L-1（蓝）→ L-2（绿）→ L-3（黄）
+- ELKjs compound nodes 自动布局
+- 跨 group 的连线由 ELK 自动路由
+- 不属于任何 group 的节点放顶层
+
 ### 布局算法（线性模式）
 
 - **主路径**：所有非决策矩形节点统一宽度（取最大值），自顶向下排列

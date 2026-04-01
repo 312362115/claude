@@ -776,6 +776,39 @@ def adapt_funnel(config):
     )
 
 
+def adapt_treemap(config):
+    """矩形树图（Treemap）
+    JSON: { title, subtitle?, data: { name, children: [{name, value, children?}] } }
+    """
+    d = config['data']
+    root_json = json.dumps(d.get('root', d), ensure_ascii=False)
+
+    template_path = TEMPLATES_DIR / 'treemap.html'
+    template = template_path.read_text(encoding='utf-8')
+
+    # 提取 JS 渲染引擎（配色到图例之间的代码）
+    import re as _re
+    js_match = _re.search(r'// ========== 配色 ==========(.*?)// ========== 图例 ==========', template, _re.DOTALL)
+    engine_js = js_match.group(0) if js_match else ''
+
+    # 提取图例代码
+    legend_match = _re.search(r'// ========== 图例 ==========(.*?)\}\)\(\);', template, _re.DOTALL)
+    legend_js = '// ========== 图例 ==========' + legend_match.group(1) if legend_match else ''
+
+    return make_html(
+        config.get('title', 'Treemap'),
+        config.get('subtitle', ''),
+        'canvas', 'auto-size', [],
+        f'''(function() {{
+  var svg = document.getElementById('canvas');
+  var SANS = "-apple-system, system-ui, 'PingFang SC', sans-serif";
+  var data = {root_json};
+  {_safe_inline(engine_js)}
+  {_safe_inline(legend_js)}
+}})();'''
+    )
+
+
 # ─── 适配器注册 ───
 
 ADAPTERS = {
@@ -787,6 +820,7 @@ ADAPTERS = {
     'heatmap': adapt_heatmap,
     'scatter': adapt_scatter,
     'waterfall': adapt_waterfall,
+    'treemap': adapt_treemap,
 }
 
 

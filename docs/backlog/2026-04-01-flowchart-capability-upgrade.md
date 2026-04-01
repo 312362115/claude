@@ -1,8 +1,8 @@
 ---
 priority: P2
 status: open
-spec:
-plan:
+spec: docs/specs/2026-04-01-diagram-batch2-design.md
+plan: docs/specs/2026-04-01-diagram-batch2-design.md
 ---
 
 # Diagram Skill 能力补齐 — 对标 Mermaid
@@ -98,12 +98,12 @@ plan:
 | **Treemap（矩形树图）** | 层级矩形、数值格式化、样式自定义 | 数据占比可视化，调研报告/数据分析刚需，比饼图信息密度高 |
 | **柱线混合图** | XY Chart 支持 bar + line 叠加 | 当前柱状图/折线图分开，不支持混合 |
 
-### P3 — 场景较窄
+### 第三批
 
 | 图表类型 | 说明 |
 |---------|------|
-| **Kanban** | 项目管理可视化，使用频率不高 |
-| **Git Graph** | Git 工作流教学/文档，场景较窄 |
+| **Kanban** | 项目管理可视化 |
+| **Git Graph** | Git 工作流教学/文档 |
 
 ---
 
@@ -135,6 +135,8 @@ plan:
 - 状态图并发/fork-join
 - 柱线混合图
 - 图标节点、富文本
+- Kanban
+- Git Graph
 
 ## 来源
 
