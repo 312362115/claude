@@ -90,6 +90,11 @@
 | Error | 圆角矩形 6px | Rose 浅底 `#FFF1F2` | 1.5px `#FDA4AF` | `#9F1239` | 错误 |
 | Success | 圆角矩形 6px | 成功浅底 `#ECFDF5` | 1.5px `#6EE7B7` | `#065F46` | 成功 |
 | Note | 矩形 左边框 | `#F8FAFC` | 左 3px `#3B82F6` | `#64748B` | 注释 |
+| I/O（Parallelogram） | 平行四边形 sk=12 | C-1 浅底 `#EFF6FF` | 1.5px `#93C5FD` | `#1E293B` | 输入/输出操作 |
+| Document | 波浪底矩形 | C-1 浅底 `#EFF6FF` | 1.5px `#93C5FD` | `#1E293B` | 文档/报告 |
+| Double Circle | 双圆同心 gap=4px | 成功浅底 `#ECFDF5` | 1.5px `#6EE7B7` | `#065F46` | 终态/子流程 |
+| Trapezoid | 梯形 ins=16 | Cyan `#ECFEFF` | 1.5px `#67E8F9` | `#155E75` | 手动操作 |
+| Flag | 旗帜（凹口五边形） | Orange `#FFF7ED` | 1.5px `#FDBA74` | `#9A3412` | 事件/信号 |
 
 节点内间距：上下 `10px`，左右 `16px`。最小宽度 `120px`。
 
@@ -108,6 +113,13 @@
 | 失败路径 | 2px | `#F43F5E` | 实线 | 实心三角 |
 | 高亮路径 | 2px | `#3B82F6` | 实线 | 实心三角 |
 | 返回/回退 | 1px | `#CBD5E1` | dasharray 4 2 | 开放箭头 |
+| 组合（类图） | 1.5px | `#94A3B8` | 实线 | 起点实心菱形 |
+| 聚合（类图） | 1.5px | `#94A3B8` | 实线 | 起点空心菱形 |
+| 继承（类图） | 1.5px | `#94A3B8` | 实线 | 终点空心三角 |
+| 实现（类图） | 1.5px | `#94A3B8` | dasharray 5 3 | 终点空心三角 |
+| 依赖（类图） | 1px | `#CBD5E1` | dasharray 5 3 | 开放箭头 |
+| ER Identifying | 1.5px | `#94A3B8` | 实线 | crow's foot 符号 |
+| ER Non-identifying | 1.5px | `#94A3B8` | dasharray 5 3 | crow's foot 符号 |
 
 连线规则：
 - 锚点在节点边缘**中点**（上/下/左/右边的正中间），不连到角

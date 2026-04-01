@@ -1,6 +1,6 @@
 # ER 图规范（Entity Relationship Diagram）
 
-> 工具：D2（`shape: sql_table`） · 仅快速模式（D2 效果已足够专业）
+> 工具：HTML/SVG + ELKjs 布局引擎
 
 ---
 
@@ -14,12 +14,12 @@
 
 ## 组件使用
 
-| 元素 | D2 实现 |
-|------|--------|
-| 实体表 | `shape: sql_table` |
-| PK | `{constraint: primary_key}` |
-| FK | `{constraint: foreign_key}` |
-| 关系连线 | `table1 -> table2`，标注基数 |
+| 元素 | 实现 |
+|------|------|
+| 实体表 | 圆角矩形，表头+字段列表 |
+| PK | 字段标注 `pk: true` |
+| FK | 字段标注 `fk: true`，紫色高亮 |
+| 关系连线 | ELKjs 自动布局，支持 crow's foot 符号或文本标注 |
 
 ---
 
@@ -51,58 +51,73 @@
 
 ---
 
+## Crow's Foot 符号
+
+支持两种关系标注模式：
+
+### 模式一：Crow's foot 图形符号（推荐）
+
+使用 `fromCard` / `toCard` 字段，支持四种符号：
+
+| 符号 | 含义 | 说明 |
+|------|------|------|
+| `\|\|` | 恰好一个（Exactly One） | 两条垂直短线 |
+| `\|o` | 零或一（Zero or One） | 垂直线 + 空心圆 |
+| `\|{` | 一或多（One or More） | 垂直线 + 三叉 |
+| `o{` | 零或多（Zero or More） | 空心圆 + 三叉 |
+
+```javascript
+{ from: 'users', to: 'orders', fromCard: '||', toCard: '|{', identifying: true }
+```
+
+### 模式二：文本标注（向后兼容）
+
+使用 `label` 字段，文本放在连线中点白底矩形内：
+
+```javascript
+{ from: 'users', to: 'orders', label: '1 : N' }
+```
+
+## Identifying / Non-identifying
+
+- `identifying: true`（默认）：实线，表示强依赖（子表的主键包含父表的外键）
+- `identifying: false`：虚线，表示弱依赖（子表可独立存在）
+
+---
+
 ## 布局规则
 
 1. 核心实体居中
 2. 关联实体围绕核心展开
 3. 只展示 PK/FK + 核心业务字段（不列全部字段）
-4. 连线标注基数（1:1 / 1:N / M:N）
+4. 连线标注基数（crow's foot 或文本）
 5. 单图不超过 8 张表
 
 ---
 
-## 样式模板
+## 数据结构示例
 
-```d2
-users: 用户表 {
-  shape: sql_table
-  style: {
-    fill: "#3B82F6"
-    stroke: "#3B82F6"
-    font-color: "#FFFFFF"
-    font-size: 13
-  }
-  id: INT {constraint: primary_key}
-  username: VARCHAR(50)
-  email: VARCHAR(100)
-}
+```javascript
+var tables = [
+  { id: 'users', label: '用户表', type: 'core', fields: [
+    { name: 'id', dtype: 'INT', pk: true },
+    { name: 'username', dtype: 'VARCHAR(50)' },
+    { name: 'email', dtype: 'VARCHAR(100)' }
+  ]},
+  { id: 'orders', label: '订单表', type: 'normal', fields: [
+    { name: 'id', dtype: 'INT', pk: true },
+    { name: 'user_id', dtype: 'INT', fk: true },
+    { name: 'total', dtype: 'DECIMAL' }
+  ]}
+];
 
-orders: 订单表 {
-  shape: sql_table
-  style: {
-    fill: "#EFF6FF"
-    stroke: "#93C5FD"
-    font-color: "#1E293B"
-    font-size: 13
-  }
-  id: INT {constraint: primary_key}
-  user_id: INT {constraint: foreign_key}
-  total: DECIMAL
-}
-
-users -> orders: 1:N
+var relations = [
+  { from: 'users', to: 'orders', fromCard: '||', toCard: '|{', identifying: true }
+];
 ```
 
 ---
 
 ## 模板
 
-`templates/d2/er.d2`
-
----
-
-## 生成命令
-
-```bash
-d2 --theme 0 --pad 40 input.d2 output.png
-```
+`templates/html/er.html`

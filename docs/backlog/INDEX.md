@@ -13,7 +13,8 @@
 - [x] [Diagram Skill 优化](2026-03-30-skill-optimization.md) — 配色/布局/代码质量优化
 - [x] [MD Preview 样式升级](2026-03-31-md-preview-style-upgrade.md) — 样式统一 + 图表实时渲染
 - [ ] [Deep-Research 质量优化](2026-03-31-deep-research-quality.md) — 评分 7.9 → 9
-- [ ] [MD Preview 目录导航](2026-03-29-md-preview-directory-nav.md) — 增加目录导航能力
+- [ ] [Diagram 能力补齐](2026-04-01-flowchart-capability-upgrade.md) — 对标 Mermaid，补流程图形状/类图UML箭头/ER crow's foot/状态图复合状态/Treemap
+- ~~[MD Preview 目录导航](2026-03-29-md-preview-directory-nav.md) — 增加目录导航能力（dropped）~~
 
 ## P3 — 低优（长期）
 - [ ] [图表风格统一 + 特殊图表补全](2026-04-01-diagram-style-unification.md) — Mermaid/PNG 视觉对齐 + SWOT/鱼骨/文氏图入 bridge

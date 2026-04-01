@@ -214,6 +214,9 @@
   var dia = el('marker', { id: 'diamond', markerWidth: 12, markerHeight: 8, refX: 0, refY: 4, orient: 'auto' });
   dia.appendChild(el('path', { d: 'M0,4 L6,0 L12,4 L6,8 Z', fill: theme.line.color, stroke: theme.line.color, 'stroke-width': 0.5 }));
   defs.appendChild(dia);
+  var diaOpen = el('marker', { id: 'diamond-open', markerWidth: 12, markerHeight: 8, refX: 0, refY: 4, orient: 'auto' });
+  diaOpen.appendChild(el('path', { d: 'M0,4 L6,0 L12,4 L6,8 Z', fill: '#FFFFFF', stroke: theme.line.color, 'stroke-width': 1 }));
+  defs.appendChild(diaOpen);
   var tri = el('marker', { id: 'triangle', markerWidth: 10, markerHeight: 8, refX: 10, refY: 4, orient: 'auto' });
   tri.appendChild(el('path', { d: 'M0,0 L10,4 L0,8 Z', fill: '#FFFFFF', stroke: theme.line.color, 'stroke-width': 1 }));
   defs.appendChild(tri);
@@ -224,6 +227,7 @@
 
   // ========== 渲染层 ==========
   var lineGroup = el('g'); svg.appendChild(lineGroup);
+  var cardLayer = el('g'); svg.appendChild(cardLayer);  // 基数标签层（在连线之上）
   var nodeGroup = el('g'); svg.appendChild(nodeGroup);
 
   // ========== 标题 ==========
@@ -236,12 +240,13 @@
     if (!r) return;
     var isDep = r.type === 'dependency';
     var isComp = r.type === 'composition';
+    var isAgg = r.type === 'aggregation';
     var isInh = r.type === 'inheritance' || r.type === 'realization';
     var isDash = isDep || r.type === 'realization';
     var lineColor = isDep ? theme.depLine.color : theme.line.color;
     var lineW = isDep ? theme.depLine.width : theme.line.width;
-    var markerEnd = isComp ? '' : isInh ? 'url(#triangle)' : isDep ? 'url(#darrow)' : 'url(#arrow)';
-    var markerStart = isComp ? 'url(#diamond)' : '';
+    var markerEnd = (isComp || isAgg) ? '' : isInh ? 'url(#triangle)' : isDep ? 'url(#darrow)' : 'url(#arrow)';
+    var markerStart = isComp ? 'url(#diamond)' : isAgg ? 'url(#diamond-open)' : '';
 
     var sec = edge.sections && edge.sections[0];
     if (!sec) return;
@@ -271,6 +276,24 @@
     if (markerStart) pathAttrs['marker-start'] = markerStart;
     if (isDash) pathAttrs['stroke-dasharray'] = '5,3';
     lineGroup.appendChild(el('path', pathAttrs));
+
+    // 基数标记（fromCard / toCard）— 绘制到 cardLayer（在连线之上，不遮挡箭头）
+    function drawCard(card, seg0, seg1, atStart) {
+      if (!card) return;
+      var sdx = seg1.x - seg0.x, sdy = seg1.y - seg0.y;
+      var slen = Math.sqrt(sdx * sdx + sdy * sdy);
+      if (slen === 0) return;
+      var t = Math.min(28 / slen, 0.35);
+      var lx = seg0.x + sdx * t, ly = seg0.y + sdy * t;
+      var nx = -sdy / slen * 12, ny = sdx / slen * 12;
+      var cw = mt(card, 10) + 6;
+      cardLayer.appendChild(el('rect', { x: lx + nx - cw / 2, y: ly + ny - 7, width: cw, height: 14, rx: 2, fill: '#ffffff' }));
+      cardLayer.appendChild(el('text', { x: lx + nx, y: ly + ny, 'text-anchor': 'middle', 'dominant-baseline': 'central', 'font-size': 10, fill: '#64748B', 'font-family': MONO })).textContent = card;
+    }
+    if (r.fromCard || r.toCard) {
+      drawCard(r.fromCard, pts[0], pts[1], true);
+      drawCard(r.toCard, pts[pts.length - 1], pts[pts.length - 2], false);
+    }
   });
 
   // ========== 绘制类框 ==========
@@ -315,7 +338,7 @@
     nodeGroup.appendChild(el('text', { x: lx + 20, y: legendY + 12, 'font-size': 11, fill: '#64748B', 'font-family': SANS })).textContent = item.label;
     lx += mt(item.label, 11) + 40;
   });
-  [{ label: '关联', dash: false, marker: 'url(#arrow)' }, { label: '组合', dash: false, ms: 'url(#diamond)' }, { label: '依赖', dash: true, marker: 'url(#darrow)' }, { label: '继承', dash: false, marker: 'url(#triangle)' }].forEach(function(le) {
+  [{ label: '关联', dash: false, marker: 'url(#arrow)' }, { label: '组合', dash: false, ms: 'url(#diamond)' }, { label: '聚合', dash: false, ms: 'url(#diamond-open)' }, { label: '依赖', dash: true, marker: 'url(#darrow)' }, { label: '继承', dash: false, marker: 'url(#triangle)' }].forEach(function(le) {
     var la = { x1: lx, y1: legendY + 7, x2: lx + 28, y2: legendY + 7, stroke: le.dash ? theme.depLine.color : theme.line.color, 'stroke-width': le.dash ? 1 : 1.5 };
     if (le.marker) la['marker-end'] = le.marker;
     if (le.ms) la['marker-start'] = le.ms;

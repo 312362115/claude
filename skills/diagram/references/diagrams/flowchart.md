@@ -25,16 +25,21 @@
 
 ## 组件使用规则
 
-| 元素 | 节点类型 | Mermaid 语法 | 色系 |
-|------|---------|-------------|------|
-| 流程起点 | Terminal Start | `([文字])` | 绿色 Emerald |
-| 处理步骤 | Process | `[文字]` | 蓝色 Blue |
-| 判断/条件 | Decision | `{文字}` | 黄色 Amber |
-| 数据库操作 | Data Store | `[(文字)]` | 紫色 Violet |
-| 关键步骤 | Highlight | `[文字]` | 蓝色实心白字 |
-| 错误终点 | Error | `[文字]` | 红色 Rose |
-| 成功终点 | Success | `[文字]` | 绿色 Emerald |
-| 流程终点 | Terminal End | `([文字])` | 灰色 |
+| 元素 | 节点类型 | type 值 | Mermaid 语法 | 色系 |
+|------|---------|---------|-------------|------|
+| 流程起点 | Terminal Start | `start` | `([文字])` | 绿色 Emerald |
+| 处理步骤 | Process | `process` | `[文字]` | 蓝色 Blue |
+| 判断/条件 | Decision | `decision` | `{文字}` | 黄色 Amber |
+| 数据库操作 | Data Store | `datastore` | `[(文字)]` | 紫色 Violet |
+| 关键步骤 | Highlight | `highlight` | `[文字]` | 蓝色实心白字 |
+| 错误终点 | Error | `error` | `[文字]` | 红色 Rose |
+| 成功终点 | Success | `success` | `[文字]` | 绿色 Emerald |
+| 流程终点 | Terminal End | `end` | `([文字])` | 灰色 |
+| **I/O 操作** | Parallelogram | `io` | `[/文字/]` | 蓝色 Blue |
+| **文档** | Document | `document` | `[文字]` | 蓝色 Blue |
+| **终态/子流程** | Double Circle | `double-circle` | `(((文字)))` | 绿色 Emerald |
+| **手动操作** | Trapezoid | `trapezoid` | `[/文字\]` | 青色 Cyan |
+| **事件/信号** | Flag | `flag` | `>文字]` | 橙色 Orange |
 
 ---
 

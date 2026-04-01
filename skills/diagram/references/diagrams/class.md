@@ -16,9 +16,12 @@
 |------|--------|
 | 类 | `shape: class`，三栏（类名/属性/方法） |
 | 接口 | 类名标注 `«interface»` |
-| 继承 | `Child -> Parent`，标签 `extends` |
-| 实现 | 虚线，标签 `implements` |
-| 组合 | `Part -> Whole`，菱形箭头 |
+| 继承 | 空心三角箭头 + 实线，`type: 'inheritance'` |
+| 实现 | 空心三角箭头 + 虚线，`type: 'realization'` |
+| 组合 | 实心菱形（起点）+ 实线，`type: 'composition'` |
+| 聚合 | 空心菱形（起点）+ 实线，`type: 'aggregation'` |
+| 关联 | 开放箭头 + 实线，`type: 'association'` |
+| 依赖 | 开放箭头 + 虚线，`type: 'dependency'` |
 
 ---
 
@@ -28,6 +31,20 @@
 - 接口：C-2 Emerald（`#ECFDF5` / `#6EE7B7`）
 - 抽象类：C-5 Violet（`#F5F3FF` / `#C4B5FD`）
 - 关键类：Highlight（`#3B82F6` 实心白字）
+
+---
+
+## 基数标记
+
+关系支持 `fromCard` / `toCard` 字段标注多重性：
+
+```javascript
+{ from: 'User', to: 'Order', type: 'association', label: '下单', fromCard: '1', toCard: '*' }
+```
+
+常用标记值：`"1"` / `"*"` / `"0..1"` / `"1..*"` / `"0..*"`
+
+标记渲染在连线两端，白底等宽字体，不与箭头重叠。
 
 ---
 

@@ -1,6 +1,6 @@
 ---
 priority: P2
-status: open
+status: dropped
 spec:
 plan:
 ---
