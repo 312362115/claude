@@ -21,6 +21,40 @@
 
 ---
 
+## 快速开始
+
+### 1. 安装
+
+打开 Claude Code，直接告诉它：
+
+```
+帮我把 https://github.com/312362115/claude 仓库里的 skills/ 目录
+安装到我的 ~/.claude/skills/ 下
+```
+
+Claude 会自动完成克隆和复制，不会覆盖你已有的 `CLAUDE.md`、`settings.json` 等个人配置。所有依赖（如 ELKjs 布局引擎）已内联打包在 skills 目录中，无需额外安装。
+
+### 2. 使用
+
+安装完成后，在 Claude Code 中用斜杠命令或自然语言即可触发：
+
+```
+/task-start          # 启动新任务，需求对焦 + 方案设计
+/task-execute        # 跨会话持续执行大型任务
+/task-finish         # 代码自检 + 复盘
+/diagram             # 生成专业图表
+/deep-research       # 深度调研报告
+/preview-md          # 浏览器预览 MD 文件
+```
+
+```
+"帮我画一个系统架构图"        → 自动触发 diagram
+"调研一下 React vs Vue"      → 自动触发 deep-research
+"我要实现用户认证模块"        → 自动触发 task-start
+```
+
+---
+
 ## 核心亮点
 
 - **结构化任务工作流** — `task-start → task-execute → task-finish`，从需求对焦到代码自检再到复盘沉淀，全流程闭环
@@ -135,40 +169,6 @@
 │   └── assets/            #   图表资源
 │
 └── plugins/               # 官方插件缓存
-```
-
----
-
-## 快速开始
-
-### 1. 安装
-
-打开 Claude Code，直接告诉它：
-
-```
-帮我把 https://github.com/312362115/claude 仓库里的 skills/ 目录
-安装到我的 ~/.claude/skills/ 下
-```
-
-Claude 会自动完成克隆和复制，不会覆盖你已有的 `CLAUDE.md`、`settings.json` 等个人配置。所有依赖（如 ELKjs 布局引擎）已内联打包在 skills 目录中，无需额外安装。
-
-### 2. 使用
-
-安装完成后，在 Claude Code 中用斜杠命令或自然语言即可触发：
-
-```
-/task-start          # 启动新任务，需求对焦 + 方案设计
-/task-execute        # 跨会话持续执行大型任务
-/task-finish         # 代码自检 + 复盘
-/diagram             # 生成专业图表
-/deep-research       # 深度调研报告
-/preview-md          # 浏览器预览 MD 文件
-```
-
-```
-"帮我画一个系统架构图"        → 自动触发 diagram
-"调研一下 React vs Vue"      → 自动触发 deep-research
-"我要实现用户认证模块"        → 自动触发 task-start
 ```
 
 ---
