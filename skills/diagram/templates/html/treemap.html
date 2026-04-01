@@ -206,6 +206,18 @@
         return;
       }
       fillColor = hexToRgba(baseColor, 0.8);
+    } else if (node.children && node.children.length > 0) {
+      // 非顶层分支节点：子节点覆盖自身，只画标签
+      node.children.forEach(function(c) { renderNode(c, depth + 1); });
+      if (w >= MIN_LABEL_W && h >= MIN_LABEL_H) {
+        var labelH = 18;
+        svg.appendChild(el('rect', { x: x, y: y, width: w, height: labelH, rx: 2, fill: 'rgba(0,0,0,0.35)' }));
+        svg.appendChild(el('text', {
+          x: x + 5, y: y + 13,
+          'font-size': 10, 'font-weight': 600, fill: '#FFFFFF', 'font-family': SANS
+        })).textContent = node.name;
+      }
+      return;
     } else {
       fillColor = hexToRgba(baseColor, 0.65 - depth * 0.15);
     }

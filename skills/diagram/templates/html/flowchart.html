@@ -161,7 +161,7 @@
     if (t !== 'decision') {
       var fw = t === 'highlight' ? 700 : 500;
       // 富文本：支持 icon 前缀 + \n 换行 + **加粗**
-      var icon = (typeof arguments[11] !== 'undefined') ? arguments[11] : null;
+      var icon = (typeof arguments[12] !== 'undefined') ? arguments[12] : null;
       var lines = label.split('\\n');
       if (lines.length === 1 && label.indexOf('**') === -1 && !icon) {
         // 简单文本（快速路径）
