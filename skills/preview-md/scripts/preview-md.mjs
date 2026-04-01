@@ -243,6 +243,34 @@ ${baseCSS}
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.1/marked.min.js"></script>
 <script>
+window.__mermaidReady = new Promise(function(resolve) { window.__mermaidResolve = resolve; });
+</script>
+<script type="module">
+import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+window.__mermaid = mermaid;
+mermaid.initialize({
+  startOnLoad: false,
+  theme: 'base',
+  themeVariables: {
+    primaryColor: '#eff6ff',
+    primaryTextColor: '#1e293b',
+    primaryBorderColor: '#3b82f6',
+    lineColor: '#94a3b8',
+    secondaryColor: '#f0fdf4',
+    tertiaryColor: '#faf5ff',
+    fontFamily: '-apple-system, system-ui, "PingFang SC", "Noto Sans CJK SC", sans-serif',
+    fontSize: '14px',
+    noteBkgColor: '#fffbeb',
+    noteBorderColor: '#f59e0b',
+    noteTextColor: '#1e293b',
+  },
+  flowchart: { curve: 'basis', padding: 16 },
+  sequence: { mirrorActors: false, bottomMarginAdj: 2 },
+});
+window.__mermaidResolve();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@viz-js/viz@3/lib/viz-standalone.js"></script>
+<script>
   const FILE_PATH = '${encodedPath}';
   const FILE_DIR = '${encodedDir}';
 
@@ -330,6 +358,63 @@ ${baseCSS}
     });
   }
 
+  // 渲染 Mermaid / Graphviz DSL 代码块
+  async function renderDSLBlocks() {
+    // 等待 mermaid ESM 模块加载完成
+    if (window.__mermaidReady) await window.__mermaidReady;
+
+    // Mermaid
+    const mermaidBlocks = document.querySelectorAll('pre > code.language-mermaid');
+    if (mermaidBlocks.length > 0 && window.__mermaid) {
+      let idx = 0;
+      for (const codeEl of mermaidBlocks) {
+        const pre = codeEl.parentElement;
+        const src = codeEl.textContent;
+        try {
+          const id = 'mermaid-' + idx++;
+          const { svg } = await window.__mermaid.render(id, src);
+          const container = document.createElement('div');
+          container.className = 'chart-container';
+          container.innerHTML = '<div class="chart-inner">' + svg + '</div>';
+          pre.parentNode.replaceChild(container, pre);
+        } catch (e) {
+          // 渲染失败保留原始代码块，加错误提示
+          pre.style.borderLeft = '3px solid var(--c-danger)';
+          pre.title = 'Mermaid 渲染失败: ' + e.message;
+        }
+      }
+    }
+
+    // Graphviz (DOT)
+    const dotBlocks = document.querySelectorAll('pre > code.language-dot, pre > code.language-graphviz');
+    if (dotBlocks.length > 0 && window.Viz) {
+      try {
+        const viz = await window.Viz.instance();
+        for (const codeEl of dotBlocks) {
+          const pre = codeEl.parentElement;
+          const src = codeEl.textContent;
+          try {
+            const svg = viz.renderSVGElement(src);
+            svg.style.maxWidth = '100%';
+            svg.style.height = 'auto';
+            const container = document.createElement('div');
+            container.className = 'chart-container';
+            const inner = document.createElement('div');
+            inner.className = 'chart-inner';
+            inner.appendChild(svg);
+            container.appendChild(inner);
+            pre.parentNode.replaceChild(container, pre);
+          } catch (e) {
+            pre.style.borderLeft = '3px solid var(--c-danger)';
+            pre.title = 'Graphviz 渲染失败: ' + e.message;
+          }
+        }
+      } catch (e) {
+        console.error('Viz.js 初始化失败:', e);
+      }
+    }
+  }
+
   // 转换 GitHub Alerts: > [!NOTE] 等
   function renderGitHubAlerts() {
     document.querySelectorAll('#content blockquote').forEach(bq => {
@@ -362,7 +447,7 @@ ${baseCSS}
     });
   }
 
-  function renderMarkdown(md) {
+  async function renderMarkdown(md) {
     marked.setOptions({ gfm: true, breaks: false });
 
     const renderer = new marked.Renderer();
@@ -387,6 +472,7 @@ ${baseCSS}
     wrapImagesInFigure();
     renderTaskLists();
     renderGitHubAlerts();
+    await renderDSLBlocks();
 
     // 生成目录
     const tocList = document.getElementById('toc');
@@ -451,7 +537,7 @@ ${baseCSS}
   async function loadAndRender() {
     const res = await fetch('/api/content?file=' + FILE_PATH);
     const md = await res.text();
-    renderMarkdown(md);
+    await renderMarkdown(md);
   }
 
   loadAndRender();
