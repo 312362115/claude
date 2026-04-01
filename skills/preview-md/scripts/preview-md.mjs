@@ -1,16 +1,24 @@
 #!/usr/bin/env node
 /**
- * MD 预览工具：全局单例 HTTP server + GitHub 风格渲染 + 左侧目录 + 文件监听自动刷新。
+ * MD 预览工具：全局单例 HTTP server + 专业蓝灰主题渲染 + 左侧目录 + 文件监听自动刷新。
  * 用法：node scripts/preview-md.mjs <path-to-md-file>
  *
  * 首次调用启动 server，后续调用复用已有 server，直接打开新文件预览。
  * 所有浏览器标签关闭 1 分钟后 server 自动退出。
+ *
+ * 样式来源：skills/shared/styles/base.css（与 HTML 报告共用）
  */
 import { readFileSync, watchFile, unwatchFile, existsSync, writeFileSync, unlinkSync } from 'fs';
 import { createServer } from 'http';
 import { resolve, basename, dirname, extname, join } from 'path';
 import { exec } from 'child_process';
+import { fileURLToPath } from 'url';
 import http from 'http';
+
+// 读取共享样式
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const BASE_CSS_PATH = resolve(__dirname, '../../shared/styles/base.css');
+const baseCSS = readFileSync(BASE_CSS_PATH, 'utf-8');
 
 // MIME types for static file serving
 const MIME_TYPES = {
@@ -147,6 +155,16 @@ function cleanup() {
   process.exit(0);
 }
 
+// GitHub Alerts SVG icons
+const CALLOUT_ICONS = {
+  NOTE: '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"/></svg>',
+  TIP: '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"/></svg>',
+  IMPORTANT: '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M0 1.75C0 .784.784 0 1.75 0h12.5C15.216 0 16 .784 16 1.75v9.5A1.75 1.75 0 0 1 14.25 13H8.06l-2.573 2.573A1.458 1.458 0 0 1 3 14.543V13H1.75A1.75 1.75 0 0 1 0 11.25Zm1.75-.25a.25.25 0 0 0-.25.25v9.5c0 .138.112.25.25.25h2a.75.75 0 0 1 .75.75v2.19l2.72-2.72a.749.749 0 0 1 .53-.22h6.5a.25.25 0 0 0 .25-.25v-9.5a.25.25 0 0 0-.25-.25Zm7 2.25v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 9a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"/></svg>',
+  WARNING: '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0 1 14.082 15H1.918a1.75 1.75 0 0 1-1.543-2.575Zm1.763.707a.25.25 0 0 0-.44 0L1.698 13.132a.25.25 0 0 0 .22.368h12.164a.25.25 0 0 0 .22-.368Zm.53 3.996v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"/></svg>',
+  CAUTION: '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M4.47.22A.749.749 0 0 1 5 0h6c.199 0 .389.079.53.22l4.25 4.25c.141.14.22.331.22.53v6a.749.749 0 0 1-.22.53l-4.25 4.25A.749.749 0 0 1 11 16H5a.749.749 0 0 1-.53-.22L.22 11.53A.749.749 0 0 1 0 11V5c0-.199.079-.389.22-.53Zm.84 1.28L1.5 5.31v5.38l3.81 3.81h5.38l3.81-3.81V5.31L10.69 1.5ZM8 4a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-1.5 0v-3.5A.75.75 0 0 1 8 4Zm0 8a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"/></svg>',
+};
+const CALLOUT_LABELS = { NOTE: 'Note', TIP: 'Tip', IMPORTANT: 'Important', WARNING: 'Warning', CAUTION: 'Caution' };
+
 // 生成预览页面 HTML
 function buildHTML(filePath) {
   const fileTitle = basename(filePath, '.md');
@@ -159,289 +177,288 @@ function buildHTML(filePath) {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${fileTitle}</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.5.1/github-markdown-light.min.css">
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+${baseCSS}
 
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-    background: #f6f8fa;
-    color: #1f2328;
-  }
+/* ─── Preview-specific ─── */
+#content {
+  background: var(--c-surface);
+  padding: 40px 48px 64px;
+  border: 1px solid var(--c-border);
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+#content > *:last-child { margin-bottom: 0; }
 
-  .layout {
-    display: flex;
-    min-height: 100vh;
-  }
+.file-path {
+  margin: 0 0 12px;
+  font-size: 12px;
+  color: var(--c-text-muted);
+  font-family: var(--font-mono);
+}
 
-  .toc-sidebar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 280px;
-    height: 100vh;
-    overflow-y: auto;
-    background: #ffffff;
-    border-right: 1px solid #d0d7de;
-    padding: 20px 0;
-    z-index: 10;
-  }
+.pdf-btn {
+  position: fixed;
+  top: 16px;
+  right: 20px;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--c-text);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: 6px;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  transition: all 0.15s ease;
+}
+.pdf-btn:hover { background: var(--c-border-light); border-color: var(--c-primary); color: var(--c-primary); }
+.pdf-btn svg { width: 16px; height: 16px; fill: currentColor; }
 
-  .toc-sidebar::-webkit-scrollbar { width: 4px; }
-  .toc-sidebar::-webkit-scrollbar-thumb { background: #d0d7de; border-radius: 2px; }
-
-  .toc-title {
-    padding: 0 20px 12px;
-    font-size: 13px;
-    font-weight: 600;
-    color: #656d76;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    border-bottom: 1px solid #d0d7de;
-    margin-bottom: 8px;
-  }
-
-  .toc-list { list-style: none; padding: 0; }
-  .toc-list li { margin: 0; }
-
-  .toc-list a {
-    display: block;
-    padding: 4px 20px;
-    font-size: 13px;
-    color: #656d76;
-    text-decoration: none;
-    line-height: 1.5;
-    border-left: 2px solid transparent;
-    transition: all 0.15s ease;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .toc-list a:hover { color: #0969da; background: #f6f8fa; }
-
-  .toc-list a.active {
-    color: #0969da;
-    border-left-color: #0969da;
-    background: #ddf4ff;
-    font-weight: 500;
-  }
-
-  .toc-list a.depth-2 { padding-left: 20px; font-weight: 500; }
-  .toc-list a.depth-3 { padding-left: 36px; }
-  .toc-list a.depth-4 { padding-left: 52px; font-size: 12px; }
-  .toc-list a.depth-5 { padding-left: 64px; font-size: 12px; }
-  .toc-list a.depth-6 { padding-left: 76px; font-size: 12px; }
-
-  .main-content {
-    margin-left: 280px;
-    flex: 1;
-    padding: 32px 40px;
-    max-width: 100%;
-  }
-
-  .markdown-body {
-    max-width: none;
-    margin: 0;
-    background: #ffffff;
-    padding: 40px 48px;
-    border: 1px solid #d0d7de;
-    border-radius: 6px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-  }
-
-  .file-path {
-    max-width: none;
-    margin: 0 0 12px;
-    font-size: 12px;
-    color: #656d76;
-    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
-  }
-
-  @media (max-width: 1000px) {
-    .toc-sidebar { width: 240px; }
-    .main-content { margin-left: 240px; padding: 24px 20px; }
-    .markdown-body { padding: 24px; }
-  }
-
-  .pdf-btn {
-    position: fixed;
-    top: 16px;
-    right: 20px;
-    z-index: 20;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 16px;
-    font-size: 13px;
-    font-weight: 500;
-    color: #24292f;
-    background: #ffffff;
-    border: 1px solid #d0d7de;
-    border-radius: 6px;
-    cursor: pointer;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-    transition: all 0.15s ease;
-  }
-  .pdf-btn:hover { background: #f6f8fa; border-color: #0969da; color: #0969da; }
-  .pdf-btn svg { width: 16px; height: 16px; fill: currentColor; }
-
-  @media (max-width: 720px) {
-    .toc-sidebar { display: none; }
-    .main-content { margin-left: 0; }
-  }
-
-  @media print {
-    .toc-sidebar, .pdf-btn, .file-path { display: none !important; }
-    .main-content { margin-left: 0 !important; padding: 0 !important; }
-    .markdown-body { border: none !important; box-shadow: none !important; padding: 0 !important; }
-    body { background: #fff !important; }
-  }
+@media print {
+  .pdf-btn, .file-path { display: none !important; }
+}
 </style>
 </head>
 <body>
-  <div class="layout">
-    <nav class="toc-sidebar">
-      <div class="toc-title">目录</div>
-      <ul class="toc-list" id="toc"></ul>
-    </nav>
-    <button class="pdf-btn" onclick="window.print()" title="下载为 PDF">
-      <svg viewBox="0 0 16 16"><path d="M4.75 7.5a.75.75 0 000 1.5h6.5a.75.75 0 000-1.5h-6.5zM4.75 10.5a.75.75 0 000 1.5h4.5a.75.75 0 000-1.5h-4.5zM13.5 1h-11A1.5 1.5 0 001 2.5v11A1.5 1.5 0 002.5 15h11a1.5 1.5 0 001.5-1.5v-11A1.5 1.5 0 0013.5 1zm0 1.5v2h-11v-2h11zm-11 11V6h11v7.5h-11z"/></svg>
-      下载 PDF
-    </button>
-    <main class="main-content">
-      <div class="file-path">${filePath}</div>
-      <article class="markdown-body" id="content"></article>
-    </main>
-  </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.1/marked.min.js"></script>
-  <script>
-    const FILE_PATH = '${encodedPath}';
-    const FILE_DIR = '${encodedDir}';
+<nav class="sidebar">
+  <div class="sidebar-title">目录</div>
+  <ul class="toc-list" id="toc"></ul>
+</nav>
 
-    // 解析相对路径为绝对路径（简化版，处理 ./ 和 ../ 和直接文件名）
-    function resolveRelativePath(base, rel) {
-      if (rel.startsWith('/') || rel.startsWith('http://') || rel.startsWith('https://') || rel.startsWith('data:')) {
-        return null; // 绝对路径或外部 URL，不处理
-      }
-      const baseParts = decodeURIComponent(base).split('/');
-      const relParts = rel.split('/');
-      for (const part of relParts) {
-        if (part === '.' || part === '') continue;
-        if (part === '..') baseParts.pop();
-        else baseParts.push(part);
-      }
-      return baseParts.join('/');
+<button class="pdf-btn" onclick="window.print()" title="下载为 PDF">
+  <svg viewBox="0 0 16 16"><path d="M4.75 7.5a.75.75 0 000 1.5h6.5a.75.75 0 000-1.5h-6.5zM4.75 10.5a.75.75 0 000 1.5h4.5a.75.75 0 000-1.5h-4.5zM13.5 1h-11A1.5 1.5 0 001 2.5v11A1.5 1.5 0 002.5 15h11a1.5 1.5 0 001.5-1.5v-11A1.5 1.5 0 0013.5 1zm0 1.5v2h-11v-2h11zm-11 11V6h11v7.5h-11z"/></svg>
+  下载 PDF
+</button>
+
+<main class="content">
+  <div class="file-path">${filePath}</div>
+  <article id="content"></article>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.1/marked.min.js"></script>
+<script>
+  const FILE_PATH = '${encodedPath}';
+  const FILE_DIR = '${encodedDir}';
+
+  // GitHub Alerts callout 配置
+  const CALLOUT_TYPES = {
+    NOTE: { cls: 'callout-note', icon: '${CALLOUT_ICONS.NOTE.replace(/'/g, "\\'")}', label: 'Note' },
+    TIP: { cls: 'callout-tip', icon: '${CALLOUT_ICONS.TIP.replace(/'/g, "\\'")}', label: 'Tip' },
+    IMPORTANT: { cls: 'callout-important', icon: '${CALLOUT_ICONS.IMPORTANT.replace(/'/g, "\\'")}', label: 'Important' },
+    WARNING: { cls: 'callout-warning', icon: '${CALLOUT_ICONS.WARNING.replace(/'/g, "\\'")}', label: 'Warning' },
+    CAUTION: { cls: 'callout-caution', icon: '${CALLOUT_ICONS.CAUTION.replace(/'/g, "\\'")}', label: 'Caution' },
+  };
+
+  function resolveRelativePath(base, rel) {
+    if (rel.startsWith('/') || rel.startsWith('http://') || rel.startsWith('https://') || rel.startsWith('data:')) {
+      return null;
     }
-
-    // 渲染后改写图片 src 为 /api/file 路由
-    function rewriteImagePaths() {
-      const images = document.querySelectorAll('#content img');
-      images.forEach(img => {
-        const src = img.getAttribute('src');
-        if (!src) return;
-        const absPath = resolveRelativePath(FILE_DIR, src);
-        if (absPath) {
-          img.src = '/api/file?path=' + encodeURIComponent(absPath);
-        }
-      });
+    const baseParts = decodeURIComponent(base).split('/');
+    const relParts = rel.split('/');
+    for (const part of relParts) {
+      if (part === '.' || part === '') continue;
+      if (part === '..') baseParts.pop();
+      else baseParts.push(part);
     }
+    return baseParts.join('/');
+  }
 
-    function renderMarkdown(md) {
-      marked.setOptions({ gfm: true, breaks: false });
-
-      const renderer = new marked.Renderer();
-      const slugCounts = {};
-
-      renderer.heading = function(text, level, raw) {
-        var plain = (raw || text).replace(/<[^>]+>/g, '');
-        var slug = plain.toLowerCase().replace(/[^\\w\\u4e00-\\u9fff]+/g, '-').replace(/(^-|-$)/g, '');
-        if (slugCounts[slug] !== undefined) {
-          slugCounts[slug]++;
-          slug = slug + '-' + slugCounts[slug];
-        } else {
-          slugCounts[slug] = 0;
-        }
-        return '<h' + level + ' id="' + slug + '">' + text + '</h' + level + '>';
-      };
-
-      document.getElementById('content').innerHTML = marked.parse(md, { renderer });
-      rewriteImagePaths();
-
-      const tocList = document.getElementById('toc');
-      tocList.innerHTML = '';
-      const headings = document.querySelectorAll('#content h1, #content h2, #content h3, #content h4');
-
-      headings.forEach(h => {
-        const depth = parseInt(h.tagName[1]);
-        if (depth > 4) return;
-        const li = document.createElement('li');
-        const a = document.createElement('a');
-        a.href = '#' + h.id;
-        a.textContent = h.textContent;
-        a.className = 'depth-' + depth;
-        a.dataset.id = h.id;
-        li.appendChild(a);
-        tocList.appendChild(li);
-      });
-
-      // 改写相对路径图片为服务器端点
-      const mdDir = decodeURIComponent(FILE_DIR);
-      document.querySelectorAll('#content img').forEach(img => {
-        const src = img.getAttribute('src');
-        if (src && !src.startsWith('http') && !src.startsWith('/') && !src.startsWith('data:')) {
-          const absPath = mdDir + '/' + src;
-          img.setAttribute('src', '/api/file?path=' + encodeURIComponent(absPath));
-        }
-      });
-
-      setupScrollHighlight();
-    }
-
-    function setupScrollHighlight() {
-      const tocLinks = document.querySelectorAll('.toc-list a');
-      const headings = document.querySelectorAll('#content h1, #content h2, #content h3, #content h4');
-
-      function updateActiveLink() {
-        let current = '';
-        for (const h of headings) {
-          const rect = h.getBoundingClientRect();
-          if (rect.top <= 80) current = h.id;
-        }
-        tocLinks.forEach(link => {
-          link.classList.toggle('active', link.dataset.id === current);
-        });
+  function rewriteImagePaths() {
+    document.querySelectorAll('#content img').forEach(img => {
+      const src = img.getAttribute('src');
+      if (!src) return;
+      const absPath = resolveRelativePath(FILE_DIR, src);
+      if (absPath) {
+        img.src = '/api/file?path=' + encodeURIComponent(absPath);
       }
+    });
+  }
 
-      window.removeEventListener('scroll', window._tocScrollHandler);
-      window._tocScrollHandler = updateActiveLink;
-      window.addEventListener('scroll', updateActiveLink, { passive: true });
-      updateActiveLink();
+  // 将块级 img 包裹为 figure（仅当 img 是 <p> 的唯一子元素时）
+  function wrapImagesInFigure() {
+    document.querySelectorAll('#content p > img').forEach(img => {
+      const p = img.parentElement;
+      // 只处理 <p> 中仅含一个 img 的情况（块级图片）
+      if (p.childNodes.length > 1) return;
+      if (img.closest('figure')) return;
+      const alt = img.getAttribute('alt');
+      const figure = document.createElement('figure');
+      p.parentNode.replaceChild(figure, p);
+      figure.appendChild(img);
+      if (alt && alt.trim()) {
+        const caption = document.createElement('figcaption');
+        caption.textContent = alt;
+        figure.appendChild(caption);
+      }
+    });
+  }
 
-      tocLinks.forEach(link => {
-        link.addEventListener('click', e => {
-          e.preventDefault();
-          const target = document.getElementById(link.dataset.id);
-          if (target) {
-            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            history.replaceState(null, '', '#' + link.dataset.id);
+  // 转换 task list checkbox
+  function renderTaskLists() {
+    document.querySelectorAll('#content li').forEach(li => {
+      const text = li.innerHTML;
+      const checkedMatch = text.match(/^\\s*\\[x\\]\\s*/i);
+      const uncheckedMatch = text.match(/^\\s*\\[ \\]\\s*/);
+      if (checkedMatch || uncheckedMatch) {
+        const checked = !!checkedMatch;
+        const pattern = checked ? /^\\s*\\[x\\]\\s*/i : /^\\s*\\[ \\]\\s*/;
+        li.innerHTML = text.replace(pattern, '');
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.disabled = true;
+        cb.checked = checked;
+        li.insertBefore(cb, li.firstChild);
+        if (checked) {
+          li.classList.add('task-done');
+          // 包裹文字用于 line-through
+          const span = document.createElement('span');
+          while (li.childNodes.length > 1) {
+            span.appendChild(li.childNodes[1]);
           }
-        });
+          li.appendChild(span);
+        }
+        // 标记父 ul
+        const ul = li.parentElement;
+        if (ul && ul.tagName === 'UL') ul.classList.add('task-list');
+      }
+    });
+  }
+
+  // 转换 GitHub Alerts: > [!NOTE] 等
+  function renderGitHubAlerts() {
+    document.querySelectorAll('#content blockquote').forEach(bq => {
+      const firstP = bq.querySelector('p');
+      if (!firstP) return;
+      const text = firstP.innerHTML;
+      const match = text.match(/^\\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\\]\\s*/);
+      if (!match) return;
+      const type = match[1];
+      const config = CALLOUT_TYPES[type];
+      if (!config) return;
+      // 转换为 callout
+      const callout = document.createElement('div');
+      callout.className = 'callout ' + config.cls;
+      // 标题行
+      const title = document.createElement('div');
+      title.className = 'callout-title';
+      title.innerHTML = config.icon + ' ' + config.label;
+      callout.appendChild(title);
+      // 移除 [!TYPE] 标记
+      firstP.innerHTML = text.replace(match[0], '');
+      if (!firstP.innerHTML.trim()) {
+        firstP.remove();
+      }
+      // 移动内容
+      while (bq.firstChild) {
+        callout.appendChild(bq.firstChild);
+      }
+      bq.parentNode.replaceChild(callout, bq);
+    });
+  }
+
+  function renderMarkdown(md) {
+    marked.setOptions({ gfm: true, breaks: false });
+
+    const renderer = new marked.Renderer();
+    const slugCounts = {};
+
+    renderer.heading = function(text, level, raw) {
+      var plain = (raw || text).replace(/<[^>]+>/g, '');
+      var slug = plain.toLowerCase().replace(/[^\\w\\u4e00-\\u9fff]+/g, '-').replace(/(^-|-$)/g, '');
+      if (slugCounts[slug] !== undefined) {
+        slugCounts[slug]++;
+        slug = slug + '-' + slugCounts[slug];
+      } else {
+        slugCounts[slug] = 0;
+      }
+      return '<h' + level + ' id="' + slug + '">' + text + '</h' + level + '>';
+    };
+
+    document.getElementById('content').innerHTML = marked.parse(md, { renderer });
+
+    // 后处理
+    rewriteImagePaths();
+    wrapImagesInFigure();
+    renderTaskLists();
+    renderGitHubAlerts();
+
+    // 生成目录
+    const tocList = document.getElementById('toc');
+    tocList.innerHTML = '';
+    const headings = document.querySelectorAll('#content h1, #content h2, #content h3, #content h4');
+
+    headings.forEach(h => {
+      const depth = parseInt(h.tagName[1]);
+      if (depth > 4) return;
+      const li = document.createElement('li');
+      li.className = 'toc-item' + (depth >= 3 ? ' depth-' + depth : '');
+      const a = document.createElement('a');
+      a.href = '#' + h.id;
+      a.textContent = h.textContent;
+      a.dataset.id = h.id;
+      li.appendChild(a);
+      tocList.appendChild(li);
+    });
+
+    setupScrollHighlight();
+  }
+
+  function setupScrollHighlight() {
+    const tocItems = document.querySelectorAll('.toc-item');
+    const headings = document.querySelectorAll('#content h1, #content h2, #content h3, #content h4');
+
+    function updateActiveLink() {
+      let current = '';
+      for (const h of headings) {
+        const rect = h.getBoundingClientRect();
+        if (rect.top <= 80) current = h.id;
+      }
+      tocItems.forEach(item => {
+        const link = item.querySelector('a');
+        if (link && link.dataset.id === current) {
+          item.classList.add('active');
+        } else {
+          item.classList.remove('active');
+        }
       });
     }
 
-    async function loadAndRender() {
-      const res = await fetch('/api/content?file=' + FILE_PATH);
-      const md = await res.text();
-      renderMarkdown(md);
-    }
+    window.removeEventListener('scroll', window._tocScrollHandler);
+    window._tocScrollHandler = updateActiveLink;
+    window.addEventListener('scroll', updateActiveLink, { passive: true });
+    updateActiveLink();
 
-    loadAndRender();
+    tocItems.forEach(item => {
+      const link = item.querySelector('a');
+      if (!link) return;
+      link.addEventListener('click', e => {
+        e.preventDefault();
+        const target = document.getElementById(link.dataset.id);
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          history.replaceState(null, '', '#' + link.dataset.id);
+        }
+      });
+    });
+  }
 
-    const evtSource = new EventSource('/api/events?file=' + FILE_PATH);
-    evtSource.onmessage = () => { loadAndRender(); };
-  </script>
+  async function loadAndRender() {
+    const res = await fetch('/api/content?file=' + FILE_PATH);
+    const md = await res.text();
+    renderMarkdown(md);
+  }
+
+  loadAndRender();
+
+  const evtSource = new EventSource('/api/events?file=' + FILE_PATH);
+  evtSource.onmessage = () => { loadAndRender(); };
+</script>
 </body>
 </html>`;
 }

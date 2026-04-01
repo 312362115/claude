@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{{REPORT_TITLE}}</title>
 <style>
+/*
+ * 样式来源：skills/shared/styles/base.css + report-components.css
+ * 修改样式请编辑源文件后同步到此模板
+ */
+
 /* ─── Reset & Base ─── */
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -278,7 +283,7 @@ tbody tr:nth-child(even):hover { background: #f5f7fa; }
 .exec-summary ul { margin: 10px 0 14px; }
 .exec-summary li { font-size: 0.95rem; color: #334155; margin-bottom: 5px; }
 
-/* ─── Callout Boxes ─── */
+/* ─── Callout Boxes (GitHub Alerts) ─── */
 .callout {
   margin: 24px 0; padding: 16px 22px;
   border-radius: 8px; border-left: 4px solid;
@@ -286,8 +291,22 @@ tbody tr:nth-child(even):hover { background: #f5f7fa; }
 }
 .callout p { margin-bottom: 6px; }
 .callout p:last-child { margin-bottom: 0; }
-.callout-info { background: #eff6ff; border-color: var(--c-primary); }
+.callout .callout-title {
+  font-weight: 700; font-size: 0.88rem; margin-bottom: 6px;
+  display: flex; align-items: center; gap: 6px;
+}
+.callout-note { background: #eff6ff; border-color: var(--c-primary); }
+.callout-note .callout-title { color: var(--c-primary); }
+.callout-tip { background: #f0fdf4; border-color: var(--c-success); }
+.callout-tip .callout-title { color: var(--c-success); }
+.callout-important { background: #faf5ff; border-color: #8b5cf6; }
+.callout-important .callout-title { color: #8b5cf6; }
 .callout-warning { background: #fffbeb; border-color: var(--c-warning); }
+.callout-warning .callout-title { color: var(--c-warning); }
+.callout-caution { background: #fef2f2; border-color: var(--c-danger); }
+.callout-caution .callout-title { color: var(--c-danger); }
+/* 兼容旧名 */
+.callout-info { background: #eff6ff; border-color: var(--c-primary); }
 .callout-danger { background: #fef2f2; border-color: var(--c-danger); }
 
 /* ─── Footnotes ─── */
@@ -366,26 +385,33 @@ sup a:hover { text-decoration: underline; }
   gap: 0; margin: 24px 0;
   border-radius: 12px; overflow: hidden;
   border: 1px solid var(--c-border);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+  background: var(--c-surface);
 }
-.vs-col { padding: 28px; }
-.vs-col:first-child {
-  background: linear-gradient(160deg, #f0fdf4 0%, #ecfdf5 50%, #f0fdfa 100%);
-  border-right: 1px solid var(--c-border);
+.vs-col { padding: 24px 28px; position: relative; }
+.vs-col:first-child { border-right: 1px solid var(--c-border); }
+.vs-col::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0;
+  height: 3px;
 }
-.vs-col:last-child {
-  background: linear-gradient(160deg, #fffbeb 0%, #fef3c7 50%, #fffbeb 100%);
-}
+.vs-col:first-child::before { background: var(--c-primary); }
+.vs-col:last-child::before { background: var(--c-text-muted); }
 .vs-label {
-  font-size: 0.78rem; text-transform: uppercase;
-  letter-spacing: 1px; font-weight: 700; margin-bottom: 14px;
-  padding-bottom: 10px;
+  font-size: 0.8rem; font-weight: 700; margin-bottom: 14px;
+  display: flex; align-items: center; gap: 8px;
 }
-.vs-label.label-a { color: var(--c-success); border-bottom: 2px solid #86efac; }
-.vs-label.label-b { color: #b45309; border-bottom: 2px solid #fcd34d; }
-.vs-col p { font-size: 0.9rem; line-height: 1.7; color: #334155; }
+.vs-label.label-a { color: var(--c-primary-dark); }
+.vs-label.label-b { color: var(--c-text-secondary); }
+.vs-label .vs-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; border-radius: 6px;
+  font-size: 0.7rem; font-weight: 800; color: #fff; flex-shrink: 0;
+}
+.vs-label.label-a .vs-icon { background: var(--c-primary); }
+.vs-label.label-b .vs-icon { background: var(--c-text-muted); }
+.vs-col p { font-size: 0.9rem; line-height: 1.7; color: var(--c-text); }
 .vs-col ul { font-size: 0.9rem; padding-left: 18px; }
-.vs-col li { margin-bottom: 8px; color: #334155; line-height: 1.6; }
+.vs-col li { margin-bottom: 8px; color: var(--c-text); line-height: 1.6; }
 .vs-col li::marker { color: var(--c-text-muted); }
 
 /* ─── Timeline ─── */
@@ -449,6 +475,7 @@ article > ul > li { margin-bottom: 12px; }
   .card-grid { grid-template-columns: 1fr; }
   .vs-block { grid-template-columns: 1fr; }
   .vs-col:first-child { border-right: none; border-bottom: 1px solid var(--c-border); }
+  .vs-col:last-child::before { display: none; }
 }
 
 /* ─── Print ─── */
@@ -541,11 +568,11 @@ article > ul > li { margin-bottom: 12px; }
       ▸ 对比块（方案 A vs B 双栏）：
         <div class="vs-block">
           <div class="vs-col">
-            <div class="vs-label label-a">推荐方案</div>
+            <div class="vs-label label-a"><span class="vs-icon">A</span> 推荐方案</div>
             <p>优势描述...</p>
           </div>
           <div class="vs-col">
-            <div class="vs-label label-b">备选方案</div>
+            <div class="vs-label label-b"><span class="vs-icon">B</span> 备选方案</div>
             <p>优势描述...</p>
           </div>
         </div>

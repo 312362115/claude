@@ -1,0 +1,346 @@
+/*
+ * 共享基础样式 — base.css
+ * 用途：preview-md 和 html-report 共用的核心组件样式
+ * 覆盖：CSS 变量、reset、排版、引用、代码块、分割线、
+ *       task list、details、表格、figure、chart container、
+ *       callout（5 种）、sidebar TOC
+ * 使用方式：运行时读取并内联到生成的 HTML 中
+ */
+
+/* ─── Reset & Base ─── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --sidebar-w: 260px;
+  --content-max: 860px;
+  --font-sans: -apple-system, system-ui, 'PingFang SC', 'Noto Sans CJK SC', 'Microsoft YaHei', sans-serif;
+  --font-mono: 'SF Mono', 'Fira Code', 'Cascadia Code', Menlo, monospace;
+
+  /* 专业蓝灰色调 */
+  --c-bg: #f8f9fc;
+  --c-surface: #ffffff;
+  --c-border: #e2e8f0;
+  --c-border-light: #f1f5f9;
+  --c-text: #1e293b;
+  --c-text-secondary: #64748b;
+  --c-text-muted: #94a3b8;
+  --c-primary: #3b82f6;
+  --c-primary-light: #eff6ff;
+  --c-primary-dark: #1d4ed8;
+  --c-accent: #0ea5e9;
+  --c-success: #10b981;
+  --c-warning: #f59e0b;
+  --c-danger: #ef4444;
+}
+
+html { font-size: 15px; scroll-behavior: smooth; }
+body {
+  font-family: var(--font-sans);
+  background: var(--c-bg);
+  color: var(--c-text);
+  line-height: 1.8;
+  letter-spacing: 0.01em;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ─── Sidebar ─── */
+.sidebar {
+  position: fixed; top: 0; left: 0;
+  width: var(--sidebar-w); height: 100vh;
+  background: var(--c-surface);
+  border-right: 1px solid var(--c-border);
+  overflow-y: auto; padding: 28px 0;
+  z-index: 100;
+  scrollbar-width: thin;
+  scrollbar-color: var(--c-border) transparent;
+}
+.sidebar::-webkit-scrollbar { width: 4px; }
+.sidebar::-webkit-scrollbar-thumb { background: var(--c-border); border-radius: 4px; }
+.sidebar-title {
+  font-size: 11px; font-weight: 700; color: var(--c-text-muted);
+  text-transform: uppercase; letter-spacing: 1px;
+  padding: 0 20px; margin-bottom: 16px;
+}
+.toc-list { list-style: none; }
+.toc-item a {
+  display: block; padding: 7px 20px;
+  font-size: 13px; color: var(--c-text-secondary);
+  text-decoration: none; border-left: 3px solid transparent;
+  border-bottom: none;
+  transition: all 0.15s ease;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  line-height: 1.4;
+}
+.toc-item a:hover {
+  color: var(--c-primary); background: var(--c-primary-light);
+  border-bottom: none;
+}
+.toc-item.active > a {
+  color: var(--c-primary-dark); border-left-color: var(--c-primary);
+  background: var(--c-primary-light); font-weight: 600;
+  border-bottom: none;
+}
+.toc-item.depth-3 a { padding-left: 36px; font-size: 12px; color: var(--c-text-muted); }
+
+/* ─── Main Content ─── */
+.content {
+  margin-left: var(--sidebar-w);
+  padding: 48px 64px 100px;
+  max-width: calc(var(--content-max) + 128px + var(--sidebar-w));
+}
+
+/* 段落间距与阅读节奏 */
+article > p,
+article > ul,
+article > ol,
+article > blockquote,
+article > .callout,
+article > .chart-container,
+article > table {
+  margin-bottom: 16px;
+}
+article > p + p { text-indent: 0; margin-top: 4px; }
+article > h2 + p, article > h3 + p { margin-top: 4px; }
+article > p + table, article > p + .chart-container, article > p + .callout { margin-top: 20px; }
+article > table + p, article > .chart-container + p, article > .callout + p { margin-top: 20px; }
+
+/* ─── Typography ─── */
+h1 {
+  font-size: 2.1rem; font-weight: 800;
+  color: var(--c-text); line-height: 1.35;
+  margin-bottom: 10px; letter-spacing: -0.01em;
+}
+h2 {
+  font-size: 1.45rem; font-weight: 700; color: var(--c-text);
+  margin: 56px 0 20px; padding-bottom: 10px;
+  border-bottom: 1px solid var(--c-border-light);
+  letter-spacing: -0.005em;
+}
+h2:first-child { margin-top: 0; }
+h3 {
+  font-size: 1.12rem; font-weight: 600; color: var(--c-text);
+  margin: 36px 0 14px;
+}
+h4 {
+  font-size: 0.95rem; font-weight: 600; color: var(--c-text-secondary);
+  margin: 28px 0 10px;
+}
+p {
+  margin: 0 0 14px;
+  color: var(--c-text);
+  word-break: break-word;
+}
+strong { font-weight: 600; color: var(--c-text); }
+a { color: var(--c-primary); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+a:hover { border-bottom-color: var(--c-primary); text-decoration: none; }
+ul, ol { margin: 8px 0 16px; padding-left: 24px; }
+li { margin-bottom: 6px; line-height: 1.7; }
+li > ul, li > ol { margin-top: 6px; margin-bottom: 0; }
+li > p { margin-bottom: 6px; }
+article > ul > li { margin-bottom: 12px; }
+
+/* ─── Blockquote ─── */
+blockquote {
+  margin: 20px 0; padding: 14px 24px;
+  border-left: 4px solid var(--c-primary);
+  background: var(--c-primary-light);
+  color: var(--c-text-secondary);
+  border-radius: 0 8px 8px 0;
+  font-size: 0.95rem; line-height: 1.7;
+}
+blockquote p:last-child { margin-bottom: 0; }
+
+/* ─── Code ─── */
+code {
+  font-family: var(--font-mono); font-size: 0.85em;
+  background: #f1f5f9; padding: 2px 6px; border-radius: 4px; color: #e11d48;
+}
+pre {
+  margin: 16px 0; padding: 16px 20px;
+  background: #1e293b; color: #e2e8f0;
+  border-radius: 8px; overflow-x: auto;
+  font-size: 0.85rem; line-height: 1.6;
+}
+pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
+
+/* ─── Horizontal Rule ─── */
+hr { border: none; border-top: 1px solid var(--c-border); margin: 40px 0; }
+
+/* ─── Task List (Checkbox) ─── */
+.task-list { list-style: none; padding-left: 4px; }
+.task-list li {
+  position: relative; padding-left: 28px; margin-bottom: 8px;
+}
+.task-list input[type="checkbox"] {
+  position: absolute; left: 0; top: 6px;
+  width: 16px; height: 16px;
+  accent-color: var(--c-primary);
+  cursor: default;
+}
+.task-list li.task-done { color: var(--c-text-muted); }
+.task-list li.task-done span { text-decoration: line-through; text-decoration-color: var(--c-border); }
+
+/* ─── Details / Summary (Collapsible) ─── */
+details {
+  margin: 20px 0;
+  border: 1px solid var(--c-border);
+  border-radius: 8px;
+  background: var(--c-surface);
+  overflow: hidden;
+}
+details summary {
+  padding: 12px 20px;
+  font-weight: 600; font-size: 0.93rem;
+  color: var(--c-text);
+  cursor: pointer;
+  background: #f8fafc;
+  border-bottom: 1px solid transparent;
+  transition: background 0.15s;
+  list-style: none;
+  display: flex; align-items: center; gap: 8px;
+}
+details summary::before {
+  content: '';
+  display: inline-block;
+  width: 0; height: 0;
+  border-left: 5px solid var(--c-text-muted);
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  transition: transform 0.2s;
+  flex-shrink: 0;
+}
+details[open] summary::before { transform: rotate(90deg); }
+details summary::-webkit-details-marker { display: none; }
+details summary:hover { background: var(--c-border-light); }
+details[open] summary { border-bottom-color: var(--c-border); }
+details .details-content {
+  padding: 16px 20px;
+  font-size: 0.9rem; line-height: 1.7;
+  color: var(--c-text-secondary);
+}
+details .details-content pre { margin: 12px 0; }
+
+/* ─── Tables ─── */
+table {
+  width: 100%; border-collapse: collapse;
+  margin: 20px 0; font-size: 0.88rem;
+  border-radius: 8px; overflow: hidden;
+  border: 1px solid var(--c-border);
+}
+thead th {
+  background: #f1f5f9; font-weight: 600; color: var(--c-text);
+  text-align: left; padding: 12px 16px;
+  border-bottom: 2px solid var(--c-border);
+  font-size: 0.85rem; letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+tbody td {
+  padding: 11px 16px; border-bottom: 1px solid var(--c-border-light);
+  vertical-align: top; line-height: 1.6;
+}
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: #f8fafc; }
+tbody tr:nth-child(even) { background: #fafbfd; }
+tbody tr:nth-child(even):hover { background: #f5f7fa; }
+
+/* ─── Figure (Image + Caption) ─── */
+figure {
+  margin: 24px 0;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+}
+figure img {
+  max-width: 100%; height: auto;
+  border-radius: 8px;
+  display: block; margin: 0 auto;
+}
+figcaption {
+  font-size: 0.82rem; color: var(--c-text-muted);
+  margin-top: 12px; padding-top: 10px;
+  border-top: 1px solid var(--c-border-light);
+  line-height: 1.5;
+}
+
+/* ─── Chart Container ─── */
+.chart-container {
+  margin: 28px 0; background: var(--c-surface);
+  border: 1px solid var(--c-border); border-radius: 12px;
+  padding: 28px 24px 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.03), 0 1px 2px rgba(0,0,0,0.04);
+  overflow: hidden;
+}
+.chart-container .chart-caption {
+  font-size: 0.82rem; color: var(--c-text-muted);
+  margin-top: 16px; padding-top: 12px;
+  text-align: center; font-style: normal;
+  border-top: 1px solid var(--c-border-light);
+  line-height: 1.5;
+}
+.chart-container svg { max-width: 100%; height: auto; display: block; margin: 0 auto; }
+.chart-container .chart-inner {
+  display: flex; justify-content: center; align-items: center; min-height: 200px;
+}
+
+/* ─── Callout Boxes (GitHub Alerts) ─── */
+.callout {
+  margin: 24px 0; padding: 16px 22px;
+  border-radius: 8px; border-left: 4px solid;
+  font-size: 0.93rem; line-height: 1.7;
+}
+.callout p { margin-bottom: 6px; }
+.callout p:last-child { margin-bottom: 0; }
+.callout .callout-title {
+  font-weight: 700; font-size: 0.88rem; margin-bottom: 6px;
+  display: flex; align-items: center; gap: 6px;
+}
+
+/* Note — 蓝 */
+.callout-note { background: #eff6ff; border-color: var(--c-primary); }
+.callout-note .callout-title { color: var(--c-primary); }
+
+/* Tip — 绿 */
+.callout-tip { background: #f0fdf4; border-color: var(--c-success); }
+.callout-tip .callout-title { color: var(--c-success); }
+
+/* Important — 紫 */
+.callout-important { background: #faf5ff; border-color: #8b5cf6; }
+.callout-important .callout-title { color: #8b5cf6; }
+
+/* Warning — 橙 */
+.callout-warning { background: #fffbeb; border-color: var(--c-warning); }
+.callout-warning .callout-title { color: var(--c-warning); }
+
+/* Caution — 红 */
+.callout-caution { background: #fef2f2; border-color: var(--c-danger); }
+.callout-caution .callout-title { color: var(--c-danger); }
+
+/* 兼容旧名 */
+.callout-info { background: #eff6ff; border-color: var(--c-primary); }
+.callout-info .callout-title { color: var(--c-primary); }
+.callout-danger { background: #fef2f2; border-color: var(--c-danger); }
+.callout-danger .callout-title { color: var(--c-danger); }
+
+/* ─── Footnotes ─── */
+sup a { color: var(--c-primary); font-size: 0.8em; font-weight: 600; text-decoration: none; }
+sup a:hover { text-decoration: underline; }
+
+/* ─── Responsive ─── */
+@media (max-width: 960px) {
+  .sidebar { display: none; }
+  .content { margin-left: 0; padding: 28px 20px 60px; }
+  table { font-size: 0.82rem; }
+  thead th, tbody td { padding: 8px 10px; }
+}
+
+/* ─── Print ─── */
+@media print {
+  .sidebar { display: none; }
+  .content { margin-left: 0; max-width: 100%; padding: 0; }
+  .chart-container { break-inside: avoid; box-shadow: none; border: 1px solid #ddd; }
+  body { font-size: 12px; background: #fff; }
+  h2 { page-break-after: avoid; }
+}

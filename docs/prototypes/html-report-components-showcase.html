@@ -1,0 +1,1277 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HTML 报告模板 — 组件展示</title>
+<style>
+/* ─── Reset & Base ─── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --sidebar-w: 260px;
+  --content-max: 860px;
+  --font-sans: -apple-system, system-ui, 'PingFang SC', 'Noto Sans CJK SC', 'Microsoft YaHei', sans-serif;
+  --font-mono: 'SF Mono', 'Fira Code', 'Cascadia Code', Menlo, monospace;
+
+  --c-bg: #f8f9fc;
+  --c-surface: #ffffff;
+  --c-border: #e2e8f0;
+  --c-border-light: #f1f5f9;
+  --c-text: #1e293b;
+  --c-text-secondary: #64748b;
+  --c-text-muted: #94a3b8;
+  --c-primary: #3b82f6;
+  --c-primary-light: #eff6ff;
+  --c-primary-dark: #1d4ed8;
+  --c-accent: #0ea5e9;
+  --c-success: #10b981;
+  --c-warning: #f59e0b;
+  --c-danger: #ef4444;
+
+  --c-t1: #059669;
+  --c-t2: #d97706;
+  --c-t3: #9333ea;
+}
+
+html { font-size: 15px; scroll-behavior: smooth; }
+body {
+  font-family: var(--font-sans);
+  background: var(--c-bg);
+  color: var(--c-text);
+  line-height: 1.8;
+  letter-spacing: 0.01em;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ─── Sidebar ─── */
+.sidebar {
+  position: fixed; top: 0; left: 0;
+  width: var(--sidebar-w); height: 100vh;
+  background: var(--c-surface);
+  border-right: 1px solid var(--c-border);
+  overflow-y: auto; padding: 28px 0;
+  z-index: 100;
+  scrollbar-width: thin;
+  scrollbar-color: var(--c-border) transparent;
+}
+.sidebar::-webkit-scrollbar { width: 4px; }
+.sidebar::-webkit-scrollbar-thumb { background: var(--c-border); border-radius: 4px; }
+.sidebar-title {
+  font-size: 11px; font-weight: 700; color: var(--c-text-muted);
+  text-transform: uppercase; letter-spacing: 1px;
+  padding: 0 20px; margin-bottom: 16px;
+}
+.toc-list { list-style: none; }
+.toc-item a {
+  display: block; padding: 7px 20px;
+  font-size: 13px; color: var(--c-text-secondary);
+  text-decoration: none; border-left: 3px solid transparent;
+  border-bottom: none;
+  transition: all 0.15s ease;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  line-height: 1.4;
+}
+.toc-item a:hover {
+  color: var(--c-primary); background: var(--c-primary-light);
+  border-bottom: none;
+}
+.toc-item.active > a {
+  color: var(--c-primary-dark); border-left-color: var(--c-primary);
+  background: var(--c-primary-light); font-weight: 600;
+  border-bottom: none;
+}
+.toc-item.depth-3 a { padding-left: 36px; font-size: 12px; color: var(--c-text-muted); }
+
+/* ─── Main Content ─── */
+.content {
+  margin-left: var(--sidebar-w);
+  padding: 48px 64px 100px;
+  max-width: calc(var(--content-max) + 128px + var(--sidebar-w));
+}
+
+article > p, article > ul, article > ol, article > blockquote,
+article > .callout, article > .chart-container, article > table {
+  margin-bottom: 16px;
+}
+
+/* ─── Report Header ─── */
+.report-header {
+  margin-bottom: 48px; padding-bottom: 36px;
+  border-bottom: 2px solid var(--c-border);
+}
+.report-title {
+  font-size: 2.1rem; font-weight: 800;
+  color: var(--c-text); line-height: 1.35;
+  margin-bottom: 10px; letter-spacing: -0.01em;
+}
+.report-subtitle {
+  font-size: 1.05rem; color: var(--c-text-secondary);
+  margin-bottom: 24px; line-height: 1.6;
+}
+.report-meta {
+  display: flex; flex-wrap: wrap; gap: 12px 32px;
+  font-size: 0.85rem; color: var(--c-text-muted);
+  padding: 14px 20px; background: #f8fafc;
+  border-radius: 8px; border: 1px solid var(--c-border-light);
+}
+.meta-item { display: flex; align-items: center; gap: 6px; }
+.meta-label { font-weight: 600; color: var(--c-text-secondary); }
+.meta-item::before {
+  content: '';
+  width: 4px; height: 4px; border-radius: 50%;
+  background: var(--c-primary); flex-shrink: 0;
+}
+.meta-item:first-child::before { display: none; }
+
+/* ─── Typography ─── */
+h2 {
+  font-size: 1.45rem; font-weight: 700; color: var(--c-text);
+  margin: 56px 0 20px; padding-bottom: 10px;
+  border-bottom: 1px solid var(--c-border-light);
+  letter-spacing: -0.005em;
+}
+h2:first-child { margin-top: 0; }
+h3 {
+  font-size: 1.12rem; font-weight: 600; color: var(--c-text);
+  margin: 36px 0 14px;
+}
+h4 {
+  font-size: 0.95rem; font-weight: 600; color: var(--c-text-secondary);
+  margin: 28px 0 10px;
+}
+p { margin: 0 0 14px; color: var(--c-text); word-break: break-word; }
+strong { font-weight: 600; color: var(--c-text); }
+a { color: var(--c-primary); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+a:hover { border-bottom-color: var(--c-primary); text-decoration: none; }
+ul, ol { margin: 8px 0 16px; padding-left: 24px; }
+li { margin-bottom: 6px; line-height: 1.7; }
+li > ul, li > ol { margin-top: 6px; margin-bottom: 0; }
+li > p { margin-bottom: 6px; }
+
+blockquote {
+  margin: 20px 0; padding: 14px 24px;
+  border-left: 4px solid var(--c-primary);
+  background: var(--c-primary-light);
+  color: var(--c-text-secondary);
+  border-radius: 0 8px 8px 0;
+  font-size: 0.95rem; line-height: 1.7;
+}
+blockquote p:last-child { margin-bottom: 0; }
+
+code {
+  font-family: var(--font-mono); font-size: 0.85em;
+  background: #f1f5f9; padding: 2px 6px; border-radius: 4px; color: #e11d48;
+}
+pre {
+  margin: 16px 0; padding: 16px 20px;
+  background: #1e293b; color: #e2e8f0;
+  border-radius: 8px; overflow-x: auto;
+  font-size: 0.85rem; line-height: 1.6;
+}
+pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
+
+hr { border: none; border-top: 1px solid var(--c-border); margin: 40px 0; }
+
+/* ─── Tables ─── */
+table {
+  width: 100%; border-collapse: collapse;
+  margin: 20px 0; font-size: 0.88rem;
+  border-radius: 8px; overflow: hidden;
+  border: 1px solid var(--c-border);
+}
+thead th {
+  background: #f1f5f9; font-weight: 600; color: var(--c-text);
+  text-align: left; padding: 12px 16px;
+  border-bottom: 2px solid var(--c-border);
+  font-size: 0.85rem; letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+tbody td {
+  padding: 11px 16px; border-bottom: 1px solid var(--c-border-light);
+  vertical-align: top; line-height: 1.6;
+}
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: #f8fafc; }
+tbody tr:nth-child(even) { background: #fafbfd; }
+tbody tr:nth-child(even):hover { background: #f5f7fa; }
+
+/* ─── Chart Container ─── */
+.chart-container {
+  margin: 28px 0; background: var(--c-surface);
+  border: 1px solid var(--c-border); border-radius: 12px;
+  padding: 28px 24px 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.03), 0 1px 2px rgba(0,0,0,0.04);
+  overflow: hidden;
+}
+.chart-container .chart-caption {
+  font-size: 0.82rem; color: var(--c-text-muted);
+  margin-top: 16px; padding-top: 12px;
+  text-align: center; font-style: normal;
+  border-top: 1px solid var(--c-border-light);
+  line-height: 1.5;
+}
+.chart-container svg { max-width: 100%; height: auto; display: block; margin: 0 auto; }
+.chart-container .chart-inner {
+  display: flex; justify-content: center; align-items: center; min-height: 200px;
+}
+
+/* ─── Source Tier Badges ─── */
+.tier-badge {
+  display: inline-block; font-size: 0.65rem; font-weight: 700;
+  padding: 1px 5px; border-radius: 3px;
+  vertical-align: super; margin-left: 1px; line-height: 1;
+}
+.tier-t1 { background: #d1fae5; color: var(--c-t1); }
+.tier-t2 { background: #fef3c7; color: var(--c-t2); }
+.tier-t3 { background: #f3e8ff; color: var(--c-t3); }
+
+/* ─── Hypothesis Result ─── */
+.hypothesis-confirmed { color: var(--c-success); font-weight: 600; }
+.hypothesis-falsified { color: var(--c-danger); font-weight: 600; }
+.hypothesis-insufficient { color: var(--c-warning); font-weight: 600; }
+
+/* ─── Executive Summary Box ─── */
+.exec-summary {
+  background: linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%);
+  border: 1px solid #bfdbfe; border-radius: 12px;
+  padding: 28px 32px; margin: 8px 0 40px;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.06);
+}
+.exec-summary h2 {
+  margin-top: 0; margin-bottom: 14px; border-bottom: none;
+  font-size: 1.15rem; color: var(--c-primary-dark);
+  letter-spacing: 0.02em;
+}
+.exec-summary p { font-size: 0.95rem; line-height: 1.75; color: #334155; }
+.exec-summary ul { margin: 10px 0 14px; }
+.exec-summary li { font-size: 0.95rem; color: #334155; margin-bottom: 5px; }
+
+/* ─── Callout Boxes ─── */
+.callout {
+  margin: 24px 0; padding: 16px 22px;
+  border-radius: 8px; border-left: 4px solid;
+  font-size: 0.93rem; line-height: 1.7;
+}
+.callout p { margin-bottom: 6px; }
+.callout p:last-child { margin-bottom: 0; }
+.callout-note { background: #eff6ff; border-color: var(--c-primary); }
+.callout-tip { background: #f0fdf4; border-color: var(--c-success); }
+.callout-important { background: #faf5ff; border-color: #8b5cf6; }
+.callout-warning { background: #fffbeb; border-color: var(--c-warning); }
+.callout-caution { background: #fef2f2; border-color: var(--c-danger); }
+/* 兼容旧名 */
+.callout-info { background: #eff6ff; border-color: var(--c-primary); }
+.callout-danger { background: #fef2f2; border-color: var(--c-danger); }
+.callout .callout-title {
+  font-weight: 700; font-size: 0.88rem; margin-bottom: 6px;
+  display: flex; align-items: center; gap: 6px;
+}
+.callout-note .callout-title { color: var(--c-primary); }
+.callout-tip .callout-title { color: var(--c-success); }
+.callout-important .callout-title { color: #8b5cf6; }
+.callout-warning .callout-title { color: var(--c-warning); }
+.callout-caution .callout-title { color: var(--c-danger); }
+
+/* ─── Footnotes ─── */
+sup a { color: var(--c-primary); font-size: 0.8em; font-weight: 600; text-decoration: none; }
+sup a:hover { text-decoration: underline; }
+
+/* ─── References Section ─── */
+.references { margin-top: 48px; }
+.references > h2 { margin-bottom: 24px; }
+.references .ref-group-title {
+  font-size: 0.88rem; font-weight: 700;
+  margin: 20px 0 10px; color: var(--c-text-secondary);
+}
+.references ol { padding-left: 28px; }
+.references li {
+  font-size: 0.88rem; color: var(--c-text-secondary);
+  margin-bottom: 8px; line-height: 1.6; padding-left: 4px;
+}
+.references li a { color: var(--c-primary); }
+.references li strong { color: var(--c-text); font-weight: 600; }
+
+/* ─── Card Grid ─── */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px; margin: 20px 0;
+}
+.card {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: 12px;
+  padding: 22px 24px;
+  transition: border-color 0.2s;
+  position: relative;
+}
+.card:hover { border-color: var(--c-primary); }
+.card h4 { margin: 0 0 8px; font-size: 0.95rem; color: var(--c-text); }
+.card p { margin: 0; font-size: 0.88rem; color: var(--c-text-secondary); line-height: 1.6; }
+.card-tag {
+  position: absolute; top: 14px; right: 14px;
+  font-size: 0.7rem; font-weight: 700;
+  padding: 2px 10px; border-radius: 14px;
+}
+.tag-primary { background: var(--c-primary-light); color: var(--c-primary-dark); }
+.tag-success { background: #d1fae5; color: var(--c-success); }
+.tag-warning { background: #fef3c7; color: #b45309; }
+.tag-muted { background: #f1f5f9; color: var(--c-text-muted); }
+
+/* ─── Score Bar ─── */
+.score-bar {
+  display: flex; align-items: center; gap: 8px; margin: 6px 0;
+}
+.score-bar .label {
+  width: 80px; font-size: 0.82rem; color: var(--c-text-secondary);
+  text-align: right; flex-shrink: 0;
+}
+.score-bar .bar {
+  flex: 1; height: 6px;
+  background: var(--c-border-light);
+  border-radius: 3px; overflow: hidden;
+}
+.score-bar .fill {
+  height: 100%; border-radius: 3px;
+  transition: width 0.5s ease;
+}
+.fill-high { background: linear-gradient(90deg, var(--c-success), var(--c-accent)); }
+.fill-med { background: linear-gradient(90deg, var(--c-warning), #fbbf24); }
+.fill-low { background: linear-gradient(90deg, var(--c-danger), var(--c-warning)); }
+.score-bar .score-value {
+  font-size: 0.75rem; font-weight: 600; width: 40px; flex-shrink: 0;
+}
+
+/* ─── VS Block (Comparison) ─── */
+.vs-block {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 0; margin: 24px 0;
+  border-radius: 12px; overflow: hidden;
+  border: 1px solid var(--c-border);
+  background: var(--c-surface);
+}
+.vs-col { padding: 24px 28px; position: relative; }
+.vs-col:first-child { border-right: 1px solid var(--c-border); }
+.vs-col::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0;
+  height: 3px;
+}
+.vs-col:first-child::before { background: var(--c-primary); }
+.vs-col:last-child::before { background: var(--c-text-muted); }
+.vs-label {
+  font-size: 0.8rem; font-weight: 700; margin-bottom: 14px;
+  display: flex; align-items: center; gap: 8px;
+}
+.vs-label.label-a { color: var(--c-primary-dark); }
+.vs-label.label-b { color: var(--c-text-secondary); }
+.vs-label .vs-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; border-radius: 6px;
+  font-size: 0.7rem; font-weight: 800; color: #fff; flex-shrink: 0;
+}
+.vs-label.label-a .vs-icon { background: var(--c-primary); }
+.vs-label.label-b .vs-icon { background: var(--c-text-muted); }
+.vs-col p { font-size: 0.9rem; line-height: 1.7; color: var(--c-text); }
+.vs-col ul { font-size: 0.9rem; padding-left: 18px; }
+.vs-col li { margin-bottom: 8px; color: var(--c-text); line-height: 1.6; }
+.vs-col li::marker { color: var(--c-text-muted); }
+
+/* ─── Timeline ─── */
+.timeline {
+  position: relative;
+  padding-left: 32px;
+  margin: 24px 0;
+}
+.timeline::before {
+  content: '';
+  position: absolute; left: 14px; top: 0; bottom: 0;
+  width: 2px;
+  background: linear-gradient(180deg, var(--c-primary), #8b5cf6, var(--c-success));
+}
+.tl-item {
+  position: relative;
+  padding: 14px 0 22px;
+  border-bottom: 1px dashed var(--c-border);
+}
+.tl-item:last-child { border-bottom: none; }
+.tl-dot {
+  position: absolute; left: -24px; top: 18px;
+  width: 12px; height: 12px; border-radius: 50%;
+  border: 2px solid var(--c-primary);
+  background: var(--c-bg);
+}
+.tl-item:nth-child(2) .tl-dot { border-color: #8b5cf6; }
+.tl-item:nth-child(3) .tl-dot { border-color: var(--c-success); }
+.tl-item:nth-child(4) .tl-dot { border-color: var(--c-warning); }
+.tl-title {
+  font-weight: 700; font-size: 1rem; margin-bottom: 6px;
+  color: var(--c-text);
+}
+.tl-desc {
+  font-size: 0.88rem; color: var(--c-text-secondary); line-height: 1.6;
+}
+
+/* ─── Badge (Inline Status) ─── */
+.badge {
+  display: inline-block;
+  padding: 2px 10px; border-radius: 14px;
+  font-size: 0.72rem; font-weight: 700;
+  vertical-align: middle; margin-left: 4px;
+}
+.badge-blue { background: var(--c-primary-light); color: var(--c-primary-dark); }
+.badge-green { background: #d1fae5; color: var(--c-t1); }
+.badge-orange { background: #fef3c7; color: #b45309; }
+.badge-purple { background: #f3e8ff; color: #7c3aed; }
+.badge-gray { background: #f1f5f9; color: var(--c-text-muted); }
+
+article > ul > li { margin-bottom: 12px; }
+
+/* ─── Task List (Checkbox) ─── */
+.task-list { list-style: none; padding-left: 4px; }
+.task-list li {
+  position: relative; padding-left: 28px; margin-bottom: 8px;
+}
+.task-list input[type="checkbox"] {
+  position: absolute; left: 0; top: 6px;
+  width: 16px; height: 16px;
+  accent-color: var(--c-primary);
+  cursor: default;
+}
+.task-list li.task-done { color: var(--c-text-muted); }
+.task-list li.task-done span { text-decoration: line-through; text-decoration-color: var(--c-border); }
+
+/* ─── Figure (Image + Caption) ─── */
+figure {
+  margin: 24px 0;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+}
+figure img {
+  max-width: 100%; height: auto;
+  border-radius: 8px;
+  display: block; margin: 0 auto;
+}
+figcaption {
+  font-size: 0.82rem; color: var(--c-text-muted);
+  margin-top: 12px; padding-top: 10px;
+  border-top: 1px solid var(--c-border-light);
+  line-height: 1.5;
+}
+
+/* ─── Details / Summary (Collapsible) ─── */
+details {
+  margin: 20px 0;
+  border: 1px solid var(--c-border);
+  border-radius: 8px;
+  background: var(--c-surface);
+  overflow: hidden;
+}
+details summary {
+  padding: 12px 20px;
+  font-weight: 600; font-size: 0.93rem;
+  color: var(--c-text);
+  cursor: pointer;
+  background: #f8fafc;
+  border-bottom: 1px solid transparent;
+  transition: background 0.15s;
+  list-style: none;
+  display: flex; align-items: center; gap: 8px;
+}
+details summary::before {
+  content: '';
+  display: inline-block;
+  width: 0; height: 0;
+  border-left: 5px solid var(--c-text-muted);
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  transition: transform 0.2s;
+  flex-shrink: 0;
+}
+details[open] summary::before {
+  transform: rotate(90deg);
+}
+details summary::-webkit-details-marker { display: none; }
+details summary:hover { background: var(--c-border-light); }
+details[open] summary { border-bottom-color: var(--c-border); }
+details .details-content {
+  padding: 16px 20px;
+  font-size: 0.9rem; line-height: 1.7;
+  color: var(--c-text-secondary);
+}
+details .details-content pre { margin: 12px 0; }
+
+/* ─── Showcase specific ─── */
+.component-section {
+  margin: 48px 0;
+  padding: 32px;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: 12px;
+}
+.component-label {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--c-text-muted);
+  background: var(--c-border-light);
+  padding: 3px 12px;
+  border-radius: 4px;
+  margin-bottom: 16px;
+}
+.component-desc {
+  font-size: 0.88rem;
+  color: var(--c-text-secondary);
+  margin-bottom: 20px;
+  padding: 10px 16px;
+  background: #f8fafc;
+  border-radius: 6px;
+  border-left: 3px solid var(--c-primary);
+}
+
+@media (max-width: 960px) {
+  .sidebar { display: none; }
+  .content { margin-left: 0; padding: 28px 20px 60px; }
+}
+</style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="sidebar-title">组件目录</div>
+  <ul class="toc-list" id="toc"></ul>
+</nav>
+
+<main class="content">
+
+  <header class="report-header">
+    <h1 class="report-title">HTML 报告模板 — 全组件展示</h1>
+    <p class="report-subtitle">展示 html-report-template.html 支持的所有组件样式，供 MD Preview 样式统一参考</p>
+    <div class="report-meta">
+      <span class="meta-item"><span class="meta-label">组件总数</span> 18 类</span>
+      <span class="meta-item"><span class="meta-label">分类</span> 基础排版 + 数据展示 + 专业组件 + MD 增强</span>
+      <span class="meta-item"><span class="meta-label">主题</span> 专业蓝灰</span>
+    </div>
+  </header>
+
+  <article>
+
+    <!-- ═══════════════════════════════════════ -->
+    <h2>一、基础排版组件</h2>
+    <!-- ═══════════════════════════════════════ -->
+
+    <!-- 1. Report Header -->
+    <div class="component-section">
+      <span class="component-label">组件 #1</span>
+      <h3>Report Header — 报告头</h3>
+      <div class="component-desc">
+        <strong>用途：</strong>报告标题页，展示标题、副标题和元数据（日期、类型、深度等）。<br>
+        <strong>CSS 类：</strong><code>.report-header</code> <code>.report-title</code> <code>.report-subtitle</code> <code>.report-meta</code> <code>.meta-item</code><br>
+        <strong>MD Preview 适用性：</strong>可选 — MD 文件通常没有元数据区，但可用于渲染 YAML frontmatter
+      </div>
+      <p>上方页面顶部就是 Report Header 的实际效果。包含：</p>
+      <ul>
+        <li><strong>标题</strong>：2.1rem, weight 800, 负字间距，视觉冲击力强</li>
+        <li><strong>副标题</strong>：1.05rem, 次要色，补充说明</li>
+        <li><strong>元数据条</strong>：圆角背景卡片，flex 布局，蓝点分隔符</li>
+      </ul>
+    </div>
+
+    <!-- 2. Typography -->
+    <div class="component-section">
+      <span class="component-label">组件 #2</span>
+      <h3>Typography — 排版体系</h3>
+      <div class="component-desc">
+        <strong>用途：</strong>正文排版基础 — 标题层级、段落、列表、链接、加粗。<br>
+        <strong>CSS 类：</strong><code>h2</code> <code>h3</code> <code>h4</code> <code>p</code> <code>ul/ol</code> <code>a</code> <code>strong</code><br>
+        <strong>MD Preview 适用性：</strong>核心 — 这是 MD 渲染的基础
+      </div>
+
+      <h2 style="margin-top: 20px;">H2 标题 — 章节级（1.45rem / 700）</h2>
+      <p>H2 有底部 1px 浅色分割线，上方 56px 间距营造"呼吸感"。适合 MD 中的 <code>##</code> 标题。</p>
+
+      <h3>H3 标题 — 小节级（1.12rem / 600）</h3>
+      <p>H3 无底线，更紧凑。适合 MD 中的 <code>###</code> 标题。</p>
+
+      <h4>H4 标题 — 段内标题（0.95rem / 600 / 次要色）</h4>
+      <p>H4 使用次要文字色，视觉层级更弱。适合 MD 中的 <code>####</code> 标题。</p>
+
+      <p>正文段落：行高 1.8，字间距 0.01em，抗锯齿渲染。这是一段示例正文，展示段落间距和排版效果。中文字体使用 PingFang SC / Noto Sans CJK SC，英文使用系统默认 sans-serif。</p>
+
+      <p>行内元素：<strong>加粗文字</strong>、<a href="#">超链接（hover 显示下划线）</a>、<code>行内代码</code>。</p>
+
+      <ul>
+        <li>无序列表项一 — 行高 1.7，项间距 6px</li>
+        <li>无序列表项二
+          <ul>
+            <li>嵌套列表项</li>
+            <li>嵌套列表项</li>
+          </ul>
+        </li>
+        <li>无序列表项三</li>
+      </ul>
+
+      <ol>
+        <li>有序列表项一</li>
+        <li>有序列表项二</li>
+        <li>有序列表项三</li>
+      </ol>
+    </div>
+
+    <!-- 3. Blockquote -->
+    <div class="component-section">
+      <span class="component-label">组件 #3</span>
+      <h3>Blockquote — 引用块</h3>
+      <div class="component-desc">
+        <strong>用途：</strong>引用外部内容、重要摘述、旁注说明。<br>
+        <strong>CSS 类：</strong><code>blockquote</code><br>
+        <strong>MD Preview 适用性：</strong>核心 — 对应 MD 的 <code>&gt;</code> 语法
+      </div>
+      <blockquote>
+        <p>这是一个引用块。蓝色 4px 左边框 + 浅蓝背景 + 右侧圆角。</p>
+        <p>多段落引用的最后一段无下边距。字号 0.95rem，颜色使用次要文字色。</p>
+      </blockquote>
+    </div>
+
+    <!-- 4. Code Block -->
+    <div class="component-section">
+      <span class="component-label">组件 #4</span>
+      <h3>Code Block — 代码块</h3>
+      <div class="component-desc">
+        <strong>用途：</strong>展示代码片段、命令行、配置文件。<br>
+        <strong>CSS 类：</strong><code>pre</code> <code>code</code><br>
+        <strong>MD Preview 适用性：</strong>核心 — 对应 MD 的 <code>```</code> 围栏代码块
+      </div>
+      <pre><code>// 深色背景 #1e293b + 浅色文字 #e2e8f0
+// 圆角 8px，内边距 16px 20px
+function renderChart(config) {
+  const { type, data, title } = config;
+  return bridge.render({ type, data, title });
+}</code></pre>
+      <p>行内代码：<code>const x = 42</code> — 浅灰背景 + 粉红文字 + 圆角 4px</p>
+    </div>
+
+    <!-- 5. HR -->
+    <div class="component-section">
+      <span class="component-label">组件 #5</span>
+      <h3>Horizontal Rule — 分割线</h3>
+      <div class="component-desc">
+        <strong>用途：</strong>章节分隔。<br>
+        <strong>CSS 类：</strong><code>hr</code><br>
+        <strong>MD Preview 适用性：</strong>核心 — 对应 MD 的 <code>---</code>
+      </div>
+      <hr>
+      <p>上下 40px 间距的浅灰分割线。</p>
+    </div>
+
+    <!-- 6. Task List -->
+    <div class="component-section">
+      <span class="component-label">组件 #6</span>
+      <h3>Task List — 任务复选框</h3>
+      <div class="component-desc">
+        <strong>用途：</strong>任务清单、进度跟踪，项目文档和 plan 高频使用。<br>
+        <strong>CSS 类：</strong><code>.task-list</code> <code>.task-done</code><br>
+        <strong>MD 语法：</strong><code>- [ ] 待办</code> / <code>- [x] 已完成</code><br>
+        <strong>MD Preview 适用性：</strong>核心 — GFM 标准语法，plan 文档大量使用
+      </div>
+      <ul class="task-list">
+        <li class="task-done"><input type="checkbox" checked disabled><span>Redis 连接模块封装</span></li>
+        <li class="task-done"><input type="checkbox" checked disabled><span>Session 中间件改造</span></li>
+        <li><input type="checkbox" disabled><span>回归测试编写</span></li>
+        <li><input type="checkbox" disabled><span>灰度上线方案评审</span></li>
+        <li><input type="checkbox" disabled><span>全量切换 & 复盘</span></li>
+      </ul>
+    </div>
+
+    <!-- 7. Details/Summary -->
+    <div class="component-section">
+      <span class="component-label">组件 #7</span>
+      <h3>Details / Summary — 折叠块</h3>
+      <div class="component-desc">
+        <strong>用途：</strong>折叠长内容（日志、配置、详细参数），保持页面整洁。<br>
+        <strong>CSS 类：</strong><code>details</code> <code>summary</code> <code>.details-content</code><br>
+        <strong>MD 语法：</strong><code>&lt;details&gt;&lt;summary&gt;标题&lt;/summary&gt;内容&lt;/details&gt;</code><br>
+        <strong>MD Preview 适用性：</strong>核心 — GitHub MD 原生支持，技术文档常用
+      </div>
+      <details>
+        <summary>点击展开：Redis 连接配置示例</summary>
+        <div class="details-content">
+          <p>以下是生产环境的 Redis 连接配置：</p>
+          <pre><code>{
+  "host": "redis-cluster.internal",
+  "port": 6379,
+  "db": 2,
+  "password": "***",
+  "maxRetries": 3,
+  "connectTimeout": 5000,
+  "commandTimeout": 3000,
+  "pool": {
+    "min": 5,
+    "max": 20,
+    "acquireTimeout": 10000
+  }
+}</code></pre>
+          <p>注意：生产环境建议开启 TLS 并配置连接池。</p>
+        </div>
+      </details>
+      <details open>
+        <summary>已展开状态：部署检查清单</summary>
+        <div class="details-content">
+          <ul class="task-list">
+            <li class="task-done"><input type="checkbox" checked disabled><span>Redis 集群连通性验证</span></li>
+            <li class="task-done"><input type="checkbox" checked disabled><span>Session 中间件替换</span></li>
+            <li><input type="checkbox" disabled><span>灰度流量比例配置</span></li>
+            <li><input type="checkbox" disabled><span>监控告警规则设置</span></li>
+          </ul>
+        </div>
+      </details>
+    </div>
+
+    <!-- ═══════════════════════════════════════ -->
+    <h2>二、数据展示组件</h2>
+    <!-- ═══════════════════════════════════════ -->
+
+    <!-- 8. Table -->
+    <div class="component-section">
+      <span class="component-label">组件 #8</span>
+      <h3>Table — 表格</h3>
+      <div class="component-desc">
+        <strong>用途：</strong>结构化数据展示、对比分析、功能清单。<br>
+        <strong>CSS 类：</strong><code>table</code> <code>thead</code> <code>tbody</code><br>
+        <strong>MD Preview 适用性：</strong>核心 — 对应 MD 表格语法
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>特性</th>
+            <th>GitHub 样式</th>
+            <th>报告模板样式</th>
+            <th>提升点</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>表头背景</td>
+            <td>无</td>
+            <td>#f1f5f9 浅灰</td>
+            <td>更清晰的视觉层级</td>
+          </tr>
+          <tr>
+            <td>斑马条纹</td>
+            <td>有</td>
+            <td>有（更柔和）</td>
+            <td>偶数行 #fafbfd</td>
+          </tr>
+          <tr>
+            <td>Hover 效果</td>
+            <td>无</td>
+            <td>有</td>
+            <td>行悬停高亮 #f8fafc</td>
+          </tr>
+          <tr>
+            <td>圆角边框</td>
+            <td>无</td>
+            <td>8px 圆角</td>
+            <td>更现代的视觉</td>
+          </tr>
+          <tr>
+            <td>表头分割</td>
+            <td>1px</td>
+            <td>2px solid</td>
+            <td>更强的头部分界</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 9. Figure -->
+    <div class="component-section">
+      <span class="component-label">组件 #9</span>
+      <h3>Figure — 图片 + 说明</h3>
+      <div class="component-desc">
+        <strong>用途：</strong>图片展示，卡片式外框 + 居中 + 底部说明文字。<br>
+        <strong>CSS 类：</strong><code>figure</code> <code>figcaption</code><br>
+        <strong>MD 语法：</strong><code>![说明文字](image.png)</code><br>
+        <strong>MD Preview 适用性：</strong>核心 — MD 图片渲染增强，从裸 img 升级为 figure 卡片
+      </div>
+      <figure>
+        <svg width="480" height="160" viewBox="0 0 480 160" style="border-radius: 8px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+          <text x="240" y="70" text-anchor="middle" fill="white" font-size="18" font-weight="700" font-family="-apple-system, sans-serif">Architecture Diagram</text>
+          <text x="240" y="100" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="13" font-family="-apple-system, sans-serif">示意图 — 实际使用时为 PNG/SVG 图片</text>
+          <rect x="40" y="120" width="80" height="24" rx="4" fill="rgba(255,255,255,0.2)"/>
+          <text x="80" y="136" text-anchor="middle" fill="white" font-size="10">Client</text>
+          <rect x="200" y="120" width="80" height="24" rx="4" fill="rgba(255,255,255,0.2)"/>
+          <text x="240" y="136" text-anchor="middle" fill="white" font-size="10">Server</text>
+          <rect x="360" y="120" width="80" height="24" rx="4" fill="rgba(255,255,255,0.2)"/>
+          <text x="400" y="136" text-anchor="middle" fill="white" font-size="10">Database</text>
+          <line x1="120" y1="132" x2="200" y2="132" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" stroke-dasharray="4,3"/>
+          <line x1="280" y1="132" x2="360" y2="132" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" stroke-dasharray="4,3"/>
+        </svg>
+        <figcaption>图 1：系统架构示意图 — 白色卡片 + 圆角图片 + 分割线说明</figcaption>
+      </figure>
+    </div>
+
+    <!-- 10. Chart Container -->
+    <div class="component-section">
+      <span class="component-label">组件 #10</span>
+      <h3>Chart Container — 图表容器</h3>
+      <div class="component-desc">
+        <strong>用途：</strong>包裹 SVG 图表（bridge.py 输出），提供统一的卡片式外框和说明文字。<br>
+        <strong>CSS 类：</strong><code>.chart-container</code> <code>.chart-inner</code> <code>.chart-caption</code><br>
+        <strong>MD Preview 适用性：</strong>需要 — 用于包裹 <code>```chart</code> 和 <code>```mermaid</code> 渲染结果
+      </div>
+      <div class="chart-container">
+        <div class="chart-inner">
+          <svg width="400" height="120" viewBox="0 0 400 120">
+            <rect x="20" y="80" width="60" height="30" rx="4" fill="#3b82f6" opacity="0.7"/>
+            <rect x="100" y="50" width="60" height="60" rx="4" fill="#3b82f6" opacity="0.8"/>
+            <rect x="180" y="20" width="60" height="90" rx="4" fill="#3b82f6" opacity="0.9"/>
+            <rect x="260" y="40" width="60" height="70" rx="4" fill="#3b82f6" opacity="0.85"/>
+            <rect x="340" y="60" width="40" height="50" rx="4" fill="#3b82f6" opacity="0.75"/>
+            <text x="50" y="118" text-anchor="middle" font-size="11" fill="#94a3b8">Q1</text>
+            <text x="130" y="118" text-anchor="middle" font-size="11" fill="#94a3b8">Q2</text>
+            <text x="210" y="118" text-anchor="middle" font-size="11" fill="#94a3b8">Q3</text>
+            <text x="290" y="118" text-anchor="middle" font-size="11" fill="#94a3b8">Q4</text>
+          </svg>
+        </div>
+        <p class="chart-caption">图 1：季度营收趋势（示意）— 白色卡片 + 12px 圆角 + 轻阴影</p>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════ -->
+    <h2>三、专业组件（报告专属）</h2>
+    <!-- ═══════════════════════════════════════ -->
+
+    <!-- 11. Executive Summary -->
+    <div class="component-section">
+      <span class="component-label">组件 #11</span>
+      <h3>Executive Summary — 执行摘要</h3>
+      <div class="component-desc">
+        <strong>用途：</strong>报告开头的关键结论总结，渐变背景突出重要性。<br>
+        <strong>CSS 类：</strong><code>.exec-summary</code><br>
+        <strong>MD Preview 适用性：</strong>报告专属 — 不下沉到通用 MD 预览
+      </div>
+      <section class="exec-summary">
+        <h2>Executive Summary</h2>
+        <p>本次调研覆盖了 15 个技术方案，经过三轮筛选和 PoC 验证，核心结论如下：</p>
+        <ul>
+          <li>方案 A（Redis Session）综合评分最高，推荐采用</li>
+          <li>性能瓶颈主要集中在序列化环节，p99 延迟可控制在 2ms 以内</li>
+          <li>合规要求可在 Q1 结束前满足，无阻塞风险</li>
+        </ul>
+      </section>
+    </div>
+
+    <!-- 12. Callout -->
+    <div class="component-section">
+      <span class="component-label">组件 #12</span>
+      <h3>Callout — 提示框（五种类型）</h3>
+      <div class="component-desc">
+        <strong>用途：</strong>突出显示提示、建议、重要、警告、危险信息。对应 GitHub Alerts 五种类型。<br>
+        <strong>CSS 类：</strong><code>.callout</code> + <code>.callout-note</code> / <code>.callout-tip</code> / <code>.callout-important</code> / <code>.callout-warning</code> / <code>.callout-caution</code><br>
+        <strong>MD 语法：</strong><code>&gt; [!NOTE]</code> / <code>&gt; [!TIP]</code> / <code>&gt; [!IMPORTANT]</code> / <code>&gt; [!WARNING]</code> / <code>&gt; [!CAUTION]</code><br>
+        <strong>MD Preview 适用性：</strong>核心 — GitHub Flavored Markdown 标准语法
+      </div>
+      <div class="callout callout-note">
+        <div class="callout-title"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"/></svg> Note</div>
+        <p>补充说明信息，帮助用户更好地理解上下文。</p>
+      </div>
+      <div class="callout callout-tip">
+        <div class="callout-title"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"/></svg> Tip</div>
+        <p>实用建议，帮助用户更高效地完成任务或获得更好的结果。</p>
+      </div>
+      <div class="callout callout-important">
+        <div class="callout-title"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M0 1.75C0 .784.784 0 1.75 0h12.5C15.216 0 16 .784 16 1.75v9.5A1.75 1.75 0 0 1 14.25 13H8.06l-2.573 2.573A1.458 1.458 0 0 1 3 14.543V13H1.75A1.75 1.75 0 0 1 0 11.25Zm1.75-.25a.25.25 0 0 0-.25.25v9.5c0 .138.112.25.25.25h2a.75.75 0 0 1 .75.75v2.19l2.72-2.72a.749.749 0 0 1 .53-.22h6.5a.25.25 0 0 0 .25-.25v-9.5a.25.25 0 0 0-.25-.25Zm7 2.25v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 9a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"/></svg> Important</div>
+        <p>关键信息，用户需要了解才能顺利进行。不可忽略的重要事项。</p>
+      </div>
+      <div class="callout callout-warning">
+        <div class="callout-title"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0 1 14.082 15H1.918a1.75 1.75 0 0 1-1.543-2.575Zm1.763.707a.25.25 0 0 0-.44 0L1.698 13.132a.25.25 0 0 0 .22.368h12.164a.25.25 0 0 0 .22-.368Zm.53 3.996v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"/></svg> Warning</div>
+        <p>需要注意的风险或限制条件，忽略可能导致问题。</p>
+      </div>
+      <div class="callout callout-caution">
+        <div class="callout-title"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M4.47.22A.749.749 0 0 1 5 0h6c.199 0 .389.079.53.22l4.25 4.25c.141.14.22.331.22.53v6a.749.749 0 0 1-.22.53l-4.25 4.25A.749.749 0 0 1 11 16H5a.749.749 0 0 1-.53-.22L.22 11.53A.749.749 0 0 1 0 11V5c0-.199.079-.389.22-.53Zm.84 1.28L1.5 5.31v5.38l3.81 3.81h5.38l3.81-3.81V5.31L10.69 1.5ZM8 4a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-1.5 0v-3.5A.75.75 0 0 1 8 4Zm0 8a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"/></svg> Caution</div>
+        <p>严重风险或破坏性操作警告，执行前务必再三确认。</p>
+      </div>
+    </div>
+
+    <!-- 13. Card Grid -->
+    <div class="component-section">
+      <span class="component-label">组件 #13</span>
+      <h3>Card Grid — 卡片网格</h3>
+      <div class="component-desc">
+        <strong>用途：</strong>并列展示方案对比、关键发现、功能特性等。<br>
+        <strong>CSS 类：</strong><code>.card-grid</code> <code>.card</code> <code>.card-tag</code> + <code>.tag-*</code><br>
+        <strong>MD Preview 适用性：</strong>报告专属 — 需要特定 HTML 结构，MD 语法无法直接表达
+      </div>
+      <div class="card-grid">
+        <div class="card">
+          <span class="card-tag tag-primary">推荐</span>
+          <h4>Redis Session</h4>
+          <p>成熟稳定，撤销简单（删 key 即失效），已有集群可复用，运维成本低。</p>
+        </div>
+        <div class="card">
+          <span class="card-tag tag-warning">备选</span>
+          <h4>JWT + 黑名单</h4>
+          <p>无状态优势明显，但撤销场景需额外维护黑名单，本质上又引入了状态。</p>
+        </div>
+        <div class="card">
+          <span class="card-tag tag-muted">已排除</span>
+          <h4>Cookie Session</h4>
+          <p>现有方案，无法满足主动撤销的合规要求，不支持水平扩展。</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 14. Score Bar -->
+    <div class="component-section">
+      <span class="component-label">组件 #14</span>
+      <h3>Score Bar — 评分条</h3>
+      <div class="component-desc">
+        <strong>用途：</strong>多维度量化评估（技术成熟度、性能、安全性等维度打分）。<br>
+        <strong>CSS 类：</strong><code>.score-bar</code> <code>.label</code> <code>.bar</code> <code>.fill</code> + <code>.fill-high/med/low</code><br>
+        <strong>MD Preview 适用性：</strong>报告专属 — 需要特定 HTML 结构
+      </div>
+      <div class="score-bar">
+        <span class="label">性能</span>
+        <div class="bar"><div class="fill fill-high" style="width:92%"></div></div>
+        <span class="score-value" style="color:var(--c-success)">92%</span>
+      </div>
+      <div class="score-bar">
+        <span class="label">安全性</span>
+        <div class="bar"><div class="fill fill-high" style="width:88%"></div></div>
+        <span class="score-value" style="color:var(--c-success)">88%</span>
+      </div>
+      <div class="score-bar">
+        <span class="label">易用性</span>
+        <div class="bar"><div class="fill fill-med" style="width:65%"></div></div>
+        <span class="score-value" style="color:var(--c-warning)">65%</span>
+      </div>
+      <div class="score-bar">
+        <span class="label">文档</span>
+        <div class="bar"><div class="fill fill-low" style="width:35%"></div></div>
+        <span class="score-value" style="color:var(--c-danger)">35%</span>
+      </div>
+    </div>
+
+    <!-- 15. VS Block -->
+    <div class="component-section">
+      <span class="component-label">组件 #15</span>
+      <h3>VS Block — 对比块</h3>
+      <div class="component-desc">
+        <strong>用途：</strong>方案 A vs B 双栏对比，顶部色条 + 图标区分两侧。<br>
+        <strong>CSS 类：</strong><code>.vs-block</code> <code>.vs-col</code> <code>.vs-label</code> + <code>.label-a/b</code> <code>.vs-icon</code><br>
+        <strong>MD Preview 适用性：</strong>报告专属 — 需要特定 HTML 结构
+      </div>
+      <div class="vs-block">
+        <div class="vs-col">
+          <div class="vs-label label-a"><span class="vs-icon">A</span> Redis Session（推荐）</div>
+          <ul>
+            <li>删 key 即撤销，确定性高</li>
+            <li>已有集群，零额外基础设施成本</li>
+            <li>p99 延迟 < 2ms</li>
+            <li>运维团队熟悉</li>
+          </ul>
+        </div>
+        <div class="vs-col">
+          <div class="vs-label label-b"><span class="vs-icon">B</span> JWT + 黑名单（备选）</div>
+          <ul>
+            <li>无状态架构，水平扩展性好</li>
+            <li>客户端持有 token，减少服务端查询</li>
+            <li>撤销需维护黑名单，本质引入状态</li>
+            <li>token 泄露风险窗口大</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- 16. Timeline -->
+    <div class="component-section">
+      <span class="component-label">组件 #16</span>
+      <h3>Timeline — 时间轴</h3>
+      <div class="component-desc">
+        <strong>用途：</strong>技术演进路线、项目里程碑、历史事件梳理。<br>
+        <strong>CSS 类：</strong><code>.timeline</code> <code>.tl-item</code> <code>.tl-dot</code> <code>.tl-title</code> <code>.tl-desc</code><br>
+        <strong>MD Preview 适用性：</strong>报告专属 — 需要特定 HTML 结构
+      </div>
+      <div class="timeline">
+        <div class="tl-item">
+          <div class="tl-dot"></div>
+          <div class="tl-title">Phase 1：基础改造 <span class="badge badge-blue">Week 1-2</span></div>
+          <div class="tl-desc">Redis 连接模块封装，session 中间件替换，基本功能验证。</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot"></div>
+          <div class="tl-title">Phase 2：安全加固 <span class="badge badge-purple">Week 3</span></div>
+          <div class="tl-desc">Session 加密、主动撤销机制、异常检测与告警。</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot"></div>
+          <div class="tl-title">Phase 3：灰度上线 <span class="badge badge-green">Week 4</span></div>
+          <div class="tl-desc">10% 流量灰度，监控 Redis 负载和 session 命中率，逐步放量。</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot"></div>
+          <div class="tl-title">Phase 4：全量 & 复盘 <span class="badge badge-orange">Week 5</span></div>
+          <div class="tl-desc">全量切换，下线旧 session 逻辑，合规审查复检，经验沉淀。</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 17. Badges & Tier Badges -->
+    <div class="component-section">
+      <span class="component-label">组件 #17</span>
+      <h3>Badges — 徽章体系</h3>
+      <div class="component-desc">
+        <strong>用途：</strong>行内状态标签（表格/标题中的快速标注）和来源层级标注。<br>
+        <strong>CSS 类：</strong>行内徽章 <code>.badge</code> + <code>.badge-*</code>；来源层级 <code>.tier-badge</code> + <code>.tier-t1/t2/t3</code><br>
+        <strong>MD Preview 适用性：</strong>来源层级为报告专属；行内徽章可选
+      </div>
+
+      <h4>行内徽章（Inline Badge）</h4>
+      <p>
+        <span class="badge badge-blue">推荐</span>
+        <span class="badge badge-green">已确认</span>
+        <span class="badge badge-orange">待定</span>
+        <span class="badge badge-purple">实验性</span>
+        <span class="badge badge-gray">已废弃</span>
+      </p>
+      <p>圆角药丸形，0.72rem 字号，适合嵌入标题或表格单元格中做快速标注。</p>
+
+      <h4>来源层级徽章（Tier Badge）</h4>
+      <p>
+        一手来源 <span class="tier-badge tier-t1">T1</span> —
+        二手来源 <span class="tier-badge tier-t2">T2</span> —
+        三手来源 <span class="tier-badge tier-t3">T3</span>
+      </p>
+      <p>上标定位（vertical-align: super），0.65rem 微型徽章，用于标注引用来源的可信度层级。</p>
+
+      <h4>假设验证状态</h4>
+      <p>
+        <span class="hypothesis-confirmed">已验证</span> —
+        <span class="hypothesis-falsified">已证伪</span> —
+        <span class="hypothesis-insufficient">证据不足</span>
+      </p>
+    </div>
+
+    <!-- 18. Sidebar + TOC -->
+    <div class="component-section">
+      <span class="component-label">组件 #18</span>
+      <h3>Sidebar + TOC — 侧边目录</h3>
+      <div class="component-desc">
+        <strong>用途：</strong>固定侧边栏，自动提取 h2/h3 生成目录，滚动高亮当前章节。<br>
+        <strong>CSS 类：</strong><code>.sidebar</code> <code>.toc-list</code> <code>.toc-item</code> <code>.depth-3</code> <code>.active</code><br>
+        <strong>MD Preview 适用性：</strong>核心 — preview-md 已有此功能，样式需同步
+      </div>
+      <p>左侧 260px 固定侧边栏就是实际效果。特点：</p>
+      <ul>
+        <li>h2 正常缩进，h3 额外 padding-left: 36px + 更小字号</li>
+        <li>当前激活项：蓝色左边框 + 浅蓝背景 + 加粗</li>
+        <li>Hover 效果：蓝色文字 + 浅蓝背景</li>
+        <li>窄滚动条（4px）匹配整体精致感</li>
+        <li>JS 自动生成目录 + requestAnimationFrame 滚动监听</li>
+      </ul>
+    </div>
+
+    <!-- ═══════════════════════════════════════ -->
+    <h2>四、组件分类总结</h2>
+    <!-- ═══════════════════════════════════════ -->
+
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>组件</th>
+          <th>CSS 类</th>
+          <th>用途</th>
+          <th>MD Preview 适用性</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td colspan="5" style="background:#f1f5f9; font-weight:700; font-size:0.82rem; color:var(--c-text-secondary); letter-spacing:0.5px;">基础排版</td></tr>
+        <tr>
+          <td>1</td>
+          <td><strong>Report Header</strong></td>
+          <td><code>.report-header</code></td>
+          <td>报告标题 + 元数据</td>
+          <td><span class="badge badge-gray">可选</span></td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td><strong>Typography</strong></td>
+          <td><code>h2-h4, p, ul, ol, a</code></td>
+          <td>排版基础</td>
+          <td><span class="badge badge-blue">核心</span></td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td><strong>Blockquote</strong></td>
+          <td><code>blockquote</code></td>
+          <td>引用块</td>
+          <td><span class="badge badge-blue">核心</span></td>
+        </tr>
+        <tr>
+          <td>4</td>
+          <td><strong>Code Block</strong></td>
+          <td><code>pre, code</code></td>
+          <td>代码展示</td>
+          <td><span class="badge badge-blue">核心</span></td>
+        </tr>
+        <tr>
+          <td>5</td>
+          <td><strong>Horizontal Rule</strong></td>
+          <td><code>hr</code></td>
+          <td>分割线</td>
+          <td><span class="badge badge-blue">核心</span></td>
+        </tr>
+        <tr>
+          <td>6</td>
+          <td><strong>Task List</strong></td>
+          <td><code>.task-list</code></td>
+          <td>任务复选框列表</td>
+          <td><span class="badge badge-blue">核心</span></td>
+        </tr>
+        <tr>
+          <td>7</td>
+          <td><strong>Details / Summary</strong></td>
+          <td><code>details, summary</code></td>
+          <td>折叠内容块</td>
+          <td><span class="badge badge-blue">核心</span></td>
+        </tr>
+        <tr><td colspan="5" style="background:#f1f5f9; font-weight:700; font-size:0.82rem; color:var(--c-text-secondary); letter-spacing:0.5px;">数据展示</td></tr>
+        <tr>
+          <td>8</td>
+          <td><strong>Table</strong></td>
+          <td><code>table</code></td>
+          <td>数据表格</td>
+          <td><span class="badge badge-blue">核心</span></td>
+        </tr>
+        <tr>
+          <td>9</td>
+          <td><strong>Figure</strong></td>
+          <td><code>figure, figcaption</code></td>
+          <td>图片 + 说明文字</td>
+          <td><span class="badge badge-blue">核心</span></td>
+        </tr>
+        <tr>
+          <td>10</td>
+          <td><strong>Chart Container</strong></td>
+          <td><code>.chart-container</code></td>
+          <td>图表外框</td>
+          <td><span class="badge badge-blue">核心</span></td>
+        </tr>
+        <tr>
+          <td>12</td>
+          <td><strong>Callout</strong></td>
+          <td><code>.callout</code></td>
+          <td>提示框（5 种类型）</td>
+          <td><span class="badge badge-blue">核心</span></td>
+        </tr>
+        <tr><td colspan="5" style="background:#f1f5f9; font-weight:700; font-size:0.82rem; color:var(--c-text-secondary); letter-spacing:0.5px;">报告专属</td></tr>
+        <tr>
+          <td>11</td>
+          <td><strong>Exec Summary</strong></td>
+          <td><code>.exec-summary</code></td>
+          <td>执行摘要</td>
+          <td><span class="badge badge-orange">报告专属</span></td>
+        </tr>
+        <tr>
+          <td>13</td>
+          <td><strong>Card Grid</strong></td>
+          <td><code>.card-grid</code></td>
+          <td>并列卡片</td>
+          <td><span class="badge badge-orange">报告专属</span></td>
+        </tr>
+        <tr>
+          <td>14</td>
+          <td><strong>Score Bar</strong></td>
+          <td><code>.score-bar</code></td>
+          <td>评分条</td>
+          <td><span class="badge badge-orange">报告专属</span></td>
+        </tr>
+        <tr>
+          <td>15</td>
+          <td><strong>VS Block</strong></td>
+          <td><code>.vs-block</code></td>
+          <td>方案对比</td>
+          <td><span class="badge badge-orange">报告专属</span></td>
+        </tr>
+        <tr>
+          <td>16</td>
+          <td><strong>Timeline</strong></td>
+          <td><code>.timeline</code></td>
+          <td>时间轴</td>
+          <td><span class="badge badge-orange">报告专属</span></td>
+        </tr>
+        <tr>
+          <td>17</td>
+          <td><strong>Badges</strong></td>
+          <td><code>.badge, .tier-badge</code></td>
+          <td>行内标签/来源层级</td>
+          <td><span class="badge badge-gray">可选</span></td>
+        </tr>
+        <tr><td colspan="5" style="background:#f1f5f9; font-weight:700; font-size:0.82rem; color:var(--c-text-secondary); letter-spacing:0.5px;">布局</td></tr>
+        <tr>
+          <td>18</td>
+          <td><strong>Sidebar + TOC</strong></td>
+          <td><code>.sidebar</code></td>
+          <td>侧边目录导航</td>
+          <td><span class="badge badge-blue">核心</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout callout-info">
+      <p><strong>样式统一策略</strong>：标记为"核心"的组件（共 12 个）提取为共享 CSS，preview-md 和 HTML 报告共用。标记为"报告专属"的组件（共 5 个）仅保留在报告模板中。"可选"组件按需引入。</p>
+    </div>
+
+  </article>
+
+</main>
+
+<script>
+(function() {
+  const toc = document.getElementById('toc');
+  const headings = document.querySelectorAll('.content h2, .content h3');
+  const tocItems = [];
+
+  headings.forEach((h, i) => {
+    const id = 'section-' + i;
+    h.id = id;
+    const depth = h.tagName === 'H3' ? 3 : 2;
+    const li = document.createElement('li');
+    li.className = 'toc-item depth-' + depth;
+    li.innerHTML = '<a href="#' + id + '">' + h.textContent + '</a>';
+    toc.appendChild(li);
+    tocItems.push({ el: li, target: h });
+  });
+
+  let ticking = false;
+  function updateActive() {
+    let active = tocItems[0];
+    const scrollY = window.scrollY + 80;
+    for (const item of tocItems) {
+      if (item.target.offsetTop <= scrollY) active = item;
+    }
+    tocItems.forEach(i => i.el.classList.remove('active'));
+    if (active) {
+      active.el.classList.add('active');
+      active.el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+    ticking = false;
+  }
+  window.addEventListener('scroll', () => {
+    if (!ticking) { requestAnimationFrame(updateActive); ticking = true; }
+  });
+  updateActive();
+})();
+</script>
+
+</body>
+</html>

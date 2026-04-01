@@ -1,0 +1,229 @@
+/*
+ * 报告专属组件样式 — report-components.css
+ * 用途：仅 html-report 使用的专业组件
+ * 覆盖：report-header、exec-summary、card-grid、score-bar、
+ *       vs-block、timeline、badges、tier-badge、hypothesis、references
+ * 依赖：base.css（CSS 变量和基础排版）
+ */
+
+/* ─── Report Header ─── */
+.report-header {
+  margin-bottom: 48px; padding-bottom: 36px;
+  border-bottom: 2px solid var(--c-border);
+}
+.report-title {
+  font-size: 2.1rem; font-weight: 800;
+  color: var(--c-text); line-height: 1.35;
+  margin-bottom: 10px; letter-spacing: -0.01em;
+}
+.report-subtitle {
+  font-size: 1.05rem; color: var(--c-text-secondary);
+  margin-bottom: 24px; line-height: 1.6;
+}
+.report-meta {
+  display: flex; flex-wrap: wrap; gap: 12px 32px;
+  font-size: 0.85rem; color: var(--c-text-muted);
+  padding: 14px 20px; background: #f8fafc;
+  border-radius: 8px; border: 1px solid var(--c-border-light);
+}
+.meta-item { display: flex; align-items: center; gap: 6px; }
+.meta-label { font-weight: 600; color: var(--c-text-secondary); }
+.meta-item::before {
+  content: '';
+  width: 4px; height: 4px; border-radius: 50%;
+  background: var(--c-primary); flex-shrink: 0;
+}
+.meta-item:first-child::before { display: none; }
+
+/* ─── Executive Summary Box ─── */
+.exec-summary {
+  background: linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%);
+  border: 1px solid #bfdbfe; border-radius: 12px;
+  padding: 28px 32px; margin: 8px 0 40px;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.06);
+}
+.exec-summary h2 {
+  margin-top: 0; margin-bottom: 14px; border-bottom: none;
+  font-size: 1.15rem; color: var(--c-primary-dark);
+  letter-spacing: 0.02em;
+}
+.exec-summary p { font-size: 0.95rem; line-height: 1.75; color: #334155; }
+.exec-summary ul { margin: 10px 0 14px; }
+.exec-summary li { font-size: 0.95rem; color: #334155; margin-bottom: 5px; }
+
+/* ─── Card Grid ─── */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px; margin: 20px 0;
+}
+.card {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: 12px;
+  padding: 22px 24px;
+  transition: border-color 0.2s;
+  position: relative;
+}
+.card:hover { border-color: var(--c-primary); }
+.card h4 { margin: 0 0 8px; font-size: 0.95rem; color: var(--c-text); }
+.card p { margin: 0; font-size: 0.88rem; color: var(--c-text-secondary); line-height: 1.6; }
+.card-tag {
+  position: absolute; top: 14px; right: 14px;
+  font-size: 0.7rem; font-weight: 700;
+  padding: 2px 10px; border-radius: 14px;
+}
+.tag-primary { background: var(--c-primary-light); color: var(--c-primary-dark); }
+.tag-success { background: #d1fae5; color: var(--c-success); }
+.tag-warning { background: #fef3c7; color: #b45309; }
+.tag-muted { background: #f1f5f9; color: var(--c-text-muted); }
+
+/* ─── Score Bar ─── */
+.score-bar {
+  display: flex; align-items: center; gap: 8px; margin: 6px 0;
+}
+.score-bar .label {
+  width: 80px; font-size: 0.82rem; color: var(--c-text-secondary);
+  text-align: right; flex-shrink: 0;
+}
+.score-bar .bar {
+  flex: 1; height: 6px;
+  background: var(--c-border-light);
+  border-radius: 3px; overflow: hidden;
+}
+.score-bar .fill {
+  height: 100%; border-radius: 3px;
+  transition: width 0.5s ease;
+}
+.fill-high { background: linear-gradient(90deg, var(--c-success), var(--c-accent)); }
+.fill-med { background: linear-gradient(90deg, var(--c-warning), #fbbf24); }
+.fill-low { background: linear-gradient(90deg, var(--c-danger), var(--c-warning)); }
+.score-bar .score-value {
+  font-size: 0.75rem; font-weight: 600; width: 40px; flex-shrink: 0;
+}
+
+/* ─── VS Block (Comparison) ─── */
+.vs-block {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 0; margin: 24px 0;
+  border-radius: 12px; overflow: hidden;
+  border: 1px solid var(--c-border);
+  background: var(--c-surface);
+}
+.vs-col { padding: 24px 28px; position: relative; }
+.vs-col:first-child { border-right: 1px solid var(--c-border); }
+.vs-col::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0;
+  height: 3px;
+}
+.vs-col:first-child::before { background: var(--c-primary); }
+.vs-col:last-child::before { background: var(--c-text-muted); }
+.vs-label {
+  font-size: 0.8rem; font-weight: 700; margin-bottom: 14px;
+  display: flex; align-items: center; gap: 8px;
+}
+.vs-label.label-a { color: var(--c-primary-dark); }
+.vs-label.label-b { color: var(--c-text-secondary); }
+.vs-label .vs-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; border-radius: 6px;
+  font-size: 0.7rem; font-weight: 800; color: #fff; flex-shrink: 0;
+}
+.vs-label.label-a .vs-icon { background: var(--c-primary); }
+.vs-label.label-b .vs-icon { background: var(--c-text-muted); }
+.vs-col p { font-size: 0.9rem; line-height: 1.7; color: var(--c-text); }
+.vs-col ul { font-size: 0.9rem; padding-left: 18px; }
+.vs-col li { margin-bottom: 8px; color: var(--c-text); line-height: 1.6; }
+.vs-col li::marker { color: var(--c-text-muted); }
+
+/* ─── Timeline ─── */
+.timeline {
+  position: relative;
+  padding-left: 32px;
+  margin: 24px 0;
+}
+.timeline::before {
+  content: '';
+  position: absolute; left: 14px; top: 0; bottom: 0;
+  width: 2px;
+  background: linear-gradient(180deg, var(--c-primary), #8b5cf6, var(--c-success));
+}
+.tl-item {
+  position: relative;
+  padding: 14px 0 22px;
+  border-bottom: 1px dashed var(--c-border);
+}
+.tl-item:last-child { border-bottom: none; }
+.tl-dot {
+  position: absolute; left: -24px; top: 18px;
+  width: 12px; height: 12px; border-radius: 50%;
+  border: 2px solid var(--c-primary);
+  background: var(--c-bg);
+}
+.tl-item:nth-child(2) .tl-dot { border-color: #8b5cf6; }
+.tl-item:nth-child(3) .tl-dot { border-color: var(--c-success); }
+.tl-item:nth-child(4) .tl-dot { border-color: var(--c-warning); }
+.tl-title {
+  font-weight: 700; font-size: 1rem; margin-bottom: 6px;
+  color: var(--c-text);
+}
+.tl-desc {
+  font-size: 0.88rem; color: var(--c-text-secondary); line-height: 1.6;
+}
+
+/* ─── Badge (Inline Status) ─── */
+.badge {
+  display: inline-block;
+  padding: 2px 10px; border-radius: 14px;
+  font-size: 0.72rem; font-weight: 700;
+  vertical-align: middle; margin-left: 4px;
+}
+.badge-blue { background: var(--c-primary-light); color: var(--c-primary-dark); }
+.badge-green { background: #d1fae5; color: var(--c-success); }
+.badge-orange { background: #fef3c7; color: #b45309; }
+.badge-purple { background: #f3e8ff; color: #7c3aed; }
+.badge-gray { background: #f1f5f9; color: var(--c-text-muted); }
+
+/* ─── Source Tier Badges ─── */
+.tier-badge {
+  display: inline-block; font-size: 0.65rem; font-weight: 700;
+  padding: 1px 5px; border-radius: 3px;
+  vertical-align: super; margin-left: 1px; line-height: 1;
+}
+.tier-t1 { background: #d1fae5; color: var(--c-t1, #059669); }
+.tier-t2 { background: #fef3c7; color: var(--c-t2, #d97706); }
+.tier-t3 { background: #f3e8ff; color: var(--c-t3, #9333ea); }
+
+/* ─── Hypothesis Result ─── */
+.hypothesis-confirmed { color: var(--c-success); font-weight: 600; }
+.hypothesis-falsified { color: var(--c-danger); font-weight: 600; }
+.hypothesis-insufficient { color: var(--c-warning); font-weight: 600; }
+
+/* ─── References Section ─── */
+.references { margin-top: 48px; }
+.references > h2 { margin-bottom: 24px; }
+.references .ref-group-title {
+  font-size: 0.88rem; font-weight: 700;
+  margin: 20px 0 10px; color: var(--c-text-secondary);
+}
+.references ol { padding-left: 28px; }
+.references li {
+  font-size: 0.88rem; color: var(--c-text-secondary);
+  margin-bottom: 8px; line-height: 1.6; padding-left: 4px;
+}
+.references li a { color: var(--c-primary); }
+.references li strong { color: var(--c-text); font-weight: 600; }
+
+/* ─── Report Responsive ─── */
+@media (max-width: 960px) {
+  .report-meta { gap: 8px 20px; }
+  .card-grid { grid-template-columns: 1fr; }
+  .vs-block { grid-template-columns: 1fr; }
+  .vs-col:first-child { border-right: none; border-bottom: 1px solid var(--c-border); }
+}
+
+/* ─── Report Print ─── */
+@media print {
+  .exec-summary { box-shadow: none; }
+}
