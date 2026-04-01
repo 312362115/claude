@@ -255,62 +255,107 @@ window.__mermaid = mermaid;
  * 1. themeVariables 控制基础色板
  * 2. themeCSS 注入 SVG 内部样式，实现节点分色、圆角、投影等 CSS 无法外部覆盖的效果
  */
+/*
+ * diagram skill 6 色色板：
+ *   蓝  #DBEAFE / #93C5FD / #1E293B
+ *   绿  #D1FAE5 / #6EE7B7 / #065F46
+ *   紫  #EDE9FE / #C4B5FD / #5B21B6
+ *   琥珀 #FEF3C7 / #FCD34D / #92400E
+ *   玫红 #FECDD3 / #FDA4AF / #9F1239
+ *   青  #CFFAFE / #67E8F9 / #155E75
+ */
 const MERMAID_CSS = \`
-  /* 通用节点 */
-  .node rect, .node polygon, .node circle, .node ellipse { filter: drop-shadow(0 1px 2px rgba(0,0,0,0.06)); }
-  .node rect { rx: 6; ry: 6; }
-  .nodeLabel, .node foreignObject div { font-weight: 500; }
+  /* ═══ 通用基础 ═══ */
+  .node rect, .node polygon, .node circle, .node ellipse,
+  .basic.label-container { filter: drop-shadow(0 1px 2px rgba(0,0,0,0.06)); }
+  .node rect, .basic.label-container { rx: 6; ry: 6; }
+  .nodeLabel, .node foreignObject div { font-weight: 500; line-height: 1.4; }
   .label { text-shadow: none; }
-
-  /* 流程图 — 按第N个节点分色（Mermaid 内部用 .node-{id}） */
-  .flowchart-link { stroke-width: 1.5px; }
   .edgeLabel { font-size: 11px; }
+  .edgeLabel .label rect { opacity: 0.9; rx: 3; ry: 3; }
+
+  /* ═══ 流程图 — 节点按 nth-child 轮播 6 色 ═══ */
+  .flowchart-link { stroke-width: 1.5px; }
   .marker { fill: #94A3B8; }
 
-  /* 序列图 — 参与者框 */
+  /* 菱形（决策节点）— 始终琥珀色 */
+  .node polygon { fill: #FEF3C7 !important; stroke: #FCD34D !important; }
+  .node:has(polygon) .nodeLabel { color: #92400E !important; }
+
+  /* 矩形节点 — 6 色轮播 */
+  .node:nth-child(6n+1) .basic.label-container { fill: #DBEAFE; stroke: #93C5FD; }
+  .node:nth-child(6n+2) .basic.label-container { fill: #D1FAE5; stroke: #6EE7B7; }
+  .node:nth-child(6n+2) .nodeLabel { color: #065F46; }
+  .node:nth-child(6n+3) .basic.label-container { fill: #EDE9FE; stroke: #C4B5FD; }
+  .node:nth-child(6n+3) .nodeLabel { color: #5B21B6; }
+  .node:nth-child(6n+4) .basic.label-container { fill: #CFFAFE; stroke: #67E8F9; }
+  .node:nth-child(6n+4) .nodeLabel { color: #155E75; }
+  .node:nth-child(6n+5) .basic.label-container { fill: #FECDD3; stroke: #FDA4AF; }
+  .node:nth-child(6n+5) .nodeLabel { color: #9F1239; }
+  .node:nth-child(6n+6) .basic.label-container { fill: #FEF3C7; stroke: #FCD34D; }
+  .node:nth-child(6n+6) .nodeLabel { color: #92400E; }
+
+  /* ═══ 子图/集群 — 6 色轮播（对齐 diagram 分层背景） ═══ */
+  .cluster rect { rx: 10; ry: 10; stroke-width: 1.5px; }
+  .cluster span, .cluster .nodeLabel { font-weight: 600; font-size: 13px; }
+  .cluster:nth-child(6n+1) rect { fill: rgba(59,130,246,0.05); stroke: rgba(59,130,246,0.2); }
+  .cluster:nth-child(6n+1) span { color: #3B82F6; }
+  .cluster:nth-child(6n+2) rect { fill: rgba(16,185,129,0.05); stroke: rgba(16,185,129,0.2); }
+  .cluster:nth-child(6n+2) span { color: #10B981; }
+  .cluster:nth-child(6n+3) rect { fill: rgba(139,92,246,0.05); stroke: rgba(139,92,246,0.2); }
+  .cluster:nth-child(6n+3) span { color: #8B5CF6; }
+  .cluster:nth-child(6n+4) rect { fill: rgba(245,158,11,0.05); stroke: rgba(245,158,11,0.2); }
+  .cluster:nth-child(6n+4) span { color: #F59E0B; }
+  .cluster:nth-child(6n+5) rect { fill: rgba(244,63,94,0.05); stroke: rgba(244,63,94,0.2); }
+  .cluster:nth-child(6n+5) span { color: #F43F5E; }
+  .cluster:nth-child(6n+6) rect { fill: rgba(14,165,233,0.05); stroke: rgba(14,165,233,0.2); }
+  .cluster:nth-child(6n+6) span { color: #0EA5E9; }
+
+  /* ═══ 序列图 ═══ */
   .actor { rx: 6; ry: 6; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.06)); }
-  text.actor > tspan { font-weight: 600; }
+  text.actor > tspan { font-weight: 600; font-size: 13px; }
   .messageLine0, .messageLine1 { stroke-width: 1.5px; }
   .messageText { font-size: 12px; font-weight: 500; }
-  .activation0 { fill: #EFF6FF; stroke: #3B82F6; }
-  .activation1 { fill: #ECFDF5; stroke: #10B981; }
   .loopText tspan { font-size: 11px; font-weight: 500; }
   .labelBox { rx: 3; ry: 3; }
   .actor-line { stroke-dasharray: 4 3; stroke: #CBD5E1; }
   .note { rx: 4; ry: 4; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.04)); }
+  /* 序列图/类图/状态图/ER图 — 节点分色通过 JS colorizeMermaidCharts() 后处理 */
+  .activation0 { fill: #EFF6FF; stroke: #3B82F6; }
+  .activation1 { fill: #ECFDF5; stroke: #10B981; }
+  .activation2 { fill: #F5F3FF; stroke: #8B5CF6; }
 
-  /* 类图 — 每个类框加分色 */
-  .classGroup rect { rx: 8; ry: 8; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.06)); }
-  .classGroup line { stroke: #E2E8F0; }
-  .classLabel .label { font-weight: 700; font-size: 13px; }
-  .relation { stroke-width: 1.5px; }
-  .cardinality { font-size: 10px; }
+  /* ═══ 类图 ═══ */
+  [id^="classId-"] .label-container { rx: 8; ry: 8; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.06)); }
+  .relation { stroke-width: 1.5px; stroke: #94A3B8; }
+  .cardinality { font-size: 10px; fill: #64748B; }
 
-  /* 状态图 */
-  .stateGroup rect { rx: 8; ry: 8; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.06)); }
-  .state-title { font-weight: 600; }
+  /* ═══ 状态图 ═══ */
+  [id^="state-"] .label-container { rx: 8; ry: 8; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.06)); }
 
-  /* ER 图 */
-  .entityBox { rx: 8; ry: 8; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.06)); }
-  .entityLabel { font-weight: 700; }
-  .relationshipLine { stroke-width: 1.5px; }
+  /* ═══ ER 图 ═══ */
+  [id^="entity-"] .label-container { rx: 8; ry: 8; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.06)); }
+  .relationshipLine { stroke-width: 1.5px; stroke: #94A3B8; }
 
-  /* 甘特图 */
+  /* ═══ 甘特图 ═══ */
   .task { rx: 4; ry: 4; }
   .taskText { font-size: 11px; font-weight: 500; }
-  .sectionTitle { font-weight: 600; }
+  .sectionTitle { font-weight: 600; font-size: 12px; }
 
-  /* 饼图 */
+  /* ═══ 饼图 ═══ */
   .pieCircle { filter: drop-shadow(0 2px 4px rgba(0,0,0,0.08)); }
-  .pieTitleText { font-weight: 700; }
-  .legend text { font-weight: 500; }
+  .pieTitleText { font-weight: 700; font-size: 16px; }
+  .legend text { font-weight: 500; font-size: 12px; }
+  .slice { font-weight: 600; }
 
-  /* 思维导图 */
-  .mindmap-node rect, .mindmap-node circle { filter: drop-shadow(0 1px 3px rgba(0,0,0,0.08)); }
+  /* ═══ 思维导图 ═══ */
+  .mindmap-node rect, .mindmap-node circle { filter: drop-shadow(0 1px 3px rgba(0,0,0,0.1)); }
+  .mindmap-node .nodeLabel { font-weight: 500; }
 
-  /* 子图/集群 */
-  .cluster rect { rx: 10; ry: 10; }
-  .cluster span, .cluster .nodeLabel { font-weight: 600; }
+  /* ═══ Journey 旅程图 ═══ */
+  .section-type-0 { fill: #3B82F6 !important; }
+  .section-type-1 { fill: #10B981 !important; }
+  .section-type-2 { fill: #8B5CF6 !important; }
 \`;
 
 mermaid.initialize({
@@ -562,6 +607,49 @@ window.__mermaidResolve();
     }
   }
 
+  // Mermaid 图表后处理 — 给无法通过 CSS nth-child 分色的图表元素上色
+  const PALETTE = [
+    { fill: '#DBEAFE', stroke: '#93C5FD', text: '#1E293B' },   // 蓝
+    { fill: '#D1FAE5', stroke: '#6EE7B7', text: '#065F46' },   // 绿
+    { fill: '#EDE9FE', stroke: '#C4B5FD', text: '#5B21B6' },   // 紫
+    { fill: '#CFFAFE', stroke: '#67E8F9', text: '#155E75' },   // 青
+    { fill: '#FECDD3', stroke: '#FDA4AF', text: '#9F1239' },   // 玫红
+    { fill: '#FEF3C7', stroke: '#FCD34D', text: '#92400E' },   // 琥珀
+  ];
+  function colorizeMermaidCharts() {
+    document.querySelectorAll('.chart-container svg').forEach(svg => {
+      // 用 style 设置（内联样式优先级高于 themeCSS）
+      function colorize(el, c) {
+        el.style.fill = c.fill;
+        el.style.stroke = c.stroke;
+      }
+
+      // 序列图 — 参与者分色（top + bottom）
+      const actorTops = svg.querySelectorAll('rect.actor.actor-top');
+      const actorBots = svg.querySelectorAll('rect.actor.actor-bottom');
+      actorTops.forEach((rect, i) => colorize(rect, PALETTE[i % PALETTE.length]));
+      actorBots.forEach((rect, i) => colorize(rect, PALETTE[i % PALETTE.length]));
+
+      // 类图 — classId 节点分色
+      svg.querySelectorAll('[id^="classId-"]').forEach((node, i) => {
+        const c = PALETTE[i % PALETTE.length];
+        node.querySelectorAll('.label-container, rect.basic').forEach(r => colorize(r, c));
+      });
+
+      // 状态图 — state 节点分色
+      svg.querySelectorAll('[id^="state-"]:not([id*="start"]):not([id*="end"])').forEach((node, i) => {
+        const c = PALETTE[i % PALETTE.length];
+        node.querySelectorAll('.label-container, rect.basic').forEach(r => colorize(r, c));
+      });
+
+      // ER 图 — entity 节点分色
+      svg.querySelectorAll('[id^="entity-"]').forEach((node, i) => {
+        const c = PALETTE[i % PALETTE.length];
+        node.querySelectorAll('.label-container, rect.basic').forEach(r => colorize(r, c));
+      });
+    });
+  }
+
   // 转换 GitHub Alerts: > [!NOTE] 等
   function renderGitHubAlerts() {
     document.querySelectorAll('#content blockquote').forEach(bq => {
@@ -620,6 +708,7 @@ window.__mermaidResolve();
     renderTaskLists();
     renderGitHubAlerts();
     await renderDSLBlocks();
+    colorizeMermaidCharts();
 
     // 生成目录
     const tocList = document.getElementById('toc');
