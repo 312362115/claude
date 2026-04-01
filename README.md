@@ -1,4 +1,4 @@
-# Max — Claude Code 开发脚手架
+# Claude Code Skills
 
 <p align="center">
   <a href="https://github.com/312362115/claude/stargazers">
