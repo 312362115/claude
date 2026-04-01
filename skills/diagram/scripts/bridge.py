@@ -809,6 +809,35 @@ def adapt_treemap(config):
     )
 
 
+def adapt_combo(config):
+    """柱线混合图（Combo Chart）
+    JSON: { title, subtitle?, data: { categories, series: [{name, type:'bar'|'line', values, yAxis?, format?}] } }
+    """
+    d = config['data']
+    data_json = json.dumps(d, ensure_ascii=False)
+
+    template_path = TEMPLATES_DIR / 'combo.html'
+    template = template_path.read_text(encoding='utf-8')
+
+    # 提取配色到图例之间的完整渲染逻辑
+    import re as _re
+    js_match = _re.search(r'// ========== 配色 ==========(.*?)\}\)\(\);', template, _re.DOTALL)
+    engine_js = js_match.group(1) if js_match else ''
+
+    return make_html(
+        config.get('title', 'Combo Chart'),
+        config.get('subtitle', ''),
+        'canvas', 'auto-size', [],
+        f'''(function() {{
+  var svg = document.getElementById('canvas');
+  var SANS = "-apple-system, system-ui, 'PingFang SC', sans-serif";
+  var data = {data_json};
+  // ========== 配色 ==========
+  {_safe_inline(engine_js)}
+}})();'''
+    )
+
+
 # ─── 适配器注册 ───
 
 ADAPTERS = {
@@ -821,6 +850,7 @@ ADAPTERS = {
     'scatter': adapt_scatter,
     'waterfall': adapt_waterfall,
     'treemap': adapt_treemap,
+    'combo': adapt_combo,
 }
 
 

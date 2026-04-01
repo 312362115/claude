@@ -83,7 +83,10 @@
   function getStyle(type) {
     var map = { start: 'success', end: 'success', process: 'node', decision: 'decision',
       highlight: 'highlight', error: 'error', success: 'success', external: 'external', datastore: 'datastore',
-      io: 'node', parallelogram: 'node', document: 'node', 'double-circle': 'success', trapezoid: 'trapezoid', flag: 'flag' };
+      io: 'node', parallelogram: 'node', document: 'node', 'double-circle': 'success', trapezoid: 'trapezoid', flag: 'flag',
+      hexagon: 'node', subroutine: 'node', circle: 'node', 'manual-input': 'trapezoid', delay: 'external',
+      'stored-data': 'datastore', 'multi-document': 'node', 'tagged-document': 'node', display: 'node',
+      collate: 'decision', extract: 'node', merge: 'node' };
     return theme[map[type] || 'node'];
   }
 
@@ -110,13 +113,91 @@
     } else if (t === 'flag') {
       var nt = 10;
       group.appendChild(el('polygon', { points: x+','+y+' '+(x+w)+','+y+' '+(x+w-nt)+','+(cy)+' '+(x+w)+','+(y+h)+' '+x+','+(y+h), fill: style.bg, stroke: style.border, 'stroke-width': 1.5 }));
+    } else if (t === 'hexagon') {
+      var hx = 14;
+      group.appendChild(el('polygon', { points: (x+hx)+','+y+' '+(x+w-hx)+','+y+' '+(x+w)+','+cy+' '+(x+w-hx)+','+(y+h)+' '+(x+hx)+','+(y+h)+' '+x+','+cy, fill: style.bg, stroke: style.border, 'stroke-width': 1.5 }));
+    } else if (t === 'subroutine') {
+      var sb = 10;
+      group.appendChild(el('rect', { x: x, y: y, width: w, height: h, rx: 2, fill: style.bg, stroke: style.border, 'stroke-width': 1.5 }));
+      group.appendChild(el('line', { x1: x+sb, y1: y, x2: x+sb, y2: y+h, stroke: style.border, 'stroke-width': 1.5 }));
+      group.appendChild(el('line', { x1: x+w-sb, y1: y, x2: x+w-sb, y2: y+h, stroke: style.border, 'stroke-width': 1.5 }));
+    } else if (t === 'circle') {
+      var cr = Math.min(w, h) / 2;
+      group.appendChild(el('circle', { cx: cx, cy: cy, r: cr, fill: style.bg, stroke: style.border, 'stroke-width': 1.5 }));
+    } else if (t === 'manual-input') {
+      var mi = 10;
+      group.appendChild(el('polygon', { points: x+','+(y+mi)+' '+(x+w)+','+y+' '+(x+w)+','+(y+h)+' '+x+','+(y+h), fill: style.bg, stroke: style.border, 'stroke-width': 1.5 }));
+    } else if (t === 'delay') {
+      var dr = h / 2;
+      group.appendChild(el('path', { d: 'M'+x+','+y+' L'+(x+w-dr)+','+y+' A'+dr+','+dr+' 0 0 1 '+(x+w-dr)+','+(y+h)+' L'+x+','+(y+h)+' Z', fill: style.bg, stroke: style.border, 'stroke-width': 1.5 }));
+    } else if (t === 'stored-data') {
+      var sd = 12;
+      group.appendChild(el('path', { d: 'M'+(x+sd)+','+y+' L'+(x+w)+','+y+' L'+(x+w)+','+(y+h)+' L'+(x+sd)+','+(y+h)+' A'+sd+','+(h/2)+' 0 0 1 '+(x+sd)+','+y+' Z', fill: style.bg, stroke: style.border, 'stroke-width': 1.5 }));
+    } else if (t === 'multi-document') {
+      var md = 4;
+      var bh2 = h - 8 - md*2;
+      group.appendChild(el('path', { d: 'M'+(x+md*2)+','+y+' L'+(x+w)+','+y+' L'+(x+w)+','+(y+bh2+md*2)+' Q'+(x+w*0.75+md)+','+(y+bh2+md*2+10)+' '+(x+w*0.5+md)+','+(y+bh2+md*2)+' Q'+(x+w*0.25+md)+','+(y+bh2+md*2-10)+' '+(x+md*2)+','+(y+bh2+md*2)+' Z', fill: style.border, stroke: style.border, 'stroke-width': 1, opacity: 0.3 }));
+      group.appendChild(el('path', { d: 'M'+(x+md)+','+(y+md)+' L'+(x+w-md)+','+(y+md)+' L'+(x+w-md)+','+(y+bh2+md*2)+' Q'+(x+w*0.75)+','+(y+bh2+md*2+8)+' '+(x+w*0.5)+','+(y+bh2+md*2)+' Q'+(x+w*0.25)+','+(y+bh2+md*2-8)+' '+(x+md)+','+(y+bh2+md*2)+' Z', fill: style.border, stroke: style.border, 'stroke-width': 1, opacity: 0.2 }));
+      var bh3 = h - 8;
+      group.appendChild(el('path', { d: 'M'+x+','+(y+md*2)+' L'+(x+w-md*2)+','+(y+md*2)+' L'+(x+w-md*2)+','+(y+bh3)+' Q'+(x+(w-md*2)*0.75)+','+(y+bh3+12)+' '+(x+(w-md*2)*0.5)+','+(y+bh3)+' Q'+(x+(w-md*2)*0.25)+','+(y+bh3-12)+' '+x+','+(y+bh3)+' Z', fill: style.bg, stroke: style.border, 'stroke-width': 1.5 }));
+    } else if (t === 'tagged-document') {
+      var tf = 12;
+      group.appendChild(el('path', { d: 'M'+x+','+y+' L'+(x+w-tf)+','+y+' L'+(x+w)+','+(y+tf)+' L'+(x+w)+','+(y+h)+' L'+x+','+(y+h)+' Z', fill: style.bg, stroke: style.border, 'stroke-width': 1.5 }));
+      group.appendChild(el('path', { d: 'M'+(x+w-tf)+','+y+' L'+(x+w-tf)+','+(y+tf)+' L'+(x+w)+','+(y+tf), fill: 'none', stroke: style.border, 'stroke-width': 1.5 }));
+    } else if (t === 'display') {
+      var dp = 14;
+      group.appendChild(el('path', { d: 'M'+(x+dp)+','+y+' L'+(x+w-dp)+','+y+' A'+dp+','+(h/2)+' 0 0 1 '+(x+w-dp)+','+(y+h)+' L'+(x+dp)+','+(y+h)+' L'+x+','+cy+' Z', fill: style.bg, stroke: style.border, 'stroke-width': 1.5 }));
+    } else if (t === 'collate') {
+      group.appendChild(el('polygon', { points: x+','+y+' '+(x+w)+','+y+' '+cx+','+cy, fill: style.bg, stroke: style.border, 'stroke-width': 1.5 }));
+      group.appendChild(el('polygon', { points: cx+','+cy+' '+(x+w)+','+(y+h)+' '+x+','+(y+h), fill: style.bg, stroke: style.border, 'stroke-width': 1.5 }));
+    } else if (t === 'extract') {
+      group.appendChild(el('polygon', { points: cx+','+y+' '+(x+w)+','+(y+h)+' '+x+','+(y+h), fill: style.bg, stroke: style.border, 'stroke-width': 1.5 }));
+    } else if (t === 'merge') {
+      group.appendChild(el('polygon', { points: x+','+y+' '+(x+w)+','+y+' '+cx+','+(y+h), fill: style.bg, stroke: style.border, 'stroke-width': 1.5 }));
     } else {
       var rx = (t === 'start' || t === 'end') ? h / 2 : 6;
       group.appendChild(el('rect', { x: x, y: y, width: w, height: h, rx: rx, fill: style.bg, stroke: style.border, 'stroke-width': 1.5 }));
     }
     if (t !== 'decision') {
       var fw = t === 'highlight' ? 700 : 500;
-      group.appendChild(el('text', { x: cx, y: cy + 1, 'text-anchor': 'middle', 'dominant-baseline': 'central', 'font-size': fontSize, 'font-weight': fw, fill: style.text, 'font-family': fontFamily })).textContent = label;
+      // 富文本：支持 icon 前缀 + \n 换行 + **加粗**
+      var icon = (typeof arguments[11] !== 'undefined') ? arguments[11] : null;
+      var lines = label.split('\\n');
+      if (lines.length === 1 && label.indexOf('**') === -1 && !icon) {
+        // 简单文本（快速路径）
+        group.appendChild(el('text', { x: cx, y: cy + 1, 'text-anchor': 'middle', 'dominant-baseline': 'central', 'font-size': fontSize, 'font-weight': fw, fill: style.text, 'font-family': fontFamily })).textContent = label;
+      } else {
+        // 多行 / 加粗 / 图标
+        var lineH = fontSize + 4;
+        var totalH = lines.length * lineH;
+        var startY = cy - totalH / 2 + lineH / 2 + 1;
+        lines.forEach(function(line, li) {
+          var textEl = el('text', { x: cx, y: startY + li * lineH, 'text-anchor': 'middle', 'dominant-baseline': 'central', 'font-size': fontSize, fill: style.text, 'font-family': fontFamily });
+          // 解析 **bold** 片段
+          var parts = line.split(/(\*\*[^*]+\*\*)/g);
+          parts.forEach(function(part) {
+            if (part.indexOf('**') === 0 && part.lastIndexOf('**') === part.length - 2) {
+              var tspan = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+              tspan.setAttribute('font-weight', '700');
+              tspan.textContent = part.slice(2, -2);
+              textEl.appendChild(tspan);
+            } else if (part) {
+              var tspan = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+              tspan.setAttribute('font-weight', String(fw));
+              tspan.textContent = part;
+              textEl.appendChild(tspan);
+            }
+          });
+          // 第一行加图标前缀
+          if (li === 0 && icon) {
+            var iconSpan = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+            iconSpan.textContent = icon + ' ';
+            iconSpan.setAttribute('font-size', String(fontSize + 1));
+            textEl.insertBefore(iconSpan, textEl.firstChild);
+          }
+          group.appendChild(textEl);
+        });
+      }
     }
   }
 
@@ -390,7 +471,7 @@
         var pos = dagPosMap[n.id];
         if (!pos) return;
         var style = getStyle(n.type);
-        drawNodeShape(nodeGroup, pos.x, pos.y, pos.w, pos.h, pos.x + pos.w / 2, pos.y + pos.h / 2, n.type, style, n.label, FONT_SIZE_DAG, SANS_DAG);
+        drawNodeShape(nodeGroup, pos.x, pos.y, pos.w, pos.h, pos.x + pos.w / 2, pos.y + pos.h / 2, n.type, style, n.label, FONT_SIZE_DAG, SANS_DAG, n.icon);
       });
     });
     return;  // DAG 模式完成，跳过线性模式
@@ -710,7 +791,7 @@
   function drawNode(n) {
     var x = n.cx - n.w / 2 + offsetX, y = n.y;
     var style = getStyle(n.type);
-    drawNodeShape(nodeGroup, x, y, n.w, n.h, n.cx + offsetX, n.cy, n.type, style, n.label, FONT_SIZE, SANS);
+    drawNodeShape(nodeGroup, x, y, n.w, n.h, n.cx + offsetX, n.cy, n.type, style, n.label, FONT_SIZE, SANS, n.icon);
   }
 
   steps.forEach(function(s) { drawNode(nodeMap[s.id]); });

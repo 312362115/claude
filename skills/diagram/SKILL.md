@@ -83,6 +83,9 @@ description: >
 | 流量路径 | 桑基图 | 流带分层 | `references/diagrams/sankey.md` |
 | 分布关系 | 散点图 | 笛卡尔坐标 | `references/diagrams/scatter.md` |
 | 数据占比/层级面积 | 矩形树图 | Squarified | `references/diagrams/treemap.md` |
+| 柱状+折线混合 | 柱线混合图 | 笛卡尔双 Y 轴 | `references/diagrams/combo.md` |
+| 项目管理/任务看板 | Kanban | 竖列卡片 | `references/diagrams/kanban.md` |
+| Git 分支工作流 | Git Graph | 横向分支线 | `references/diagrams/git-graph.md` |
 
 ---
 

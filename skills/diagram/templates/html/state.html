@@ -49,6 +49,10 @@
   var CIRCLE_R = 12;
   var CIRCLE_SIZE = CIRCLE_R * 2 + 4;
   var CHOICE_SIZE = 28;
+  var FORK_W = 60;
+  var FORK_H = 4;
+  var NOTE_W = 140;
+  var NOTE_H = 36;
   var COMPOSITE_PAD_TOP = 40;
   var COMPOSITE_PAD_SIDE = 16;
   var COMPOSITE_PAD_BOTTOM = 16;
@@ -74,6 +78,22 @@
       } else if (s.type === 'choice') {
         node.w = CHOICE_SIZE;
         node.h = CHOICE_SIZE;
+      } else if (s.type === 'fork' || s.type === 'join') {
+        node.w = FORK_W;
+        node.h = FORK_H;
+      } else if (s.type === 'note') {
+        var noteTextW = mt(s.label, 11);
+        node.w = Math.max(noteTextW + 20, NOTE_W);
+        node.h = NOTE_H;
+        node.attachTo = s.attachTo;
+      } else if (s.type === 'concurrent') {
+        // 并发状态：类似 composite 但有多个 regions
+        node.w = 0; node.h = 0;
+        node.regions = s.regions || [];
+        compositeIds.push(s.id);
+        s.regions.forEach(function(r) {
+          processStates([{ id: r.id, label: r.label, type: 'composite', children: r.children }], (depth || 0) + 1);
+        });
       } else if (s.type === 'composite') {
         // composite 尺寸由 ELK 自动计算
         node.w = 0;
@@ -99,7 +119,21 @@
       var n = stateMap[s.id];
       var elkNode = { id: s.id, width: n.w, height: n.h };
 
-      if (s.type === 'composite') {
+      if (s.type === 'concurrent') {
+        // 并发状态：regions 作为子 compound nodes
+        elkNode.layoutOptions = {
+          'elk.algorithm': 'layered',
+          'elk.direction': 'DOWN',
+          'elk.spacing.nodeNode': '40',
+          'elk.edgeRouting': 'ORTHOGONAL',
+          'elk.padding': '[top=' + COMPOSITE_PAD_TOP + ',left=' + COMPOSITE_PAD_SIDE + ',bottom=' + COMPOSITE_PAD_BOTTOM + ',right=' + COMPOSITE_PAD_SIDE + ']'
+        };
+        elkNode.children = [];
+        s.regions.forEach(function(r) {
+          elkNode.children.push(buildElkChildren([{ id: r.id, label: r.label, type: 'composite', children: r.children }])[0]);
+        });
+        elkNode.edges = [];
+      } else if (s.type === 'composite') {
         elkNode.layoutOptions = {
           'elk.algorithm': 'layered',
           'elk.direction': 'RIGHT',
@@ -135,20 +169,29 @@
   var internalEdgeIds = {};
   function collectInternalEdges(stateList) {
     stateList.forEach(function(s) {
-      if (s.type === 'composite') {
+      if (s.type === 'composite' || s.type === 'concurrent') {
         var childIds = {};
+        var childList = s.type === 'concurrent'
+          ? [].concat.apply([], s.regions.map(function(r) { return r.children || []; }))
+          : s.children;
         (function collectIds(list) {
           list.forEach(function(c) {
             childIds[c.id] = true;
             if (c.children) collectIds(c.children);
           });
-        })(s.children);
+        })(childList);
         transitions.forEach(function(t, i) {
           if (childIds[t.from] && childIds[t.to]) {
             internalEdgeIds['e' + i] = true;
           }
         });
-        collectInternalEdges(s.children);
+        if (s.type === 'concurrent') {
+          s.regions.forEach(function(r) {
+            collectInternalEdges([{ id: r.id, type: 'composite', children: r.children }]);
+          });
+        } else {
+          collectInternalEdges(s.children);
+        }
       }
     });
   }
@@ -245,6 +288,23 @@
         x: n.x + 12, y: n.y + 22,
         'font-size': 13, 'font-weight': 700, fill: lc.label, 'font-family': SANS
       })).textContent = n.label;
+    });
+
+    // 绘制并发状态的区域分隔虚线
+    states.forEach(function(s) {
+      if (s.type === 'concurrent' && s.regions && s.regions.length > 1) {
+        var parent = stateMap[s.id];
+        if (!parent) return;
+        for (var ri = 0; ri < s.regions.length - 1; ri++) {
+          var region = stateMap[s.regions[ri].id];
+          if (!region) continue;
+          var sepY = region.y + region.h + 8;
+          bgGroup.appendChild(el('line', {
+            x1: parent.x + 8, y1: sepY, x2: parent.x + parent.w - 8, y2: sepY,
+            stroke: '#94A3B8', 'stroke-width': 1.5, 'stroke-dasharray': '6,4'
+          }));
+        }
+      }
     });
 
     // ========== 绘制边 ==========
@@ -355,6 +415,26 @@
           points: n.cx + ',' + (n.cy - hh) + ' ' + (n.cx + hw) + ',' + n.cy + ' ' + n.cx + ',' + (n.cy + hh) + ' ' + (n.cx - hw) + ',' + n.cy,
           fill: '#FFFBEB', stroke: '#FCD34D', 'stroke-width': 1.5
         }));
+      } else if (n.type === 'fork' || n.type === 'join') {
+        // 黑色粗横条
+        nodeGroup.appendChild(el('rect', {
+          x: n.x, y: n.y, width: n.w, height: n.h,
+          rx: 2, fill: '#1E293B'
+        }));
+      } else if (n.type === 'note') {
+        // 左边框注释卡片
+        nodeGroup.appendChild(el('rect', {
+          x: n.x, y: n.y, width: n.w, height: n.h,
+          rx: 4, fill: '#F8FAFC', stroke: '#E2E8F0', 'stroke-width': 1
+        }));
+        nodeGroup.appendChild(el('rect', {
+          x: n.x, y: n.y, width: 3, height: n.h,
+          fill: '#3B82F6'
+        }));
+        nodeGroup.appendChild(el('text', {
+          x: n.x + 10, y: n.cy, 'dominant-baseline': 'central',
+          'font-size': 11, fill: '#64748B', 'font-family': SANS
+        })).textContent = n.label;
       } else {
         // 容器内的子状态用白底
         var isInsideComposite = n.depth > 0;
