@@ -10,8 +10,8 @@ if not os.path.exists('lib'):
 with open('../templates/html/state.html', 'r') as f:
     template = f.read()
 
-# 提取引擎部分（从工具函数到文件末尾）
-engine_match = re.search(r'(  // ========== 工具函数 ==========.*)</script>', template, re.DOTALL)
+# 提取引擎部分（从常量到文件末尾）
+engine_match = re.search(r'(  // ========== 常量 ==========.*)</script>', template, re.DOTALL)
 engine = engine_match.group(1)
 
 # 公共 HTML 头（含 ELKjs）
@@ -93,89 +93,78 @@ L2 = '''
   ];
 '''
 
-# L3: 10 states, 15 transitions, includes self-loop
+# L3: composite state + choice pseudo-state
 L3 = '''
   // ========== 数据定义 ==========
-  var title = '工单处理状态机';
-  var subtitle = 'L3 复杂 · 10 状态 · 15 转换 · 含自循环';
+  var title = 'TCP 连接状态机';
+  var subtitle = 'L3 复杂 · composite 复合状态 + choice 伪状态';
+
+  var states = [
+    { id: 'start', label: '●', type: 'start' },
+    { id: 'established', label: '已建立连接', type: 'composite', children: [
+      { id: 'idle', label: '空闲', type: 'state' },
+      { id: 'sending', label: '发送中', type: 'state' },
+      { id: 'receiving', label: '接收中', type: 'state' }
+    ]},
+    { id: 'c1', label: '', type: 'choice' },
+    { id: 'closing', label: '关闭中', type: 'state' },
+    { id: 'error', label: '连接异常', type: 'state' },
+    { id: 'end', label: '◎', type: 'end' }
+  ];
+
+  var transitions = [
+    { from: 'start', to: 'established', label: '三次握手' },
+    { from: 'idle', to: 'sending', label: '发送请求' },
+    { from: 'sending', to: 'receiving', label: '等待响应' },
+    { from: 'receiving', to: 'idle', label: '处理完成' },
+    { from: 'established', to: 'c1', label: '断开' },
+    { from: 'c1', to: 'closing', label: '[正常关闭]' },
+    { from: 'c1', to: 'error', label: '[超时/异常]' },
+    { from: 'closing', to: 'end', label: '四次挥手' },
+    { from: 'error', to: 'end', label: '强制断开' }
+  ];
+'''
+
+# L4: composite + choice + fork/join
+L4 = '''
+  // ========== 数据定义 ==========
+  var title = '订单全链路状态机';
+  var subtitle = 'L4 超级复杂 · composite + choice + fork/join';
 
   var states = [
     { id: 'start', label: '●', type: 'start' },
     { id: 'created', label: '已创建', type: 'state' },
-    { id: 'assigned', label: '已分配', type: 'state' },
-    { id: 'inprogress', label: '处理中', type: 'state' },
-    { id: 'blocked', label: '已阻塞', type: 'state' },
-    { id: 'review', label: '待审核', type: 'state' },
-    { id: 'rejected', label: '已驳回', type: 'state' },
-    { id: 'resolved', label: '已解决', type: 'state' },
-    { id: 'closed', label: '已关闭', type: 'state' },
+    { id: 'c1', label: '', type: 'choice' },
+    { id: 'payment', label: '支付处理', type: 'composite', children: [
+      { id: 'validating', label: '验证中', type: 'state' },
+      { id: 'charging', label: '扣款中', type: 'state' },
+      { id: 'confirmed', label: '已确认', type: 'state' }
+    ]},
+    { id: 'fork1', label: '', type: 'fork' },
+    { id: 'packing', label: '打包中', type: 'state' },
+    { id: 'notifying', label: '通知中', type: 'state' },
+    { id: 'join1', label: '', type: 'join' },
+    { id: 'shipping', label: '配送中', type: 'state' },
+    { id: 'delivered', label: '已签收', type: 'state' },
+    { id: 'cancelled', label: '已取消', type: 'state' },
     { id: 'end', label: '◎', type: 'end' }
   ];
 
   var transitions = [
-    { from: 'start', to: 'created', label: '提交工单' },
-    { from: 'created', to: 'assigned', label: '分配处理人' },
-    { from: 'assigned', to: 'inprogress', label: '开始处理' },
-    { from: 'inprogress', to: 'inprogress', label: '更新进度' },
-    { from: 'inprogress', to: 'blocked', label: '遇到阻塞' },
-    { from: 'blocked', to: 'inprogress', label: '阻塞解除' },
-    { from: 'inprogress', to: 'review', label: '提交审核' },
-    { from: 'review', to: 'rejected', label: '审核不通过' },
-    { from: 'review', to: 'resolved', label: '审核通过' },
-    { from: 'rejected', to: 'inprogress', label: '重新处理' },
-    { from: 'resolved', to: 'closed', label: '确认关闭' },
-    { from: 'created', to: 'closed', label: '重复关闭' },
-    { from: 'assigned', to: 'closed', label: '无需处理' },
-    { from: 'blocked', to: 'closed', label: '无法解决' },
-    { from: 'closed', to: 'end', label: '归档' }
-  ];
-'''
-
-# L4: 14 states, 22 transitions, multiple paths to end
-L4 = '''
-  // ========== 数据定义 ==========
-  var title = '电商退款全链路状态机';
-  var subtitle = 'L4 超级复杂 · 14 状态 · 22 转换';
-
-  var states = [
-    { id: 'start', label: '●', type: 'start' },
-    { id: 'submitted', label: '已提交', type: 'state' },
-    { id: 'cs_review', label: '客服审核', type: 'state' },
-    { id: 'merchant_review', label: '商家审核', type: 'state' },
-    { id: 'return_shipping', label: '退货中', type: 'state' },
-    { id: 'warehouse_check', label: '仓库验收', type: 'state' },
-    { id: 'finance_review', label: '财务审批', type: 'state' },
-    { id: 'refunding', label: '退款中', type: 'state' },
-    { id: 'partial_refund', label: '部分退款', type: 'state' },
-    { id: 'refunded', label: '已退款', type: 'state' },
-    { id: 'rejected', label: '已拒绝', type: 'state' },
-    { id: 'escalated', label: '已升级', type: 'state' },
-    { id: 'cancelled', label: '已撤销', type: 'state' },
-    { id: 'end', label: '◎', type: 'end' }
-  ];
-
-  var transitions = [
-    { from: 'start', to: 'submitted', label: '发起退款' },
-    { from: 'submitted', to: 'cs_review', label: '自动分配' },
-    { from: 'submitted', to: 'cancelled', label: '用户撤销' },
-    { from: 'cs_review', to: 'merchant_review', label: '转商家处理' },
-    { from: 'cs_review', to: 'finance_review', label: '直接退款' },
-    { from: 'cs_review', to: 'rejected', label: '不符合条件' },
-    { from: 'merchant_review', to: 'return_shipping', label: '同意退货' },
-    { from: 'merchant_review', to: 'rejected', label: '拒绝退款' },
-    { from: 'merchant_review', to: 'finance_review', label: '仅退款' },
-    { from: 'return_shipping', to: 'warehouse_check', label: '签收退货' },
-    { from: 'return_shipping', to: 'cancelled', label: '超时未寄' },
-    { from: 'warehouse_check', to: 'finance_review', label: '验收通过' },
-    { from: 'warehouse_check', to: 'rejected', label: '验收不通过' },
-    { from: 'finance_review', to: 'refunding', label: '审批通过' },
-    { from: 'finance_review', to: 'partial_refund', label: '部分退款' },
-    { from: 'finance_review', to: 'rejected', label: '审批拒绝' },
-    { from: 'refunding', to: 'refunded', label: '到账成功' },
-    { from: 'partial_refund', to: 'refunded', label: '到账成功' },
-    { from: 'rejected', to: 'escalated', label: '用户申诉' },
-    { from: 'escalated', to: 'cs_review', label: '重新审核' },
-    { from: 'refunded', to: 'end', label: '完成' },
+    { from: 'start', to: 'created', label: '下单' },
+    { from: 'created', to: 'c1', label: '提交' },
+    { from: 'c1', to: 'payment', label: '[在线支付]' },
+    { from: 'c1', to: 'cancelled', label: '[取消订单]' },
+    { from: 'validating', to: 'charging', label: '验证通过' },
+    { from: 'charging', to: 'confirmed', label: '扣款成功' },
+    { from: 'payment', to: 'fork1', label: '支付完成' },
+    { from: 'fork1', to: 'packing', label: '仓库' },
+    { from: 'fork1', to: 'notifying', label: '通知' },
+    { from: 'packing', to: 'join1' },
+    { from: 'notifying', to: 'join1' },
+    { from: 'join1', to: 'shipping', label: '发货' },
+    { from: 'shipping', to: 'delivered', label: '签收' },
+    { from: 'delivered', to: 'end', label: '完成' },
     { from: 'cancelled', to: 'end', label: '关闭' }
   ];
 '''

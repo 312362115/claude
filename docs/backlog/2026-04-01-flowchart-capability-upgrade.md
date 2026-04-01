@@ -1,6 +1,6 @@
 ---
 priority: P2
-status: open
+status: done
 spec: docs/specs/2026-04-01-diagram-batch2-design.md
 plan: docs/specs/2026-04-01-diagram-batch2-design.md
 ---

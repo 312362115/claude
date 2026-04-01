@@ -18,13 +18,13 @@ from pathlib import Path
 TESTS_DIR = Path(__file__).parent
 SCRIPTS_DIR = TESTS_DIR / '../scripts'
 
-# 25 种图表类型
+# 29 种图表类型
 ALL_TYPES = [
-    'architecture', 'c4', 'class', 'dataflow', 'decision-tree',
-    'er', 'fishbone', 'flowchart', 'funnel', 'gantt',
-    'heatmap', 'journey', 'mindmap', 'network', 'orgchart',
+    'architecture', 'c4', 'class', 'combo', 'dataflow', 'decision-tree',
+    'er', 'fishbone', 'flowchart', 'funnel', 'gantt', 'git-graph',
+    'heatmap', 'journey', 'kanban', 'mindmap', 'network', 'orgchart',
     'pie', 'radar', 'sankey', 'sequence', 'state',
-    'swimlane', 'swot', 'timeline', 'venn', 'waterfall'
+    'swimlane', 'swot', 'timeline', 'treemap', 'venn', 'waterfall'
 ]
 
 
