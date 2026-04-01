@@ -282,8 +282,29 @@ figcaption {
 }
 .chart-container svg { max-width: 100%; height: auto; display: block; margin: 0 auto; }
 .chart-container .chart-inner {
-  display: flex; justify-content: center; align-items: center; min-height: 200px;
+  display: flex; justify-content: center; align-items: center; min-height: 120px;
+  overflow-x: auto;
 }
+/* DSL 渲染的图表（Mermaid/Graphviz）允许自然尺寸 */
+.chart-container .chart-inner svg[id^="mermaid-"] {
+  max-width: none;
+  width: auto;
+  min-width: min(100%, 500px);
+}
+.chart-container .chart-inner > svg:only-child {
+  max-height: 800px;
+}
+
+/*
+ * ─── Mermaid / Graphviz 图表样式覆盖 ───
+ *
+ * Mermaid 节点配色通过 themeVariables + themeCSS 注入 SVG 内部控制
+ * （见 preview-md.mjs 的 mermaid.initialize 配置）
+ *
+ * 此处仅处理：
+ * 1. chart-container 外层容器样式
+ * 2. Graphviz (viz.js) 渲染的图表样式
+ */
 
 /* ─── Callout Boxes (GitHub Alerts) ─── */
 .callout {

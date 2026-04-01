@@ -248,28 +248,207 @@ window.__mermaidReady = new Promise(function(resolve) { window.__mermaidResolve 
 <script type="module">
 import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
 window.__mermaid = mermaid;
+/*
+ * Mermaid 主题配置 — 对齐 diagram skill 设计规范
+ *
+ * 核心策略：
+ * 1. themeVariables 控制基础色板
+ * 2. themeCSS 注入 SVG 内部样式，实现节点分色、圆角、投影等 CSS 无法外部覆盖的效果
+ */
+const MERMAID_CSS = \`
+  /* 通用节点 */
+  .node rect, .node polygon, .node circle, .node ellipse { filter: drop-shadow(0 1px 2px rgba(0,0,0,0.06)); }
+  .node rect { rx: 6; ry: 6; }
+  .nodeLabel, .node foreignObject div { font-weight: 500; }
+  .label { text-shadow: none; }
+
+  /* 流程图 — 按第N个节点分色（Mermaid 内部用 .node-{id}） */
+  .flowchart-link { stroke-width: 1.5px; }
+  .edgeLabel { font-size: 11px; }
+  .marker { fill: #94A3B8; }
+
+  /* 序列图 — 参与者框 */
+  .actor { rx: 6; ry: 6; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.06)); }
+  text.actor > tspan { font-weight: 600; }
+  .messageLine0, .messageLine1 { stroke-width: 1.5px; }
+  .messageText { font-size: 12px; font-weight: 500; }
+  .activation0 { fill: #EFF6FF; stroke: #3B82F6; }
+  .activation1 { fill: #ECFDF5; stroke: #10B981; }
+  .loopText tspan { font-size: 11px; font-weight: 500; }
+  .labelBox { rx: 3; ry: 3; }
+  .actor-line { stroke-dasharray: 4 3; stroke: #CBD5E1; }
+  .note { rx: 4; ry: 4; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.04)); }
+
+  /* 类图 — 每个类框加分色 */
+  .classGroup rect { rx: 8; ry: 8; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.06)); }
+  .classGroup line { stroke: #E2E8F0; }
+  .classLabel .label { font-weight: 700; font-size: 13px; }
+  .relation { stroke-width: 1.5px; }
+  .cardinality { font-size: 10px; }
+
+  /* 状态图 */
+  .stateGroup rect { rx: 8; ry: 8; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.06)); }
+  .state-title { font-weight: 600; }
+
+  /* ER 图 */
+  .entityBox { rx: 8; ry: 8; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.06)); }
+  .entityLabel { font-weight: 700; }
+  .relationshipLine { stroke-width: 1.5px; }
+
+  /* 甘特图 */
+  .task { rx: 4; ry: 4; }
+  .taskText { font-size: 11px; font-weight: 500; }
+  .sectionTitle { font-weight: 600; }
+
+  /* 饼图 */
+  .pieCircle { filter: drop-shadow(0 2px 4px rgba(0,0,0,0.08)); }
+  .pieTitleText { font-weight: 700; }
+  .legend text { font-weight: 500; }
+
+  /* 思维导图 */
+  .mindmap-node rect, .mindmap-node circle { filter: drop-shadow(0 1px 3px rgba(0,0,0,0.08)); }
+
+  /* 子图/集群 */
+  .cluster rect { rx: 10; ry: 10; }
+  .cluster span, .cluster .nodeLabel { font-weight: 600; }
+\`;
+
 mermaid.initialize({
   startOnLoad: false,
   theme: 'base',
+  themeCSS: MERMAID_CSS,
   themeVariables: {
-    primaryColor: '#eff6ff',
-    primaryTextColor: '#1e293b',
-    primaryBorderColor: '#3b82f6',
-    lineColor: '#94a3b8',
-    secondaryColor: '#f0fdf4',
-    tertiaryColor: '#faf5ff',
+    /* 主节点 — 蓝色系 */
+    primaryColor: '#DBEAFE',
+    primaryTextColor: '#1E293B',
+    primaryBorderColor: '#93C5FD',
+
+    /* 次要节点 — 绿色系 */
+    secondaryColor: '#D1FAE5',
+    secondaryBorderColor: '#6EE7B7',
+    secondaryTextColor: '#065F46',
+
+    /* 三级节点 — 紫色系 */
+    tertiaryColor: '#EDE9FE',
+    tertiaryBorderColor: '#C4B5FD',
+    tertiaryTextColor: '#5B21B6',
+
+    /* 连线 */
+    lineColor: '#94A3B8',
+
+    /* 字体 */
     fontFamily: '-apple-system, system-ui, "PingFang SC", "Noto Sans CJK SC", sans-serif',
-    fontSize: '14px',
-    noteBkgColor: '#fffbeb',
-    noteBorderColor: '#f59e0b',
-    noteTextColor: '#1e293b',
+    fontSize: '13px',
+
+    /* 注释/备注 */
+    noteBkgColor: '#FFFBEB',
+    noteBorderColor: '#FCD34D',
+    noteTextColor: '#92400E',
+
+    /* 背景 */
+    background: '#ffffff',
+    mainBkg: '#DBEAFE',
+
+    /* 文字 */
+    textColor: '#1E293B',
+    labelTextColor: '#64748B',
+
+    /* 子图 */
+    clusterBorder: '#93C5FD',
+    clusterBkg: '#F0F7FF',
+
+    /* 标签背景 */
+    edgeLabelBackground: '#ffffff',
+
+    /* 序列图 — 多色参与者 */
+    actorBkg: '#DBEAFE',
+    actorBorder: '#93C5FD',
+    actorTextColor: '#1E293B',
+    signalColor: '#475569',
+    signalTextColor: '#475569',
+    activationBorderColor: '#3B82F6',
+    activationBkg: '#EFF6FF',
+    sequenceNumberColor: '#ffffff',
+
+    /* 甘特图 — 多色任务条 */
+    gridColor: '#E2E8F0',
+    todayLineColor: '#F43F5E',
+    taskBkgColor: '#DBEAFE',
+    taskBorderColor: '#93C5FD',
+    taskTextColor: '#1E293B',
+    activeTaskBkgColor: '#BFDBFE',
+    activeTaskBorderColor: '#3B82F6',
+    doneTaskBkgColor: '#D1FAE5',
+    doneTaskBorderColor: '#6EE7B7',
+    critBkgColor: '#FECACA',
+    critBorderColor: '#F87171',
+    sectionBkgColor: '#F8FAFC',
+    altSectionBkgColor: '#F1F5F9',
+    sectionBkgColor2: '#EFF6FF',
+
+    /* 饼图 — 6色对齐 diagram 色板 */
+    pie1: '#3B82F6',
+    pie2: '#10B981',
+    pie3: '#8B5CF6',
+    pie4: '#F59E0B',
+    pie5: '#F43F5E',
+    pie6: '#0EA5E9',
+    pie7: '#6366F1',
+    pie8: '#EC4899',
+    pieStrokeColor: '#ffffff',
+    pieStrokeWidth: '2px',
+    pieTitleTextSize: '16px',
+    pieTitleTextColor: '#0F172A',
+    pieSectionTextSize: '12px',
+    pieSectionTextColor: '#ffffff',
+    pieLegendTextSize: '12px',
+    pieLegendTextColor: '#475569',
+    pieOuterStrokeWidth: '0',
+
+    /* 状态图 */
+    labelColor: '#1E293B',
+    altBackground: '#F8FAFC',
+    compositeBackground: '#F8FAFC',
+    compositeBorder: '#93C5FD',
+    compositeTitleBackground: '#DBEAFE',
+
+    /* 类图 — 提高饱和度 */
+    classText: '#1E293B',
+
+    /* 思维导图 */
+    cScale0: '#3B82F6', cScaleLabel0: '#ffffff',
+    cScale1: '#10B981', cScaleLabel1: '#ffffff',
+    cScale2: '#8B5CF6', cScaleLabel2: '#ffffff',
+    cScale3: '#F59E0B', cScaleLabel3: '#ffffff',
+    cScale4: '#F43F5E', cScaleLabel4: '#ffffff',
+    cScale5: '#0EA5E9', cScaleLabel5: '#ffffff',
+
+    /* cScale 也用于 timeline / journey 配色 */
+    cScalePeer0: '#DBEAFE', cScalePeer1: '#D1FAE5',
+    cScalePeer2: '#EDE9FE', cScalePeer3: '#FEF3C7',
+    cScalePeer4: '#FECACA', cScalePeer5: '#E0F2FE',
+
+    /* ER 图 — 实体分色 */
+    fill0: '#DBEAFE', fill1: '#D1FAE5',
+    fill2: '#EDE9FE', fill3: '#FEF3C7',
+    fill4: '#FECACA', fill5: '#E0F2FE',
+    fill6: '#FCE7F3', fill7: '#FFF7ED',
   },
-  flowchart: { curve: 'basis', padding: 16 },
-  sequence: { mirrorActors: false, bottomMarginAdj: 2 },
+  flowchart: { curve: 'basis', padding: 20, htmlLabels: true, nodeSpacing: 60, rankSpacing: 50 },
+  sequence: { mirrorActors: false, bottomMarginAdj: 2, useMaxWidth: false, messageMargin: 40, boxMargin: 8 },
+  gantt: { useMaxWidth: false, fontSize: 11, barHeight: 24, barGap: 6, topPadding: 40, sectionFontSize: 12 },
+  er: { useMaxWidth: false, fontSize: 13 },
+  mindmap: { useMaxWidth: false, padding: 16 },
+  timeline: { useMaxWidth: false },
+  sankey: { useMaxWidth: false },
+  journey: { useMaxWidth: false },
+  class: { useMaxWidth: false },
+  state: { useMaxWidth: false },
+  c4: { useMaxWidth: false },
+  pie: { useMaxWidth: false, textPosition: 0.75 },
 });
 window.__mermaidResolve();
 </script>
-<script src="https://cdn.jsdelivr.net/npm/@viz-js/viz@3/lib/viz-standalone.js"></script>
 <script>
   const FILE_PATH = '${encodedPath}';
   const FILE_DIR = '${encodedDir}';
@@ -358,12 +537,10 @@ window.__mermaidResolve();
     });
   }
 
-  // 渲染 Mermaid / Graphviz DSL 代码块
+  // 渲染 Mermaid DSL 代码块
   async function renderDSLBlocks() {
-    // 等待 mermaid ESM 模块加载完成
     if (window.__mermaidReady) await window.__mermaidReady;
 
-    // Mermaid
     const mermaidBlocks = document.querySelectorAll('pre > code.language-mermaid');
     if (mermaidBlocks.length > 0 && window.__mermaid) {
       let idx = 0;
@@ -378,39 +555,9 @@ window.__mermaidResolve();
           container.innerHTML = '<div class="chart-inner">' + svg + '</div>';
           pre.parentNode.replaceChild(container, pre);
         } catch (e) {
-          // 渲染失败保留原始代码块，加错误提示
           pre.style.borderLeft = '3px solid var(--c-danger)';
           pre.title = 'Mermaid 渲染失败: ' + e.message;
         }
-      }
-    }
-
-    // Graphviz (DOT)
-    const dotBlocks = document.querySelectorAll('pre > code.language-dot, pre > code.language-graphviz');
-    if (dotBlocks.length > 0 && window.Viz) {
-      try {
-        const viz = await window.Viz.instance();
-        for (const codeEl of dotBlocks) {
-          const pre = codeEl.parentElement;
-          const src = codeEl.textContent;
-          try {
-            const svg = viz.renderSVGElement(src);
-            svg.style.maxWidth = '100%';
-            svg.style.height = 'auto';
-            const container = document.createElement('div');
-            container.className = 'chart-container';
-            const inner = document.createElement('div');
-            inner.className = 'chart-inner';
-            inner.appendChild(svg);
-            container.appendChild(inner);
-            pre.parentNode.replaceChild(container, pre);
-          } catch (e) {
-            pre.style.borderLeft = '3px solid var(--c-danger)';
-            pre.title = 'Graphviz 渲染失败: ' + e.message;
-          }
-        }
-      } catch (e) {
-        console.error('Viz.js 初始化失败:', e);
       }
     }
   }

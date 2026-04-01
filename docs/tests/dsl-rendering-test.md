@@ -1,10 +1,10 @@
-# DSL 渲染测试 — Mermaid + Graphviz
+# DSL 渲染测试 — Mermaid 全覆盖
 
-> 覆盖全部 12 种结构图的 DSL 渲染，验证 preview-md 的 mermaid.js 和 viz.js 集成。
+> 覆盖 Mermaid 支持的全部图表类型，验证 preview-md 的渲染和主题配色效果。
 
 ---
 
-## 一、Mermaid 图表（11 种）
+## 一、结构图
 
 ### 1. Flowchart 流程图
 
@@ -226,260 +226,331 @@ journey
 
 ---
 
-## 二、Graphviz 图表（6 种）
+## 二、结构图（Flowchart 子图模式）
 
-### 11. Architecture 架构图
+### 12. Architecture 架构图
 
-```dot
-digraph architecture {
-    rankdir=TB;
-    compound=true;
-    node [shape=box, style="rounded,filled", fontname="PingFang SC", fontsize=12];
-    edge [color="#94A3B8", fontsize=10, fontname="PingFang SC"];
+```mermaid
+flowchart TD
+    subgraph client["客户端"]
+        web[Web App<br/>React]
+        mobile[Mobile App<br/>Flutter]
+    end
 
-    subgraph cluster_client {
-        label="客户端"; style="dashed,rounded"; color="#3b82f6"; fontname="PingFang SC";
-        web [label="Web App\nReact", fillcolor="#EFF6FF"];
-        mobile [label="Mobile App\nFlutter", fillcolor="#EFF6FF"];
-    }
+    subgraph gateway["网关层"]
+        nginx[Nginx<br/>负载均衡]
+        api_gw[API Gateway<br/>鉴权/限流]
+    end
 
-    subgraph cluster_gateway {
-        label="网关层"; style="dashed,rounded"; color="#8b5cf6"; fontname="PingFang SC";
-        nginx [label="Nginx\n负载均衡", fillcolor="#FAF5FF"];
-        api_gw [label="API Gateway\n鉴权/限流", fillcolor="#FAF5FF"];
-    }
+    subgraph services["微服务层"]
+        user_svc[用户服务]
+        order_svc[订单服务]
+        product_svc[商品服务]
+        pay_svc[支付服务]
+    end
 
-    subgraph cluster_services {
-        label="微服务层"; style="dashed,rounded"; color="#10b981"; fontname="PingFang SC";
-        user_svc [label="用户服务", fillcolor="#F0FDF4"];
-        order_svc [label="订单服务", fillcolor="#F0FDF4"];
-        product_svc [label="商品服务", fillcolor="#F0FDF4"];
-        pay_svc [label="支付服务", fillcolor="#F0FDF4"];
-    }
+    subgraph data["数据层"]
+        mysql[(MySQL<br/>主从集群)]
+        redis[(Redis<br/>缓存集群)]
+        es[(Elasticsearch<br/>搜索引擎)]
+        mq>RabbitMQ<br/>消息队列]
+    end
 
-    subgraph cluster_data {
-        label="数据层"; style="dashed,rounded"; color="#f59e0b"; fontname="PingFang SC";
-        mysql [label="MySQL\n主从集群", fillcolor="#FFFBEB"];
-        redis [label="Redis\n缓存集群", fillcolor="#FFFBEB"];
-        es [label="Elasticsearch\n搜索引擎", fillcolor="#FFFBEB"];
-        mq [label="RabbitMQ\n消息队列", fillcolor="#FFFBEB"];
-    }
-
-    web -> nginx;
-    mobile -> nginx;
-    nginx -> api_gw;
-    api_gw -> user_svc;
-    api_gw -> order_svc;
-    api_gw -> product_svc;
-    api_gw -> pay_svc;
-    user_svc -> mysql;
-    order_svc -> mysql;
-    order_svc -> mq [label="异步"];
-    product_svc -> es;
-    product_svc -> redis;
-    pay_svc -> mysql;
-}
+    web --> nginx
+    mobile --> nginx
+    nginx --> api_gw
+    api_gw --> user_svc
+    api_gw --> order_svc
+    api_gw --> product_svc
+    api_gw --> pay_svc
+    user_svc --> mysql
+    order_svc --> mysql
+    order_svc -.->|异步| mq
+    product_svc --> es
+    product_svc --> redis
+    pay_svc --> mysql
 ```
 
-### 12. Swimlane 泳道图（用 subgraph 模拟）
+### 13. Swimlane 泳道图
 
-```dot
-digraph swimlane {
-    rankdir=LR;
-    node [shape=box, style="rounded,filled", fontname="PingFang SC", fontsize=11];
-    edge [fontname="PingFang SC", fontsize=10];
+```mermaid
+flowchart LR
+    subgraph buyer["买家"]
+        c1[提交订单]
+        c2[确认收货]
+    end
 
-    subgraph cluster_customer {
-        label="买家"; style="filled"; color="#EFF6FF"; fontname="PingFang SC";
-        c1 [label="提交订单", fillcolor="#DBEAFE"];
-        c2 [label="确认收货", fillcolor="#DBEAFE"];
-    }
+    subgraph system["系统"]
+        s1[创建订单]
+        s2[扣减库存]
+        s3[发送通知]
+    end
 
-    subgraph cluster_system {
-        label="系统"; style="filled"; color="#F0FDF4"; fontname="PingFang SC";
-        s1 [label="创建订单", fillcolor="#D1FAE5"];
-        s2 [label="扣减库存", fillcolor="#D1FAE5"];
-        s3 [label="发送通知", fillcolor="#D1FAE5"];
-    }
+    subgraph warehouse["仓库"]
+        w1[拣货打包]
+        w2[发货]
+    end
 
-    subgraph cluster_warehouse {
-        label="仓库"; style="filled"; color="#FFFBEB"; fontname="PingFang SC";
-        w1 [label="拣货打包", fillcolor="#FEF3C7"];
-        w2 [label="发货", fillcolor="#FEF3C7"];
-    }
-
-    c1 -> s1 -> s2 -> w1 -> w2 -> s3 -> c2;
-}
+    c1 --> s1 --> s2 --> w1 --> w2 --> s3 --> c2
 ```
 
 ### 14. Network 网络图
 
-```dot
-digraph network {
-    rankdir=TB;
-    node [shape=box, style="rounded,filled", fontname="PingFang SC", fontsize=11];
-    edge [color="#94A3B8"];
+```mermaid
+flowchart TD
+    subgraph public["公网"]
+        cdn[CDN<br/>内容分发]
+        dns[DNS<br/>域名解析]
+    end
 
-    subgraph cluster_public {
-        label="公网"; style="dashed"; color="#ef4444"; fontname="PingFang SC";
-        cdn [label="CDN\n内容分发", fillcolor="#FEF2F2"];
-        dns [label="DNS\n域名解析", fillcolor="#FEF2F2"];
-    }
+    subgraph dmz["DMZ 区"]
+        fw{防火墙}
+        lb[负载均衡<br/>F5]
+    end
 
-    subgraph cluster_dmz {
-        label="DMZ 区"; style="dashed"; color="#f59e0b"; fontname="PingFang SC";
-        fw [label="防火墙", fillcolor="#FFFBEB", shape=diamond];
-        lb [label="负载均衡\nF5", fillcolor="#FFFBEB"];
-    }
+    subgraph internal["内网"]
+        app1[应用服务器 1]
+        app2[应用服务器 2]
+        db_master[(DB Master)]
+        db_slave[(DB Slave)]
+    end
 
-    subgraph cluster_internal {
-        label="内网"; style="dashed"; color="#10b981"; fontname="PingFang SC";
-        app1 [label="应用服务器 1", fillcolor="#F0FDF4"];
-        app2 [label="应用服务器 2", fillcolor="#F0FDF4"];
-        db_master [label="DB Master", fillcolor="#F0FDF4"];
-        db_slave [label="DB Slave", fillcolor="#F0FDF4"];
-    }
-
-    dns -> cdn -> fw;
-    fw -> lb;
-    lb -> app1;
-    lb -> app2;
-    app1 -> db_master;
-    app2 -> db_master;
-    db_master -> db_slave [label="主从复制", style=dashed];
-}
+    dns --> cdn --> fw
+    fw --> lb
+    lb --> app1
+    lb --> app2
+    app1 --> db_master
+    app2 --> db_master
+    db_master -.->|主从复制| db_slave
 ```
 
 ### 15. Decision Tree 决策树
 
-```dot
-digraph decision_tree {
-    rankdir=TB;
-    node [fontname="PingFang SC", fontsize=11];
-    edge [fontname="PingFang SC", fontsize=10, color="#64748b"];
+```mermaid
+flowchart TD
+    start{订单金额<br/>> 1000元?}
+    vip{VIP 客户?}
+    risk{风控评分<br/>> 80?}
 
-    start [label="订单金额\n> 1000元?", shape=diamond, style="filled", fillcolor="#EFF6FF"];
-    vip [label="VIP 客户?", shape=diamond, style="filled", fillcolor="#EFF6FF"];
-    risk [label="风控评分\n> 80?", shape=diamond, style="filled", fillcolor="#EFF6FF"];
+    auto[自动审批<br/>即时放行]
+    manual[人工审核<br/>1-2 工作日]
+    reject[拒绝<br/>通知客户]
+    senior[高级审批<br/>总监签字]
 
-    auto [label="自动审批\n即时放行", shape=box, style="rounded,filled", fillcolor="#D1FAE5"];
-    manual [label="人工审核\n1-2 工作日", shape=box, style="rounded,filled", fillcolor="#FFFBEB"];
-    reject [label="拒绝\n通知客户", shape=box, style="rounded,filled", fillcolor="#FEF2F2"];
-    senior [label="高级审批\n总监签字", shape=box, style="rounded,filled", fillcolor="#FAF5FF"];
-
-    start -> vip [label="是"];
-    start -> risk [label="否"];
-    vip -> auto [label="是"];
-    vip -> manual [label="否"];
-    risk -> manual [label="是"];
-    risk -> reject [label="否"];
-    manual -> senior [label="金额>5000", style=dashed];
-}
+    start -->|是| vip
+    start -->|否| risk
+    vip -->|是| auto
+    vip -->|否| manual
+    risk -->|是| manual
+    risk -->|否| reject
+    manual -.->|金额>5000| senior
 ```
 
 ### 16. Dataflow 数据流图
 
-```dot
-digraph dataflow {
-    rankdir=LR;
-    node [shape=box, style="rounded,filled", fontname="PingFang SC", fontsize=11];
-    edge [fontname="PingFang SC", fontsize=10, color="#64748b"];
+```mermaid
+flowchart LR
+    subgraph source["数据源"]
+        mysql_src[(MySQL<br/>业务库)]
+        kafka>Kafka<br/>事件流]
+        api[外部 API<br/>第三方数据]
+    end
 
-    subgraph cluster_source {
-        label="数据源"; style="dashed"; color="#3b82f6"; fontname="PingFang SC";
-        mysql_src [label="MySQL\n业务库", fillcolor="#EFF6FF"];
-        kafka [label="Kafka\n事件流", fillcolor="#EFF6FF"];
-        api [label="外部 API\n第三方数据", fillcolor="#EFF6FF"];
-    }
+    subgraph process["数据处理"]
+        flink[Flink<br/>实时计算]
+        spark[Spark<br/>批处理]
+        etl[ETL<br/>数据清洗]
+    end
 
-    subgraph cluster_process {
-        label="数据处理"; style="dashed"; color="#8b5cf6"; fontname="PingFang SC";
-        flink [label="Flink\n实时计算", fillcolor="#FAF5FF"];
-        spark [label="Spark\n批处理", fillcolor="#FAF5FF"];
-        etl [label="ETL\n数据清洗", fillcolor="#FAF5FF"];
-    }
+    subgraph storage["数据存储"]
+        hive[(Hive<br/>数据仓库)]
+        es[(Elasticsearch<br/>搜索索引)]
+        redis[(Redis<br/>实时缓存)]
+    end
 
-    subgraph cluster_storage {
-        label="数据存储"; style="dashed"; color="#10b981"; fontname="PingFang SC";
-        hive [label="Hive\n数据仓库", fillcolor="#F0FDF4"];
-        es [label="Elasticsearch\n搜索索引", fillcolor="#F0FDF4"];
-        redis [label="Redis\n实时缓存", fillcolor="#F0FDF4"];
-    }
+    subgraph output["数据应用"]
+        bi[BI 报表]
+        recommend[推荐引擎]
+        monitor[监控告警]
+    end
 
-    subgraph cluster_output {
-        label="数据应用"; style="dashed"; color="#f59e0b"; fontname="PingFang SC";
-        bi [label="BI 报表", fillcolor="#FFFBEB"];
-        recommend [label="推荐引擎", fillcolor="#FFFBEB"];
-        monitor [label="监控告警", fillcolor="#FFFBEB"];
-    }
-
-    mysql_src -> etl;
-    kafka -> flink;
-    api -> etl;
-    etl -> hive;
-    etl -> spark;
-    flink -> redis;
-    flink -> es;
-    spark -> hive;
-    hive -> bi;
-    es -> recommend;
-    redis -> monitor;
-}
+    mysql_src --> etl
+    kafka --> flink
+    api --> etl
+    etl --> hive
+    etl --> spark
+    flink --> redis
+    flink --> es
+    spark --> hive
+    hive --> bi
+    es --> recommend
+    redis --> monitor
 ```
 
 ### 17. Orgchart 组织结构图
 
-```dot
-digraph orgchart {
-    rankdir=TB;
-    node [shape=box, style="rounded,filled", fontname="PingFang SC", fontsize=11, fillcolor="#EFF6FF"];
-    edge [color="#94A3B8"];
+```mermaid
+flowchart TD
+    ceo[CEO<br/>张三]
 
-    ceo [label="CEO\n张三", fillcolor="#DBEAFE", penwidth=2];
+    cto[CTO<br/>李四]
+    cpo[CPO<br/>王五]
+    cfo[CFO<br/>赵六]
 
-    cto [label="CTO\n李四"];
-    cpo [label="CPO\n王五"];
-    cfo [label="CFO\n赵六"];
+    fe_lead[前端负责人<br/>陈七]
+    be_lead[后端负责人<br/>周八]
+    pm[产品经理<br/>吴九]
+    designer[设计师<br/>郑十]
+    finance[财务<br/>孙一]
 
-    fe_lead [label="前端负责人\n陈七", fillcolor="#F0FDF4"];
-    be_lead [label="后端负责人\n周八", fillcolor="#F0FDF4"];
-    pm [label="产品经理\n吴九", fillcolor="#FAF5FF"];
-    designer [label="设计师\n郑十", fillcolor="#FAF5FF"];
-    finance [label="财务\n孙一", fillcolor="#FFFBEB"];
-
-    ceo -> cto;
-    ceo -> cpo;
-    ceo -> cfo;
-    cto -> fe_lead;
-    cto -> be_lead;
-    cpo -> pm;
-    cpo -> designer;
-    cfo -> finance;
-}
+    ceo --> cto
+    ceo --> cpo
+    ceo --> cfo
+    cto --> fe_lead
+    cto --> be_lead
+    cpo --> pm
+    cpo --> designer
+    cfo --> finance
 ```
 
 ---
 
-## 三、验证清单
+## 三、统计图 & 扩展图表
 
-| # | 图表类型 | DSL | 预期 |
-|---|---------|-----|------|
-| 1 | flowchart | Mermaid | 节点+箭头+判断分支正常 |
-| 2 | sequence | Mermaid | 参与者+消息+alt块正常 |
-| 3 | class | Mermaid | 类+属性+继承关系正常 |
-| 4 | state | Mermaid | 状态+转换+起止符正常 |
-| 5 | er | Mermaid | 实体+字段+关系线正常 |
-| 6 | gantt | Mermaid | 时间轴+任务条+里程碑正常 |
-| 7 | mindmap | Mermaid | 树形展开正常 |
-| 8 | timeline | Mermaid | 时间点+事件正常 |
-| 9 | c4 | Mermaid | 系统边界+关系正常 |
-| 10 | sankey | Mermaid | 流带+标签正常 |
-| 11 | journey | Mermaid | 阶段+评分+参与者正常 |
-| 12 | architecture | Graphviz | 分层+分组+连线正常 |
-| 13 | swimlane | Graphviz | 泳道分区+流程正常 |
-| 14 | network | Graphviz | 拓扑分层+连线正常 |
-| 15 | decision-tree | Graphviz | 判断节点+分支正常 |
-| 16 | dataflow | Graphviz | 数据流向+分组正常 |
-| 17 | orgchart | Graphviz | 树形层级+连线正常 |
+### 18. XY Chart 柱状图
 
-**不支持 DSL 的图表**（继续走 PNG）：SWOT 图、鱼骨图、文氏图
+```mermaid
+xychart-beta
+    title "月度销售额（万元）"
+    x-axis [Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec]
+    y-axis "销售额" 0 --> 500
+    bar [120, 150, 180, 220, 280, 350, 310, 290, 340, 420, 380, 460]
+```
+
+### 19. XY Chart 折线图
+
+```mermaid
+xychart-beta
+    title "用户增长趋势"
+    x-axis [Q1, Q2, Q3, Q4]
+    y-axis "用户数（万）" 0 --> 100
+    line [15, 32, 58, 89]
+    line [10, 25, 45, 72]
+```
+
+### 20. XY Chart 柱状+折线混合
+
+```mermaid
+xychart-beta
+    title "营收 vs 成本"
+    x-axis [Jan, Feb, Mar, Apr, May, Jun]
+    y-axis "金额（万元）" 0 --> 400
+    bar [120, 150, 200, 280, 320, 380]
+    line [80, 100, 130, 160, 190, 220]
+```
+
+### 21. Pie 饼图
+
+```mermaid
+pie title 技术栈分布
+    "TypeScript" : 45
+    "Python" : 25
+    "Go" : 15
+    "Rust" : 10
+    "Other" : 5
+```
+
+### 22. Quadrant Chart 四象限图
+
+```mermaid
+quadrantChart
+    title Tech Selection
+    x-axis "Low Cost" --> "High Cost"
+    y-axis "Low Perf" --> "High Perf"
+    quadrant-1 "Worth it"
+    quadrant-2 "Caution"
+    quadrant-3 "Consider"
+    quadrant-4 "Skip"
+    React: [0.8, 0.7]
+    Vue: [0.3, 0.6]
+    Svelte: [0.4, 0.8]
+    Angular: [0.9, 0.65]
+    jQuery: [0.15, 0.2]
+    Solid: [0.55, 0.85]
+```
+
+### 23. Git Graph 分支图
+
+```mermaid
+gitGraph
+    commit id: "init"
+    commit id: "feat: auth"
+    branch develop
+    checkout develop
+    commit id: "feat: login"
+    commit id: "feat: register"
+    branch feature/oauth
+    checkout feature/oauth
+    commit id: "feat: oauth2"
+    commit id: "fix: token"
+    checkout develop
+    merge feature/oauth id: "merge oauth"
+    checkout main
+    merge develop id: "release v1.0" tag: "v1.0"
+    commit id: "hotfix: session"
+```
+
+### 24. Block Diagram 块图
+
+```mermaid
+block-beta
+    columns 3
+    
+    Frontend["前端应用"]:3
+    
+    space:1 API["API 网关"] space:1
+    
+    UserSvc["用户服务"] OrderSvc["订单服务"] ProductSvc["商品服务"]
+    
+    DB[("数据库")]:2 Cache[("缓存")]
+    
+    Frontend --> API
+    API --> UserSvc
+    API --> OrderSvc
+    API --> ProductSvc
+    UserSvc --> DB
+    OrderSvc --> DB
+    ProductSvc --> Cache
+```
+
+---
+
+## 四、验证清单
+
+| # | 图表类型 | 语法 | 验证点 |
+|---|---------|------|--------|
+| 1 | flowchart | Mermaid | 节点+箭头+判断分支 |
+| 2 | sequence | Mermaid | 参与者+消息+alt块 |
+| 3 | class | Mermaid | 类+属性+继承关系 |
+| 4 | state | Mermaid | 状态+转换+起止符 |
+| 5 | er | Mermaid | 实体+字段+关系线 |
+| 6 | gantt | Mermaid | 时间轴+任务条+里程碑 |
+| 7 | mindmap | Mermaid | 树形展开+多级 |
+| 8 | timeline | Mermaid | 时间点+事件 |
+| 9 | c4 | Mermaid | 系统边界+关系 |
+| 10 | sankey | Mermaid | 流带+标签 |
+| 11 | journey | Mermaid | 阶段+评分+参与者 |
+| 12 | architecture | Mermaid subgraph | 分层+分组+连线 |
+| 13 | swimlane | Mermaid subgraph | 泳道分区+流程 |
+| 14 | network | Mermaid subgraph | 拓扑分层+连线 |
+| 15 | decision-tree | Mermaid flowchart | 判断节点+分支 |
+| 16 | dataflow | Mermaid subgraph | 数据流向+分组 |
+| 17 | orgchart | Mermaid flowchart | 树形层级+连线 |
+| 18 | bar chart | xychart-beta | 柱状图+轴标签 |
+| 19 | line chart | xychart-beta | 折线+多系列 |
+| 20 | bar+line | xychart-beta | 混合图表 |
+| 21 | pie | Mermaid | 扇区+标签+颜色 |
+| 22 | quadrant | Mermaid | 四象限+散点定位 |
+| 23 | gitGraph | Mermaid | 分支+合并+标签 |
+| 24 | block | block-beta | 块+列布局+连线 |
+**Mermaid 无法覆盖（继续走 diagram skill PNG）**：SWOT 图、鱼骨图、文氏图、雷达图（radar-beta 尚不稳定）、热力图、散点图、漏斗图、瀑布图

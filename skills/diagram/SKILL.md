@@ -181,8 +181,8 @@ description: >
 - 生成方式：`python scripts/capture.py input.html -f html`
 
 **DSL（可选）** — 用于嵌入 Markdown 文档，文本可 diff、可版本控制：
-- 仅限**结构图**，统计图不支持（继续用 PNG）
-- 输出为 Mermaid 或 Graphviz (DOT) 语法的纯文本
+- 结构图 + 部分统计图支持 Mermaid DSL 输出
+- 输出为 Mermaid 语法的纯文本
 - 适用场景：MD 文档配图不想维护 PNG 文件、需要 preview-md 实时渲染、GitHub/GitLab 原生渲染
 - 生成方式：直接输出文本，用户复制到 MD 文件的代码块中
 
@@ -191,9 +191,12 @@ DSL 选择规则：
 | 图表类型 | DSL | 代码块标记 |
 |---------|-----|----------|
 | flowchart / sequence / class / state / er | Mermaid | ` ```mermaid ` |
-| gantt / mindmap / timeline / c4 / sankey | Mermaid | ` ```mermaid ` |
-| architecture / swimlane | Graphviz (DOT) | ` ```dot ` |
-| 统计图（bar/line/pie/radar 等） | **不支持** | 继续用 PNG |
+| gantt / mindmap / timeline / c4 / sankey / journey | Mermaid | ` ```mermaid ` |
+| architecture / swimlane / network / dataflow / orgchart / decision-tree | Mermaid（flowchart + subgraph） | ` ```mermaid ` |
+| bar / line（柱状图、折线图） | Mermaid（xychart-beta） | ` ```mermaid ` |
+| pie（饼图） | Mermaid | ` ```mermaid ` |
+| radar / heatmap / scatter / funnel / waterfall 等 | **不支持 DSL** | 继续用 PNG |
+| quadrant / gitGraph / block | **暂不支持** | 后续按需开放 |
 
 DSL 输出格式示例：
 
