@@ -1,5 +1,9 @@
 ---
 name: task-start
+version: 1.1.0
+last_updated: 2026-03-28
+repository: https://github.com/312362115/claude
+changelog: skills/task-start/CHANGELOG.md
 description: >
   任务启动流程：需求对焦 + UI 原型确认 + 方案设计。收到新功能、复杂任务、大型需求时触发。
   包含决策树判断走哪条路径、对焦检查清单、UI 原型预览环节、方案模板和示例。

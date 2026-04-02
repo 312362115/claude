@@ -2,6 +2,8 @@
 name: preview-md
 version: 1.1.0
 last_updated: 2026-03-30
+repository: https://github.com/312362115/claude
+changelog: skills/preview-md/CHANGELOG.md
 description: >
   MD 文件浏览器预览：GitHub 风格渲染 + 左侧自动目录。
   在完成方案设计（specs）或开发计划（plans）的 MD 文件后触发。
