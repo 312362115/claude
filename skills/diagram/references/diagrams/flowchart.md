@@ -45,12 +45,25 @@
 
 ## 布局规则
 
-1. **流向**：默认从上到下（`TD`）
-2. **主路径**：保持直线向下
-3. **判断分支**："是/通过"向下，"否/失败"向右
+1. **流向**：AI 根据内容自动选择（见下方选择规则）
+2. **主路径**：保持沿主流向直线排列
+3. **判断分支**："是/通过"沿主流向，"否/失败"向侧方
 4. **回退/重试**：用虚线 `-.->` 表示
 5. **子流程**：用 `subgraph` 包裹
 6. **节点数上限**：15 个（超过拆子流程）
+
+### 流向自动选择规则（AI 判断）
+
+| 场景特征 | 推荐方向 | direction 值 |
+|---------|---------|-------------|
+| 审批流、决策链、状态流转 | 从上到下 | `'DOWN'`（默认） |
+| 数据管道、处理流水线、ETL | 从左到右 | `'RIGHT'` |
+| 时间线式流程（阶段递进） | 从左到右 | `'RIGHT'` |
+| 多角色横向协作 | 从左到右 | `'RIGHT'` |
+| 逆向追溯、根因分析 | 从下到上 | `'UP'` |
+| 其他 | 从上到下 | `'DOWN'` |
+
+**判断优先级**：如果流程有明确的"时间从左到右"或"数据从源到终"的语义 → `RIGHT`；有明确的"层级从上到下"或"决策分支"的语义 → `DOWN`；不确定时用 `DOWN`。
 
 ---
 
@@ -179,6 +192,8 @@ var subtitle = 'Multi-channel Acquisition Funnel';
 
 // DAG 模式标志
 var dagMode = true;
+// 布局方向：'DOWN'(从上到下,默认) | 'RIGHT'(从左到右) | 'UP'(从下到上) | 'LEFT'(从右到左)
+var direction = 'RIGHT';  // 多渠道获客：数据从左到右流动
 
 // 节点列表（无需关心顺序，ELKjs 自动排列）
 // type: 'start' | 'process' | 'decision' | 'highlight' | 'error' | 'success' | 'datastore' | 'external' | 'end'
@@ -219,7 +234,7 @@ var sideNodes = [];
 - 不存在的连线**绝不添加**，严格按原图拓扑
 - 多个节点可以没有入边（多根节点），多个节点可以没有出边（多终点）
 - **节点类型忠实原图**：同层级/同角色的节点使用相同 type。`highlight` 仅用于原图明确标注为关键/核心的节点，不要用 `highlight` 来区分"不同类别"——类别差异用 `process`/`external`/`datastore` 等语义类型表达
-- 使用 ELKjs 自动布局，流向默认从上到下（`elk.direction: 'DOWN'`）
+- 使用 ELKjs 自动布局，流向由 `direction` 变量控制（`'DOWN'`/`'RIGHT'`/`'UP'`/`'LEFT'`），AI 根据内容语义自动选择
 - 引入 `lib/elk.bundled.js`
 
 ### 连线类型扩展（DAG 模式）
@@ -287,7 +302,7 @@ var nodes = [
 ### 布局算法（DAG 模式）
 
 - **引擎**：ELKjs（`lib/elk.bundled.js`），所有渲染代码在 `.then()` 回调中
-- **流向**：`'elk.direction': 'DOWN'`（从上到下）
+- **流向**：`'elk.direction': direction`（由 `direction` 变量控制，AI 自动选择）
 - **间距**：`'elk.spacing.nodeNode': '80'`，`'elk.layered.spacing.nodeNodeBetweenLayers': '80'`，`'elk.spacing.edgeNode': '40'`
 - **节点尺寸**：矩形统一宽度（取最大值），高度 40px，terminal 36px
 - **连线**：正交路由 + 10px 圆角 Q 贝塞尔转折（与设计规范一致），边标签放在路径中点

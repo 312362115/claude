@@ -17,55 +17,43 @@
 <svg id="canvas"></svg>
 
 <script src="lib/utils.js"></script>
+<script src="lib/elk.bundled.js"></script>
 <script>
 (function() {
   var NS = 'http://www.w3.org/2000/svg';
   var svg = document.getElementById('canvas');
 
 
-  var title = '电商订单全链路处理';
-  var subtitle = 'L4 超级复杂 · 15 步 · 4 判断 · 4 分组';
-  var groups = [
-    { label: '用户端', steps: [
-      { id: 'start', label: '用户点击下单', type: 'start' },
-      { id: 's1', label: '前端表单校验', type: 'process' },
-      { id: 'd1', label: '校验通过?', type: 'decision', no: 'e1' }
-    ]},
-    { label: '风控系统', steps: [
-      { id: 's2', label: '调用风控接口', type: 'external' },
-      { id: 'd2', label: '风控评分≥60?', type: 'decision', no: 'e2' }
-    ]},
-    { label: '订单服务', steps: [
-      { id: 's3', label: '锁定库存', type: 'highlight' },
-      { id: 's4', label: '写入订单表', type: 'datastore' },
-      { id: 's5', label: '调用支付网关', type: 'external' },
-      { id: 'd3', label: '支付成功?', type: 'decision', no: 'e3' },
-      { id: 's6', label: '更新订单状态', type: 'process' }
-    ]},
-    { label: '物流与通知', steps: [
-      { id: 's7', label: '推送物流中台', type: 'process' },
-      { id: 's8', label: '生成电子发票', type: 'process' },
-      { id: 'd4', label: '物流分配成功?', type: 'decision', no: 'e4' },
-      { id: 's9', label: '发送确认短信', type: 'highlight' },
-      { id: 'end', label: '订单完成', type: 'end' }
-    ]}
+  var title = 'CI/CD 发布流水线';
+  var subtitle = 'L7 DAG 横向 · 单起点 · direction=RIGHT';
+  var dagMode = true;
+  var direction = 'RIGHT';
+  var nodes = [
+    { id: 'push', label: 'Git Push', type: 'start' },
+    { id: 'lint', label: 'Lint 检查', type: 'process' },
+    { id: 'test', label: '单元测试', type: 'process' },
+    { id: 'build', label: '构建镜像', type: 'highlight' },
+    { id: 'scan', label: '安全扫描', type: 'process' },
+    { id: 'stage', label: '部署 Staging', type: 'process' },
+    { id: 'e2e', label: 'E2E 测试', type: 'process' },
+    { id: 'prod', label: '部署 Production', type: 'success' },
+    { id: 'fail', label: '通知失败', type: 'error' }
+  ];
+  var edges = [
+    { from: 'push', to: 'lint' },
+    { from: 'push', to: 'test' },
+    { from: 'lint', to: 'build' },
+    { from: 'test', to: 'build' },
+    { from: 'build', to: 'scan' },
+    { from: 'scan', to: 'stage' },
+    { from: 'scan', to: 'fail', label: '漏洞', dashed: true },
+    { from: 'stage', to: 'e2e' },
+    { from: 'e2e', to: 'prod', label: '通过' },
+    { from: 'e2e', to: 'fail', label: '失败', dashed: true }
   ];
   var steps = null;
-  var sideNodes = [
-    { id: 'e1', label: '提示校验错误', type: 'error' },
-    { id: 'e2', label: '转人工审核', type: 'error',
-      next: [{ label: '冻结账号', type: 'error' }]
-    },
-    { id: 'e3', label: '释放库存', type: 'process',
-      next: [
-        { label: '标记支付失败', type: 'error' },
-        { label: '发送失败通知', type: 'process' }
-      ]
-    },
-    { id: 'e4', label: '物流异常队列', type: 'error',
-      next: [{ label: '触发运维告警', type: 'process' }]
-    }
-  ];
+  var groups = null;
+  var sideNodes = [];
 
   // ========== 主题 ==========
   var theme = {

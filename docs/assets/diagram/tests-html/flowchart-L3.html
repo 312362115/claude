@@ -205,6 +205,8 @@
 
   // ========== DAG 模式（ELKjs 自动布局）==========
   if (typeof dagMode !== 'undefined' && dagMode && typeof nodes !== 'undefined' && nodes && typeof edges !== 'undefined' && edges) {
+    // direction 兜底：未声明时默认从上到下
+    if (typeof direction === 'undefined') direction = 'DOWN';
     var FONT_SIZE_DAG = 13;
     var NODE_PAD_X_DAG = 24;
     var NODE_MIN_W_DAG = 120;
@@ -258,7 +260,7 @@
           id: g.id,
           layoutOptions: {
             'elk.algorithm': 'layered',
-            'elk.direction': 'DOWN',
+            'elk.direction': direction,
             'elk.spacing.nodeNode': '60',
             'elk.layered.spacing.nodeNodeBetweenLayers': '60',
             'elk.spacing.edgeNode': '30',
@@ -302,7 +304,7 @@
       id: 'root',
       layoutOptions: {
         'elk.algorithm': 'layered',
-        'elk.direction': 'DOWN',
+        'elk.direction': direction,
         'elk.spacing.nodeNode': '80',
         'elk.layered.spacing.nodeNodeBetweenLayers': '80',
         'elk.spacing.edgeNode': '40',

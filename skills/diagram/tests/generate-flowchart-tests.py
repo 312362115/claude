@@ -263,6 +263,77 @@ L6 = '''
   var sideNodes = [];
 '''
 
+# L7: DAG 横向 单起点（CI/CD 流水线，从左到右）
+L7 = '''
+  var title = 'CI/CD 发布流水线';
+  var subtitle = 'L7 DAG 横向 · 单起点 · direction=RIGHT';
+  var dagMode = true;
+  var direction = 'RIGHT';
+  var nodes = [
+    { id: 'push', label: 'Git Push', type: 'start' },
+    { id: 'lint', label: 'Lint 检查', type: 'process' },
+    { id: 'test', label: '单元测试', type: 'process' },
+    { id: 'build', label: '构建镜像', type: 'highlight' },
+    { id: 'scan', label: '安全扫描', type: 'process' },
+    { id: 'stage', label: '部署 Staging', type: 'process' },
+    { id: 'e2e', label: 'E2E 测试', type: 'process' },
+    { id: 'prod', label: '部署 Production', type: 'success' },
+    { id: 'fail', label: '通知失败', type: 'error' }
+  ];
+  var edges = [
+    { from: 'push', to: 'lint' },
+    { from: 'push', to: 'test' },
+    { from: 'lint', to: 'build' },
+    { from: 'test', to: 'build' },
+    { from: 'build', to: 'scan' },
+    { from: 'scan', to: 'stage' },
+    { from: 'scan', to: 'fail', label: '漏洞', dashed: true },
+    { from: 'stage', to: 'e2e' },
+    { from: 'e2e', to: 'prod', label: '通过' },
+    { from: 'e2e', to: 'fail', label: '失败', dashed: true }
+  ];
+  var steps = null;
+  var groups = null;
+  var sideNodes = [];
+'''
+
+# L8: DAG 横向 多源（ETL 数据管道 + 子图）
+L8 = '''
+  var title = 'ETL 数据管道';
+  var subtitle = 'L8 DAG 横向 · 多源 + 子图 · direction=RIGHT';
+  var dagMode = true;
+  var direction = 'RIGHT';
+  var dagGroups = [
+    { id: 'source', label: '数据源' },
+    { id: 'process', label: '处理层' },
+    { id: 'output', label: '输出层' }
+  ];
+  var nodes = [
+    { id: 'mysql', label: 'MySQL 源库', type: 'datastore', group: 'source' },
+    { id: 'mongo', label: 'MongoDB 日志', type: 'datastore', group: 'source' },
+    { id: 'kafka', label: 'Kafka 事件流', type: 'external', group: 'source' },
+    { id: 'ingest', label: '数据采集', type: 'highlight', group: 'process' },
+    { id: 'clean', label: '清洗 & 去重', type: 'process', group: 'process' },
+    { id: 'transform', label: '聚合 & 映射', type: 'process', group: 'process' },
+    { id: 'dw', label: '数据仓库', type: 'datastore', group: 'output' },
+    { id: 'bi', label: 'BI 报表', type: 'success', group: 'output' },
+    { id: 'alert', label: '异常告警', type: 'error' }
+  ];
+  var edges = [
+    { from: 'mysql', to: 'ingest' },
+    { from: 'mongo', to: 'ingest' },
+    { from: 'kafka', to: 'ingest' },
+    { from: 'ingest', to: 'clean' },
+    { from: 'clean', to: 'transform' },
+    { from: 'transform', to: 'dw', label: '通过' },
+    { from: 'transform', to: 'alert', label: '异常', dashed: true },
+    { from: 'dw', to: 'bi' }
+  ];
+  var steps = null;
+  var groups = null;
+  var sideNodes = [];
+'''
+
 # 线性模式测试
 linear_tests = {
     'L1': L1,
@@ -274,7 +345,9 @@ linear_tests = {
 # DAG 模式测试
 dag_tests = {
     'L5': L5,
-    'L6': L6
+    'L6': L6,
+    'L7': L7,
+    'L8': L8
 }
 
 for level, data in linear_tests.items():
