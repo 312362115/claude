@@ -130,7 +130,7 @@ mmdc -i input.mmd -o output.png -b white -s 2
 ### 数据结构（线性模式）
 
 ```javascript
-// 标题
+// 标题（可选，为空字符串或 null 时不渲染标题区）
 var title = '订单处理流程';
 var subtitle = 'Order Processing Workflow';
 
@@ -186,7 +186,7 @@ var steps = null;  // 分组模式时设为 null
 当流程图有多个独立入口、汇聚节点或非决策分支时，使用 `nodes` + `edges` 数据结构 + ELKjs 自动布局：
 
 ```javascript
-// 标题
+// 标题（可选，为空字符串或 null 时不渲染标题区）
 var title = '多渠道获客转化';
 var subtitle = 'Multi-channel Acquisition Funnel';
 

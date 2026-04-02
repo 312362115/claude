@@ -163,10 +163,21 @@ description: >
 
 ### 2.5 标题规范
 
-- 位置：左上角（x=0, y=18）
-- 标题：16px bold，颜色 `#1a1a2e`
+- **标题可选**：`title` 为空字符串或 `null` 时跳过标题渲染，标题区高度设为 0
+- 有标题时：位置左上角（x=0, y=18），16px bold，颜色 `#1a1a2e`
 - 副标题：12px，颜色 `#888888`，y=36
-- 标题区高度：52px
+- 标题区高度：有标题 52px，无标题 0px
+
+```javascript
+// 标题可选的标准写法
+var TITLE_AREA_H = title ? 52 : 0;
+
+// 渲染时条件判断
+if (title) {
+  nodeGroup.appendChild(el('text', { ... })).textContent = title;
+  if (subtitle) nodeGroup.appendChild(el('text', { ... })).textContent = subtitle;
+}
+```
 
 ---
 
