@@ -2,11 +2,11 @@
 name: diagram
 description: >
   专业图表生成技能：根据需求自动选择合适的图表类型，生成符合设计规范的 PNG 图表。
-  覆盖结构图（流程图、泳道图、时序图、架构图、状态图、ER图、类图、思维导图、甘特图等）
-  和统计图（柱状图、折线图、饼图、雷达图、热力图、桑基图、漏斗图、瀑布图等）。
+  覆盖 29 种图表：结构图（流程图、泳道图、时序图、架构图、状态图、ER图、类图、思维导图、甘特图、Kanban、Git Graph 等）
+  和统计图（柱状图、折线图、饼图、雷达图、热力图、散点图、桑基图、漏斗图、瀑布图、矩形树图、柱线混合图等）。
   统一工具：HTML/SVG + 内联 JS 布局计算。ER/类图使用 ELKjs 布局引擎。
   所有图表遵循统一的设计规范（配色/字体/组件/间距），风格现代简洁。
-  支持三种输出：PNG（默认）、HTML（富文档嵌入）、DSL（Mermaid/Graphviz 文本，嵌入 MD 文档）。
+  支持三种输出：PNG（默认）、HTML（富文档嵌入）、DSL（Mermaid 文本，嵌入 MD 文档）。
   触发词：画图、画一个、生成图表、流程图、架构图、时序图、柱状图、对比图、关系图。
   即使用户没有说"画图"，只要需求中涉及可视化展示（流程、架构、数据对比、关系），都应触发此技能。
   被 deep-research 等其他技能调用时，同样遵循本规范生成图表。
@@ -101,7 +101,7 @@ description: >
 
 图表布局分两种：
 
-**ELKjs 自动布局**（ER图、类图、状态图）：
+**ELKjs 自动布局**（ER图、类图、状态图、流程图 DAG 模式）：
 - 引用 `lib/elk.bundled.js`
 - 定义 ELK 图结构（nodes + edges）
 - `elk.layout(graph).then(result => { /* 渲染 */ })`
@@ -122,7 +122,7 @@ description: >
 3. 计算布局坐标（ELKjs 或手动）
 4. 渲染 SVG（节点 → 连线 → 标签，按层级顺序）
 5. 写入 HTML 文件（含内联 JS + CSS）
-6. 启动 HTTP 服务 → Playwright 截图 → PNG
+6. 用 capture.py 截图 → PNG（禁止手动调用 Playwright）
 ```
 
 ### 2.4 HTML 模板结构
@@ -222,52 +222,49 @@ flowchart TD
 ```
 
 ```
-用户：画一个微服务架构图，输出 dot
+用户：画一个微服务架构图，输出 mermaid
 
 输出：
-` ` `dot
-digraph architecture {
-    rankdir=TB; compound=true;
-    node [shape=box, style="rounded,filled", fontname="PingFang SC"];
-
-    subgraph cluster_gateway {
-        label="网关层"; style="dashed"; color="#94A3B8";
-        nginx [label="Nginx\n负载均衡", fillcolor="#EFF6FF"];
-        api_gw [label="API Gateway", fillcolor="#EFF6FF"];
-    }
-
-    subgraph cluster_services {
-        label="服务层"; style="dashed"; color="#94A3B8";
-        user_svc [label="用户服务", fillcolor="#F0FDF4"];
-        order_svc [label="订单服务", fillcolor="#F0FDF4"];
-        pay_svc [label="支付服务", fillcolor="#F0FDF4"];
-    }
-
-    subgraph cluster_data {
-        label="数据层"; style="dashed"; color="#94A3B8";
-        mysql [label="MySQL", fillcolor="#FEF3C7"];
-        redis [label="Redis", fillcolor="#FEF3C7"];
-    }
-
-    nginx -> api_gw;
-    api_gw -> user_svc; api_gw -> order_svc; api_gw -> pay_svc;
-    user_svc -> mysql; order_svc -> mysql; pay_svc -> redis;
-}
+` ` `mermaid
+flowchart TD
+    subgraph 网关层
+        nginx[Nginx 负载均衡] --> api_gw[API Gateway]
+    end
+    subgraph 服务层
+        user_svc[用户服务]
+        order_svc[订单服务]
+        pay_svc[支付服务]
+    end
+    subgraph 数据层
+        mysql[(MySQL)]
+        redis[(Redis)]
+    end
+    api_gw --> user_svc & order_svc & pay_svc
+    user_svc --> mysql
+    order_svc --> mysql
+    pay_svc --> redis
 ` ` `
 ```
 
 ### 3.2 截图方式
 
-**必须使用 `browser_run_code` + body 元素截图**，不要用 `browser_take_screenshot`（它强制 `scale: 'css'` 导致 1x 模糊输出）。
+**必须使用固化脚本，禁止手动调用 Playwright MCP 工具截图。**
 
-```javascript
-async (page) => {
-  await page.locator('body').screenshot({
-    path: '<输出路径>.png',
-    type: 'png'
-  });
-}
+```bash
+# 结构图：HTML → PNG
+python ~/.claude/skills/diagram/scripts/capture.py <HTML文件> <输出路径>.png
+
+# 结构图：HTML → 自包含 HTML
+python ~/.claude/skills/diagram/scripts/capture.py <HTML文件> <输出路径>.html -f html
+
+# 统计图：JSON → PNG（bridge.py 内部自动截图）
+python ~/.claude/skills/diagram/scripts/bridge.py -c <配置>.json -o <输出路径>.png
+
+# 统计图：JSON → 自包含 HTML
+python ~/.claude/skills/diagram/scripts/bridge.py -c <配置>.json -o <输出路径>.html -f html
 ```
+
+> **为什么不能手动截图？** capture.py / bridge.py 已封装好 HTTP 服务启动、ELKjs 异步等待、Retina 2x 输出、body 元素定位等逻辑。手动用 `browser_run_code` / `browser_take_screenshot` 容易遗漏等待逻辑导致截图空白或模糊。
 
 ### 3.3 文件命名
 `<图表类型>-<描述>.png`（英文小写 + 连字符）
@@ -280,10 +277,13 @@ async (page) => {
 
 ## 工具依赖
 
-| 工具 | 安装方式 | 用途 |
-|------|---------|------|
-| Playwright | MCP 插件（已集成） | HTML → PNG 截图 |
-| ELKjs | `lib/elk.bundled.js`（已内联） | ER图/类图/状态图的自动布局 |
+| 工具 | 位置 | 用途 |
+|------|------|------|
+| `capture.py` | `scripts/capture.py` | 结构图 HTML → PNG/HTML（内部调用 Playwright） |
+| `bridge.py` | `scripts/bridge.py` | 统计图 JSON → PNG/HTML（内部调用 Playwright） |
+| ELKjs | `lib/elk.bundled.js`（已内联） | ER图/类图/状态图/流程图DAG的自动布局 |
+
+> **Playwright 仅作为 capture.py / bridge.py 的内部实现**，不要直接调用 Playwright MCP 工具（`browser_navigate`、`browser_take_screenshot`、`browser_run_code` 等）来截图。
 
 ### ELKjs 使用说明
 
