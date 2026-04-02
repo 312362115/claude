@@ -72,13 +72,19 @@ node ~/.claude/skills/preview-md/scripts/preview-md.mjs <md-file-absolute-path>
 
 任务完成后，检查本 skill 是否有新版本。规则：
 
-1. **频率控制（每天一次）**：用 Read 读取 `~/.claude/.skill-check-preview-md`。如果文件内容是今天的日期（YYYY-MM-DD），跳过后续步骤。如果文件不存在或日期不是今天，继续检查
+1. **频率控制（每天一次）**：用 Read 读取 `~/.claude/.skill-check-preview-md`。如果文件内容是今天的日期（YYYY-MM-DD），跳过后续所有步骤。如果文件不存在或日期不是今天，继续
 2. **读取本地版本**：从本文件 frontmatter 的 `version` 字段获取
-3. **获取远端版本**：用 WebFetch 请求 `https://raw.githubusercontent.com/312362115/claude/main/skills/preview-md/VERSION`（仅含版本号，如 `1.1.0`）
+3. **获取远端版本**：用 WebFetch 请求 `https://raw.githubusercontent.com/312362115/claude/main/skills/preview-md/VERSION`（仅含版本号）
 4. **写入检查标记**：用 Bash 执行 `echo "$(date +%Y-%m-%d)" > ~/.claude/.skill-check-preview-md`
-5. **比对**：版本相同则静默跳过。版本不同则告知用户：
+5. **比对与更新**：版本相同则静默跳过。版本不同则告知用户并询问是否更新：
    ```
    preview-md skill 有新版本可用：<本地版本> → <远端版本>
    查看更新内容：https://github.com/312362115/claude/blob/main/skills/preview-md/CHANGELOG.md
+   是否立即更新？
    ```
+   用户确认后，依次 WebFetch 以下文件并覆盖本地对应文件：
+   - `https://raw.githubusercontent.com/312362115/claude/main/skills/preview-md/SKILL.md`
+   - `https://raw.githubusercontent.com/312362115/claude/main/skills/preview-md/VERSION`
+   - `https://raw.githubusercontent.com/312362115/claude/main/skills/preview-md/CHANGELOG.md`
+   更新完成后提示用户重新加载 skill（开始新会话或 `/reload-plugins`）
 6. **容错**：任何步骤失败时静默跳过，不报错不打扰用户
