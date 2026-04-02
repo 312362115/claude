@@ -2,6 +2,8 @@
 name: deep-research
 version: 1.3.0
 last_updated: 2026-04-02
+repository: https://github.com/312362115/claude
+changelog: skills/deep-research/CHANGELOG.md
 description: >
   深度调研技能：对任意命题进行系统性调研并输出专业研究报告。
   覆盖技术选型、行业分析、学术研究、竞品分析、概念探索等所有调研场景。

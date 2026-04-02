@@ -1,5 +1,9 @@
 ---
 name: task-finish
+version: 1.0.0
+last_updated: 2026-03-20
+repository: https://github.com/312362115/claude
+changelog: skills/task-finish/CHANGELOG.md
 description: >
   任务收尾流程：CR 自检 + 复盘沉淀。在 commit 之前、完成功能开发后、大任务完成后触发。
   包含分级自检（快速/深度）、自动 diff 分析、复盘框架、经验沉淀到 memory。

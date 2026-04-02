@@ -1,5 +1,9 @@
 ---
 name: task-execute
+version: 1.0.0
+last_updated: 2026-03-20
+repository: https://github.com/312362115/claude
+changelog: skills/task-execute/CHANGELOG.md
 description: >
   持续执行框架：让 Claude 在跨多轮会话的长期任务中保持高效运行。当用户的任务规模较大、需要跨多个上下文窗口完成时使用此技能。
   触发场景包括：用户提到"长期任务"、"多阶段项目"、"跨会话开发"、"大型功能开发"、"需要多次对话才能完成"，

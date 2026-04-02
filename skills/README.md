@@ -26,9 +26,15 @@ frontmatter 中增加 `version` 和 `last_updated`：
 name: my-skill
 version: 1.2.0          # semver: major.minor.patch
 last_updated: 2026-04-01 # 最近一次发布日期
+repository: https://github.com/312362115/claude  # 源码仓库，用户据此检查更新
+changelog: skills/my-skill/CHANGELOG.md           # 变更记录相对路径
 description: ...
 ---
 ```
+
+**字段说明**：
+- `repository`：源码仓库地址，用户安装后可据此查看最新版本和拉取更新
+- `changelog`：CHANGELOG.md 的仓库内相对路径，指向详细变更记录
 
 **版本号规则（semver）**：
 - **major**：破坏性变更（输出格式改变、参数删除、行为不兼容）
@@ -58,9 +64,9 @@ description: ...
 | diagram | 1.4.0 | 2026-04-01 |
 | deep-research | 1.3.0 | 2026-04-02 |
 | preview-md | 1.1.0 | 2026-03-30 |
-| task-start | — | — |
-| task-execute | — | — |
-| task-finish | — | — |
+| task-start | 1.1.0 | 2026-03-28 |
+| task-execute | 1.0.0 | 2026-03-20 |
+| task-finish | 1.0.0 | 2026-03-20 |
 
 ---
 
