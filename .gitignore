@@ -7,6 +7,9 @@ config.json
 # 会话记录 - 体积大且无需版本控制
 projects/
 
+# Skill 更新检查缓存
+.skill-update-check
+
 # 运行时缓存与临时文件
 cache/
 backups/

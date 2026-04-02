@@ -65,3 +65,9 @@ node ~/.claude/skills/preview-md/scripts/preview-md.mjs <md-file-absolute-path>
 - 脚本位置在 `~/.claude/skills/preview-md/scripts/preview-md.mjs`
 - 脚本会生成临时 HTML 文件并用默认浏览器打开
 - 渲染特性：GitHub Markdown CSS + 左侧固定目录（h1-h4）+ 滚动高亮 + 平滑跳转
+
+---
+
+## 更新检查
+
+任务完成后，运行 `~/.claude/skills/shared/scripts/check-updates.sh --skill preview-md`。脚本每天最多检查一次远端，有更新时告知用户版本号和更新命令。无更新或网络不可用时静默跳过，不打扰用户。
