@@ -321,8 +321,10 @@ description: >
 | 散点图/气泡图 | 分布关系（性价比分布、性能-成本关系） | `scatter` |
 | 漏斗图 | 转化漏斗（用户转化、销售漏斗） | `funnel` |
 | 瀑布图 | 累计增减（利润变动、成本分解） | `waterfall` |
+| 矩形树图 | 数据占比/层级面积（市场份额、成本结构） | `treemap` |
+| 柱线混合图 | 柱状+折线叠加（收入趋势+增长率） | `combo` |
 
-**结构图表**（需要时由 Claude 直接编写 HTML + capture.py 截图，参考 Diagram skill）：
+**结构图表**（需要时由 Claude 直接编写 HTML + capture.py 截图，参考 Diagram skill 模板）：
 
 | 图表 | 适用场景 |
 |------|---------|
@@ -330,6 +332,21 @@ description: >
 | 架构图 | 系统架构、技术栈、模块关系 |
 | 泳道图 | 多角色协作流程、跨系统交互 |
 | 时序图 | 调用链路、消息传递序列 |
+| ER 图 | 数据库表结构、实体关系 |
+| 类图 | 面向对象设计、接口关系 |
+| 状态图 | 状态机、生命周期流转 |
+| 思维导图 | 知识结构、主题发散 |
+| 甘特图 | 项目排期、里程碑 |
+| 决策树 | 选型决策、条件分支 |
+| 网络图 | 网络拓扑、节点连接 |
+| 组织结构图 | 团队架构、汇报关系 |
+| 时间线 | 发展历程、版本演进 |
+| 数据流图 | 数据管道、ETL 流程 |
+| C4 图 | 系统上下文、容器、组件视图 |
+| 桑基图 | 流量路径、资源分配 |
+| 旅程图 | 用户体验旅程、触点分析 |
+| Kanban | 项目管理看板、任务状态 |
+| Git Graph | Git 分支工作流、合并策略 |
 
 ### 4.2 统计图表生成（bridge.py）
 
@@ -372,6 +389,8 @@ python ~/.claude/skills/diagram/scripts/bridge.py -c /tmp/chart-config.json -o /
 | `scatter` | `{ "xLabel": "X轴", "yLabel": "Y轴", "series": [{"name": "名称", "data": [[x, y], ...]}] }` |
 | `funnel` | `{ "stages": [{"name": "名称", "value": 数值}] }` |
 | `waterfall` | `{ "items": [{"name": "名称", "value": 数值, "type": "start\|increase\|decrease\|total"}] }` |
+| `treemap` | `{ "items": [{"name": "名称", "value": 数值, "children": [...]}] }` |
+| `combo` | `{ "categories": [...], "bars": [{"name": "名称", "values": [...]}], "lines": [{"name": "名称", "values": [...]}] }` |
 
 scatter 支持气泡图：data 中传 `[[x, y, size], ...]`，size 越大气泡越大。
 
