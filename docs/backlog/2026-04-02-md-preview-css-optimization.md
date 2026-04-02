@@ -1,6 +1,6 @@
 ---
 priority: P3
-status: open
+status: done
 ---
 
 # MD Preview CSS 样式优化
