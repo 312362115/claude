@@ -13,6 +13,57 @@
 
 ---
 
+## 版本管理
+
+每个 skill 必须包含版本声明和变更记录，让用户清楚当前使用的版本和每次更新的内容。
+
+### SKILL.md 版本字段
+
+frontmatter 中增加 `version` 和 `last_updated`：
+
+```yaml
+---
+name: my-skill
+version: 1.2.0          # semver: major.minor.patch
+last_updated: 2026-04-01 # 最近一次发布日期
+description: ...
+---
+```
+
+**版本号规则（semver）**：
+- **major**：破坏性变更（输出格式改变、参数删除、行为不兼容）
+- **minor**：新功能、新模板、新框架
+- **patch**：修复、措辞调整、小幅改进
+
+### CHANGELOG.md
+
+每个 skill 目录下维护 `CHANGELOG.md`，记录每个版本的变更：
+
+```markdown
+## 1.2.0 (2026-04-01)
+- 新增：xxx 功能
+- 修复：xxx 问题
+- 改进：xxx 行为
+```
+
+**维护规则**：
+- 每次修改 SKILL.md 或 skill 资源时，同步更新 CHANGELOG.md 并递增版本号
+- 变更类型用前缀标识：`新增`、`修复`、`改进`、`重构`、`移除`、`迁移`
+- 最新版本在最上方
+
+### 当前版本
+
+| 技能 | 版本 | 更新日期 |
+|------|------|---------|
+| diagram | 1.4.0 | 2026-04-01 |
+| deep-research | 1.3.0 | 2026-04-02 |
+| preview-md | 1.1.0 | 2026-03-30 |
+| task-start | — | — |
+| task-execute | — | — |
+| task-finish | — | — |
+
+---
+
 ## 三档输出体系
 
 报告和图表按使用场景分三档，共用一套设计规范（`shared/styles/` 色板 + diagram 配色），视觉风格统一。
