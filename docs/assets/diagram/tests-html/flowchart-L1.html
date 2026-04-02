@@ -191,7 +191,7 @@
     var NODE_MIN_W_DAG = 120;
     var NODE_H_DAG = 40;
     var TERMINAL_H_DAG = 36;
-    var TITLE_AREA_H_DAG = 52;
+    var TITLE_AREA_H_DAG = title ? 52 : 0;
     var SANS_DAG = "-apple-system, system-ui, 'PingFang SC', sans-serif";
 
     // 计算节点尺寸
@@ -348,9 +348,11 @@
       var nodeGroup = el('g');
       svg.appendChild(nodeGroup);
 
-      // 标题
-      nodeGroup.appendChild(el('text', { x: pad, y: 18 + pad / 2, 'font-size': 16, 'font-weight': 700, fill: theme.title.color, 'font-family': SANS_DAG })).textContent = title;
-      nodeGroup.appendChild(el('text', { x: pad, y: 36 + pad / 2, 'font-size': 12, fill: theme.subtitle.color, 'font-family': SANS_DAG })).textContent = subtitle;
+      // 标题（title 为空时跳过）
+      if (title) {
+        nodeGroup.appendChild(el('text', { x: pad, y: 18 + pad / 2, 'font-size': 16, 'font-weight': 700, fill: theme.title.color, 'font-family': SANS_DAG })).textContent = title;
+        if (subtitle) nodeGroup.appendChild(el('text', { x: pad, y: 36 + pad / 2, 'font-size': 12, fill: theme.subtitle.color, 'font-family': SANS_DAG })).textContent = subtitle;
+      }
 
       // 递归读取节点位置（支持 compound nodes）
       var dagPosMap = {};
@@ -473,7 +475,7 @@
   var STEP_GAP_SIMPLE = 36;
   var SIDE_GAP = 60;
   var SIDE_STEP_GAP = 28;
-  var TITLE_AREA_H = 52;
+  var TITLE_AREA_H = title ? 52 : 0;
   var GROUP_PAD_X = 48;
   var GROUP_PAD_TOP = 52;
   var GROUP_PAD_BOTTOM = 32;
@@ -706,9 +708,11 @@
   var lineGroup = el('g'); svg.appendChild(lineGroup);
   var nodeGroup = el('g'); svg.appendChild(nodeGroup);
 
-  // ========== 标题 ==========
-  nodeGroup.appendChild(el('text', { x: 0, y: 18, 'font-size': 16, 'font-weight': 700, fill: theme.title.color, 'font-family': SANS })).textContent = title;
-  nodeGroup.appendChild(el('text', { x: 0, y: 36, 'font-size': 12, fill: theme.subtitle.color, 'font-family': SANS })).textContent = subtitle;
+  // ========== 标题（title 为空时跳过）==========
+  if (title) {
+    nodeGroup.appendChild(el('text', { x: 0, y: 18, 'font-size': 16, 'font-weight': 700, fill: theme.title.color, 'font-family': SANS })).textContent = title;
+    if (subtitle) nodeGroup.appendChild(el('text', { x: 0, y: 36, 'font-size': 12, fill: theme.subtitle.color, 'font-family': SANS })).textContent = subtitle;
+  }
 
   // ========== 分组背景 ==========
   if (hasGroups) {
