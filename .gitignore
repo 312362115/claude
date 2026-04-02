@@ -9,6 +9,7 @@ projects/
 
 # Skill 更新检查缓存
 .skill-update-check
+.skill-check-*
 
 # 运行时缓存与临时文件
 cache/

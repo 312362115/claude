@@ -797,12 +797,13 @@ Redis 在高并发场景下的 p99 延迟通常低于 2ms[1]，
 
 任务完成后，检查本 skill 是否有新版本。规则：
 
-1. **频率控制**：每个会话最多检查一次。如果本次会话已经检查过，跳过
-2. **读取本地版本**：从本文件 frontmatter 的 `version` 字段获取，当前为 `1.3.0`
-3. **获取远端版本**：用 WebFetch 请求 `https://raw.githubusercontent.com/312362115/claude/main/skills/deep-research/SKILL.md`，从响应中提取 `version:` 字段值
-4. **比对**：版本相同则静默跳过，不输出任何内容。版本不同则告知用户：
+1. **频率控制（每天一次）**：用 Read 读取 `~/.claude/.skill-check-deep-research`。如果文件内容是今天的日期（YYYY-MM-DD），跳过后续步骤。如果文件不存在或日期不是今天，继续检查
+2. **读取本地版本**：从本文件 frontmatter 的 `version` 字段获取
+3. **获取远端版本**：用 WebFetch 请求 `https://raw.githubusercontent.com/312362115/claude/main/skills/deep-research/VERSION`（仅含版本号，如 `1.3.0`）
+4. **写入检查标记**：用 Bash 执行 `echo "$(date +%Y-%m-%d)" > ~/.claude/.skill-check-deep-research`
+5. **比对**：版本相同则静默跳过。版本不同则告知用户：
    ```
-   deep-research skill 有新版本可用：1.3.0 → <远端版本>
+   deep-research skill 有新版本可用：<本地版本> → <远端版本>
    查看更新内容：https://github.com/312362115/claude/blob/main/skills/deep-research/CHANGELOG.md
    ```
-5. **容错**：WebFetch 失败（网络不可用等）时静默跳过，不报错不打扰用户
+6. **容错**：任何步骤失败时静默跳过，不报错不打扰用户
