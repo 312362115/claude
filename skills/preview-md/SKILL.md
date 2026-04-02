@@ -70,4 +70,14 @@ node ~/.claude/skills/preview-md/scripts/preview-md.mjs <md-file-absolute-path>
 
 ## 更新检查
 
-任务完成后，运行 `~/.claude/skills/shared/scripts/check-updates.sh --skill preview-md`。脚本每天最多检查一次远端，有更新时告知用户版本号和更新命令。无更新或网络不可用时静默跳过，不打扰用户。
+任务完成后，检查本 skill 是否有新版本。规则：
+
+1. **频率控制**：每个会话最多检查一次。如果本次会话已经检查过，跳过
+2. **读取本地版本**：从本文件 frontmatter 的 `version` 字段获取，当前为 `1.1.0`
+3. **获取远端版本**：用 WebFetch 请求 `https://raw.githubusercontent.com/312362115/claude/main/skills/preview-md/SKILL.md`，从响应中提取 `version:` 字段值
+4. **比对**：版本相同则静默跳过，不输出任何内容。版本不同则告知用户：
+   ```
+   preview-md skill 有新版本可用：1.1.0 → <远端版本>
+   查看更新内容：https://github.com/312362115/claude/blob/main/skills/preview-md/CHANGELOG.md
+   ```
+5. **容错**：WebFetch 失败（网络不可用等）时静默跳过，不报错不打扰用户
