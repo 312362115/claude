@@ -33,13 +33,13 @@
   --c-danger: #ef4444;
 }
 
-html { font-size: 15px; scroll-behavior: smooth; }
+html { font-size: 16px; scroll-behavior: smooth; }
 body {
   font-family: var(--font-sans);
   background: var(--c-bg);
   color: var(--c-text);
-  line-height: 1.8;
-  letter-spacing: 0.01em;
+  line-height: 1.9;
+  letter-spacing: 0.03em;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
@@ -98,12 +98,12 @@ article > blockquote,
 article > .callout,
 article > .chart-container,
 article > table {
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
-article > p + p { text-indent: 0; margin-top: 4px; }
-article > h2 + p, article > h3 + p { margin-top: 4px; }
-article > p + table, article > p + .chart-container, article > p + .callout { margin-top: 20px; }
-article > table + p, article > .chart-container + p, article > .callout + p { margin-top: 20px; }
+article > p + p { text-indent: 0; margin-top: 8px; }
+article > h2 + p, article > h3 + p { margin-top: 8px; }
+article > p + table, article > p + .chart-container, article > p + .callout { margin-top: 24px; }
+article > table + p, article > .chart-container + p, article > .callout + p { margin-top: 24px; }
 
 /* ─── Typography ─── */
 h1 {
@@ -113,32 +113,32 @@ h1 {
 }
 h2 {
   font-size: 1.45rem; font-weight: 700; color: var(--c-text);
-  margin: 56px 0 20px; padding-bottom: 10px;
-  border-bottom: 1px solid var(--c-border-light);
+  margin: 60px 0 24px; padding-bottom: 12px;
+  border-bottom: 1px solid var(--c-border);
   letter-spacing: -0.005em;
 }
 h2:first-child { margin-top: 0; }
 h3 {
   font-size: 1.12rem; font-weight: 600; color: var(--c-text);
-  margin: 36px 0 14px;
+  margin: 40px 0 16px;
 }
 h4 {
   font-size: 0.95rem; font-weight: 600; color: var(--c-text-secondary);
-  margin: 28px 0 10px;
+  margin: 32px 0 12px;
 }
 p {
-  margin: 0 0 14px;
+  margin: 0 0 18px;
   color: var(--c-text);
   word-break: break-word;
 }
 strong { font-weight: 600; color: var(--c-text); }
 a { color: var(--c-primary); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
 a:hover { border-bottom-color: var(--c-primary); text-decoration: none; }
-ul, ol { margin: 8px 0 16px; padding-left: 24px; }
-li { margin-bottom: 6px; line-height: 1.7; }
-li > ul, li > ol { margin-top: 6px; margin-bottom: 0; }
-li > p { margin-bottom: 6px; }
-article > ul > li { margin-bottom: 12px; }
+ul, ol { margin: 10px 0 20px; padding-left: 24px; }
+li { margin-bottom: 8px; line-height: 1.8; }
+li > ul, li > ol { margin-top: 8px; margin-bottom: 0; }
+li > p { margin-bottom: 8px; }
+article > ul > li { margin-bottom: 14px; }
 
 /* ─── Blockquote ─── */
 blockquote {
@@ -165,7 +165,7 @@ pre {
 pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
 
 /* ─── Horizontal Rule ─── */
-hr { border: none; border-top: 1px solid var(--c-border); margin: 40px 0; }
+hr { border: none; border-top: 1px solid var(--c-border); margin: 48px 0; }
 
 /* ─── Task List (Checkbox) ─── */
 .task-list { list-style: none; padding-left: 4px; }
