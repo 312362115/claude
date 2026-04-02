@@ -1,5 +1,7 @@
 ---
 name: diagram
+version: 1.4.0
+last_updated: 2026-04-01
 description: >
   专业图表生成技能：根据需求自动选择合适的图表类型，生成符合设计规范的 PNG 图表。
   覆盖 29 种图表：结构图（流程图、泳道图、时序图、架构图、状态图、ER图、类图、思维导图、甘特图、Kanban、Git Graph 等）
