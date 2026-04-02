@@ -169,7 +169,7 @@ description: >
 
 - 使用 WebSearch 进行网络搜索，使用 WebFetch 获取具体页面内容
 - 如果命题涉及本地项目，同时用 Grep/Read 检索本地代码库和文档
-- **并行搜索**：同一层内的多个搜索方向可以用 subagent 并行执行，提高效率
+- **并行搜索**：同一层内的多个搜索方向可以用 Agent 工具并行执行，提高效率
 - **搜索关键词设计**：每个搜索用不同角度的关键词，避免信息重复
   - 例：调研 Redis → "Redis performance benchmark 2025"、"Redis vs alternatives comparison"、"Redis use cases limitations"
 
@@ -183,7 +183,7 @@ description: >
     │ 失败/内容为空/返回反爬页面 ↓
     │
 第 2 层（降级）：Playwright 浏览器模拟
-    │ 通过 mcp playwright 工具模拟真实浏览器访问
+    │ 通过 Playwright MCP 工具模拟真实浏览器访问
     │ 成功 → 使用
     │ 失败 ↓
     │
@@ -305,7 +305,9 @@ description: >
 
 报告中的图表是专业性的重要体现。根据内容需要自动选择合适的图表类型，不限制数量。
 
-**统一使用 Diagram Bridge**（`~/.claude/skills/diagram/scripts/bridge.py`），无需安装额外依赖。
+**统一使用 Diagram Skill 的固化脚本**（`bridge.py` 和 `capture.py`），无需安装额外依赖。
+
+> **禁止手动调用 Playwright MCP 工具截图**（`browser_navigate`、`browser_take_screenshot`、`browser_run_code` 等）。所有图表截图统一通过 bridge.py / capture.py 完成，它们内部已封装 HTTP 服务启动、ELKjs 异步等待、Retina 2x 输出等逻辑。
 
 ### 4.1 图表类型选择
 
