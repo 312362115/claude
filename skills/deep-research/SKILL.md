@@ -801,18 +801,10 @@ Redis 在高并发场景下的 p99 延迟通常低于 2ms[1]，
 2. **读取本地版本**：从本文件 frontmatter 的 `version` 字段获取
 3. **获取远端版本**：用 WebFetch 请求 `https://raw.githubusercontent.com/312362115/claude/main/skills/deep-research/VERSION`（仅含版本号）
 4. **写入检查标记**：用 Bash 执行 `echo "$(date +%Y-%m-%d)" > ~/.claude/.skill-check-deep-research`
-5. **比对与更新**：版本相同则静默跳过。版本不同则告知用户并询问是否更新：
+5. **比对与通知**：版本相同则静默跳过。版本不同则告知用户：
    ```
    deep-research skill 有新版本可用：<本地版本> → <远端版本>
-   查看更新内容：https://github.com/312362115/claude/blob/main/skills/deep-research/CHANGELOG.md
-   是否立即更新？
+   更新内容：https://github.com/312362115/claude/blob/main/skills/deep-research/CHANGELOG.md
+   更新方式：https://github.com/312362115/claude/tree/main/skills/deep-research
    ```
-   用户确认后，先判断安装方式再执行更新：
-   - 用 Bash 执行 `git -C <本skill所在目录的父目录> remote get-url origin 2>/dev/null`
-   - **如果输出包含 `312362115/claude`**（整仓安装）：执行 `git -C <仓库根目录> pull origin main`
-   - **否则**（单 skill 安装）：依次 WebFetch 以下文件并覆盖本地对应文件：
-     - `https://raw.githubusercontent.com/312362115/claude/main/skills/deep-research/SKILL.md`
-     - `https://raw.githubusercontent.com/312362115/claude/main/skills/deep-research/VERSION`
-     - `https://raw.githubusercontent.com/312362115/claude/main/skills/deep-research/CHANGELOG.md`
-   - 更新完成后提示用户重新加载 skill（开始新会话或 `/reload-plugins`）
 6. **容错**：任何步骤失败时静默跳过，不报错不打扰用户
