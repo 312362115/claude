@@ -807,9 +807,12 @@ Redis 在高并发场景下的 p99 延迟通常低于 2ms[1]，
    查看更新内容：https://github.com/312362115/claude/blob/main/skills/deep-research/CHANGELOG.md
    是否立即更新？
    ```
-   用户确认后，依次 WebFetch 以下文件并覆盖本地对应文件：
-   - `https://raw.githubusercontent.com/312362115/claude/main/skills/deep-research/SKILL.md`
-   - `https://raw.githubusercontent.com/312362115/claude/main/skills/deep-research/VERSION`
-   - `https://raw.githubusercontent.com/312362115/claude/main/skills/deep-research/CHANGELOG.md`
-   更新完成后提示用户重新加载 skill（开始新会话或 `/reload-plugins`）
+   用户确认后，先判断安装方式再执行更新：
+   - 用 Bash 执行 `git -C <本skill所在目录的父目录> remote get-url origin 2>/dev/null`
+   - **如果输出包含 `312362115/claude`**（整仓安装）：执行 `git -C <仓库根目录> pull origin main`
+   - **否则**（单 skill 安装）：依次 WebFetch 以下文件并覆盖本地对应文件：
+     - `https://raw.githubusercontent.com/312362115/claude/main/skills/deep-research/SKILL.md`
+     - `https://raw.githubusercontent.com/312362115/claude/main/skills/deep-research/VERSION`
+     - `https://raw.githubusercontent.com/312362115/claude/main/skills/deep-research/CHANGELOG.md`
+   - 更新完成后提示用户重新加载 skill（开始新会话或 `/reload-plugins`）
 6. **容错**：任何步骤失败时静默跳过，不报错不打扰用户
