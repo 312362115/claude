@@ -12,7 +12,7 @@
 ## P2 — 普通
 - [x] [Diagram Skill 优化](2026-03-30-skill-optimization.md) — 配色/布局/代码质量优化
 - [x] [MD Preview 样式升级](2026-03-31-md-preview-style-upgrade.md) — 样式统一 + 图表实时渲染
-- [ ] [Deep-Research 质量优化](2026-03-31-deep-research-quality.md) — 评分 7.9 → 9
+- [x] [Deep-Research 质量优化](2026-03-31-deep-research-quality.md) — 评分 7.9 → 9
 - [x] [Diagram 能力补齐](2026-04-01-flowchart-capability-upgrade.md) — 三批全交付，29 种图表
 - [x] [Deep-Research 清理 Graphviz 依赖](2026-04-02-deep-research-remove-graphviz.md) — 去除 graphviz，图表生成统一对齐 Diagram skill
 - ~~[MD Preview 目录导航](2026-03-29-md-preview-directory-nav.md) — 增加目录导航能力（dropped）~~
