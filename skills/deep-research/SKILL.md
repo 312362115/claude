@@ -202,7 +202,7 @@ description: >
 
 - 使用 WebSearch 进行网络搜索，使用 WebFetch 获取具体页面内容
 - 如果命题涉及本地项目，同时用 Grep/Read 检索本地代码库和文档
-- **并行搜索**：同一层内的多个搜索方向可以用 Agent 工具并行执行，提高效率
+- **并行搜索**：同一层内的多个搜索方向可以用 Agent 工具并行执行，提高效率。**所有搜索类 Agent 子代理必须指定 `model: "sonnet"`**，节省 token 且搜索质量足够
 - **搜索关键词设计**：每个搜索用不同角度的关键词，避免信息重复
   - 例：调研 Redis → "Redis performance benchmark 2025"、"Redis vs alternatives comparison"、"Redis use cases limitations"
 
