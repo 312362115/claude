@@ -33,7 +33,9 @@ def _safe_inline(js_content):
 
 
 def make_html(title, subtitle, svg_id, body_class, scripts, chart_js):
-    """组装完整的 HTML 页面"""
+    """组装完整的 HTML 页面
+    SVG 初始尺寸为占位值，各适配器的 JS 会在运行时动态设置实际尺寸。
+    """
     lib_css = (LIB_DIR / 'base.css').read_text(encoding='utf-8')
     lib_utils = _safe_inline((LIB_DIR / 'utils.js').read_text(encoding='utf-8'))
 
@@ -41,6 +43,13 @@ def make_html(title, subtitle, svg_id, body_class, scripts, chart_js):
     for s in scripts:
         js = _safe_inline((LIB_DIR / s).read_text(encoding='utf-8'))
         script_tags += f'<script>\n{js}\n</script>\n'
+
+    # 提供 setSvgSize 辅助函数，各适配器调用它来设置 SVG 实际尺寸
+    size_helper = '''function setSvgSize(svg, w, h) {
+  svg.setAttribute('width', w);
+  svg.setAttribute('height', h);
+  svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
+}'''
 
     return f'''<!DOCTYPE html>
 <html lang="zh-CN">
@@ -60,10 +69,11 @@ body {{
   <div class="title">{title}</div>
   <div class="subtitle">{subtitle}</div>
   <div class="chart-wrap">
-    <svg id="{svg_id}" width="1100" height="660" viewBox="0 0 1100 660"></svg>
+    <svg id="{svg_id}"></svg>
   </div>
 <script>
 {lib_utils}
+{size_helper}
 </script>
 {script_tags}
 <script>
@@ -87,7 +97,7 @@ def adapt_bar(config):
     return make_html(
         config.get('title', '柱状图'),
         config.get('subtitle', ''),
-        'chart', 'fixed-1200', [],
+        'chart', 'auto-size', [],
         f'''(function() {{
   const svg = document.getElementById('chart');
   const categories = {cats};
@@ -97,10 +107,15 @@ def adapt_bar(config):
   const N = categories.length;
   const M = series.length;
 
-  const padL = 80, padR = 40, padT = 20, padB = 60;
-  const chartW = 1100 - padL - padR;
-  const chartH = 660 - padT - padB;
-  const groupW = chartW / N;
+  // 动态计算尺寸
+  const padL = 80, padR = 40, padT = 20, padB = 70;
+  const groupW = Math.max(Math.min(120, 900 / N), 50);
+  const chartW = groupW * N;
+  const chartH = Math.min(Math.max(400, N * 30), 580);
+  const svgW = padL + chartW + padR;
+  const svgH = padT + chartH + padB;
+  setSvgSize(svg, svgW, svgH);
+
   const barW = Math.min(groupW * 0.7 / M, 60);
   const barGap = 4;
 
@@ -154,7 +169,7 @@ def adapt_bar(config):
 
   // 图例
   const legendY = padT + chartH + 48;
-  const legendStartX = 1100/2 - (series.length * 120)/2;
+  const legendStartX = svgW/2 - (series.length * 120)/2;
   series.forEach((s, i) => {{
     const lx = legendStartX + i * 120;
     svg.appendChild(el('rect', {{ x: lx, y: legendY - 8, width: 16, height: 10, rx: 2, fill: colors[i] }}));
@@ -175,20 +190,26 @@ def adapt_line(config):
     return make_html(
         config.get('title', '折线图'),
         config.get('subtitle', ''),
-        'chart', 'fixed-1200', [],
+        'chart', 'auto-size', [],
         f'''(function() {{
   const svg = document.getElementById('chart');
   const categories = {cats};
   const series = {series};
 
   const colors = ['#667eea', '#f5576c', '#43e97b', '#4facfe', '#fa8231'];
-  const padL = 80, padR = 40, padT = 20, padB = 60;
-  const chartW = 1100 - padL - padR;
-  const chartH = 660 - padT - padB;
+  const N = categories.length;
+
+  // 动态计算尺寸
+  const padL = 80, padR = 40, padT = 20, padB = 70;
+  const pointGap = Math.max(Math.min(80, 900 / N), 30);
+  const chartW = pointGap * (N - 1) + 40;
+  const chartH = Math.min(Math.max(400, N * 20), 580);
+  const svgW = padL + chartW + padR;
+  const svgH = padT + chartH + padB;
+  setSvgSize(svg, svgW, svgH);
 
   const allVals = series.flatMap(s => s.values);
   const maxVal = Math.max(...allVals) * 1.15;
-  const N = categories.length;
 
   // Y 轴网格
   for (let i = 0; i <= 5; i++) {{
@@ -236,7 +257,7 @@ def adapt_line(config):
 
   // 图例
   const legendY = padT + chartH + 48;
-  const legendStartX = 1100/2 - (series.length * 120)/2;
+  const legendStartX = svgW/2 - (series.length * 120)/2;
   series.forEach((s, i) => {{
     const lx = legendStartX + i * 120;
     svg.appendChild(el('line', {{ x1: lx, y1: legendY - 3, x2: lx + 16, y2: legendY - 3,
@@ -263,7 +284,7 @@ def adapt_pie(config):
     return make_html(
         config.get('title', '饼图'),
         config.get('subtitle', ''),
-        'pie', 'fixed-1200', [],
+        'pie', 'auto-size', [],
         f'''const data = {items};
 const colors = [
   'rgba(102,126,234,0.75)', 'rgba(245,87,108,0.75)', 'rgba(79,172,254,0.75)',
@@ -329,23 +350,35 @@ body {{ display: flex; flex-direction: column; align-items: center; }}
 .chart-wrap {{ margin-top: 12px; }}
 </style>
 </head>
-<body class="fixed-1200">
+<body class="auto-size">
   <div class="title">{config.get('title', '雷达图')}</div>
   <div class="subtitle">{config.get('subtitle', '')}</div>
   <div class="legend">{legend_items}</div>
   <div class="chart-wrap">
-    <svg id="radar" width="1100" height="640" viewBox="0 0 1100 640"></svg>
+    <svg id="radar"></svg>
   </div>
 <script>
 {_safe_inline((LIB_DIR / 'utils.js').read_text(encoding='utf-8'))}
+function setSvgSize(svg, w, h) {{
+  svg.setAttribute('width', w);
+  svg.setAttribute('height', h);
+  svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
+}}
 </script>
 <script>
 const svg = document.getElementById('radar');
-const cx = 500, cy = 310, R = 220;
 const axes = {axes};
 const levels = 5;
 const labels = {labels};
 const series = {series};
+
+// 动态计算尺寸：根据标签长度和轴数调整
+const R = Math.min(220, 260);
+const labelMargin = 80;  // 标签到雷达边缘的距离
+const svgW = (R + labelMargin) * 2 + 60;
+const svgH = (R + labelMargin) * 2 + 20;
+const cx = svgW / 2, cy = svgH / 2;
+setSvgSize(svg, svgW, svgH);
 
 {engine}
 </script>
@@ -367,7 +400,7 @@ def adapt_heatmap(config):
     return make_html(
         config.get('title', '热力图'),
         config.get('subtitle', ''),
-        'hm', 'fixed-1200', [],
+        'hm', 'auto-size', [],
         f'''(function() {{
   const svg = document.getElementById('hm');
   const xLabels = {x_labels};
@@ -418,6 +451,13 @@ def adapt_heatmap(config):
     return 'rgb(' + r + ',' + g + ',' + b + ')';
   }}
 
+  // 动态计算 SVG 尺寸，确保内容不溢出
+  const xLabelH = 28;  // x 轴标签区域高度
+  const legendPadR = 80;  // 色阶图例右侧留白
+  const svgW = ox + gridW + legendPadR;
+  const svgH = oy + gridH + xLabelH + 10;  // +10 底部留白
+  setSvgSize(svg, svgW, svgH);
+
   // 画格子
   rawData.forEach(([xi, yi, v]) => {{
     const x = ox + xi * (cellW + gap);
@@ -427,14 +467,14 @@ def adapt_heatmap(config):
       const norm = (v - minVal) / valRange;
       svg.appendChild(el('text', {{ x: x + cellW/2, y: y + cellH/2 + 1,
         'text-anchor': 'middle', 'dominant-baseline': 'middle',
-        'font-size': 10, fill: norm > 0.6 ? '#fff' : '#666' }}, String(v)));
+        'font-size': 12, 'font-weight': 500, fill: norm > 0.6 ? '#fff' : '#333' }}, String(v)));
     }}
   }});
 
   // X 轴标签
   xLabels.forEach((label, i) => {{
     svg.appendChild(el('text', {{ x: ox + i * (cellW + gap) + cellW/2, y: oy + gridH + 22,
-      'text-anchor': 'middle', 'font-size': 11, fill: '#666' }}, label));
+      'text-anchor': 'middle', 'font-size': 12, fill: '#555' }}, label));
   }});
 
   // Y 轴标签
@@ -502,15 +542,20 @@ body {{ display: flex; flex-direction: column; align-items: center; }}
 .chart-wrap {{ margin-top: 16px; }}
 </style>
 </head>
-<body class="fixed-1200">
+<body class="auto-size">
   <div class="title">{config.get('title', '散点图')}</div>
   <div class="subtitle">{config.get('subtitle', '')}</div>
   <div class="legend">{legend_items}</div>
   <div class="chart-wrap">
-    <svg id="scatter" width="1080" height="580" viewBox="0 0 1080 580"></svg>
+    <svg id="scatter"></svg>
   </div>
 <script>
 {lib_utils}
+function setSvgSize(svg, w, h) {{
+  svg.setAttribute('width', w);
+  svg.setAttribute('height', h);
+  svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
+}}
 </script>
 <script>
 (function() {{
@@ -527,9 +572,14 @@ body {{ display: flex; flex-direction: column; align-items: center; }}
     ['rgba(165,94,234,0.35)', 'rgba(165,94,234,0.5)']
   ];
 
-  const padL = 80, padR = 40, padT = 10, padB = 60;
-  const chartW = 1080 - padL - padR;
-  const chartH = 580 - padT - padB;
+  // 动态计算尺寸
+  const totalPts = series.reduce((s, se) => s + se.data.length, 0);
+  const padL = 80, padR = 40, padT = 10, padB = 70;
+  const chartW = Math.max(600, Math.min(1000, totalPts * 15 + 400));
+  const chartH = Math.max(400, Math.min(560, chartW * 0.55));
+  const svgW = padL + chartW + padR;
+  const svgH = padT + chartH + padB;
+  setSvgSize(svg, svgW, svgH);
 
   // 数据范围
   const allPts = series.flatMap(s => s.data);
@@ -622,15 +672,20 @@ def adapt_waterfall(config):
 .chart-wrap {{ margin-top: 16px; position: relative; }}
 </style>
 </head>
-<body class="fixed-1200">
+<body class="auto-size">
   <div class="title">{config.get('title', '瀑布图')}</div>
   <div class="subtitle">{config.get('subtitle', '')}</div>
   {legend_html}
   <div class="chart-wrap">
-    <svg id="waterfall" width="1100" height="640" viewBox="0 0 1100 640"></svg>
+    <svg id="waterfall"></svg>
   </div>
 <script>
 {lib_utils}
+function setSvgSize(svg, w, h) {{
+  svg.setAttribute('width', w);
+  svg.setAttribute('height', h);
+  svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
+}}
 </script>
 <script>
 (function() {{
@@ -655,9 +710,18 @@ def adapt_waterfall(config):
     }}
   }});
 
-  const chartLeft = 80, chartRight = 1060, chartTop = 20, chartBottom = 560;
-  const chartW = chartRight - chartLeft;
-  const chartH = chartBottom - chartTop;
+  // 动态计算尺寸
+  const n = bars.length;
+  const barGap = 16;
+  const barW = Math.max(40, Math.min(80, 900 / n));
+  const chartW = n * (barW + barGap) + barGap;
+  const chartH = Math.min(Math.max(400, n * 40), 560);
+  const chartLeft = 80, chartTop = 20;
+  const chartRight = chartLeft + chartW;
+  const chartBottom = chartTop + chartH;
+  const svgW = chartRight + 40;
+  const svgH = chartBottom + 70;
+  setSvgSize(svg, svgW, svgH);
 
   const allVals = bars.flatMap(b => [b.bottom, b.top]);
   const dataMax = Math.ceil(Math.max(...allVals) / 1000) * 1000;
@@ -675,10 +739,7 @@ def adapt_waterfall(config):
       'text-anchor': 'end', 'font-size': 13, fill: '#94A3B8' }}, val.toLocaleString()));
   }}
 
-  // 柱子
-  const n = bars.length;
-  const barGap = 16;
-  const barW = (chartW - barGap * (n + 1)) / n;
+  // 柱子（n, barGap, barW 已在上方尺寸计算时定义）
 
   bars.forEach((b, i) => {{
     const x = chartLeft + barGap + i * (barW + barGap);
@@ -727,16 +788,23 @@ def adapt_funnel(config):
     return make_html(
         config.get('title', '漏斗图'),
         config.get('subtitle', ''),
-        'funnel', 'fixed-1200', [],
+        'funnel', 'auto-size', [],
         f'''(function() {{
   const data = {stages};
   const colors = ['#3B82F6', '#10B981', '#F59E0B', '#F43F5E', '#8B5CF6', '#06B6D4', '#F97316', '#64748B', '#10B981'];
   const svg = document.getElementById('funnel');
 
-  const cx = 550, topY = 20, maxWidth = 800, minWidth = 160;
-  const totalHeight = 600, gap = 4;
   const n = data.length;
-  const stepH = (totalHeight - gap * (n - 1)) / n;
+  const gap = 4;
+  const topY = 20;
+  const maxWidth = Math.max(500, Math.min(800, n * 100 + 200));
+  const minWidth = Math.max(120, maxWidth * 0.2);
+  const stepH = Math.max(40, Math.min(80, 500 / n));
+  const totalHeight = n * (stepH + gap) - gap;
+  const svgW = maxWidth + 200;  // 左右留白给标签和转化率
+  const svgH = topY + totalHeight + 30;
+  const cx = svgW / 2;
+  setSvgSize(svg, svgW, svgH);
   const maxVal = data[0].value;
 
   function widthFor(val) {{ return minWidth + (maxWidth - minWidth) * (val / maxVal); }}
