@@ -768,7 +768,7 @@ window.__mermaidResolve();
       const depth = parseInt(h.tagName[1]);
       if (depth > 4) return;
       const li = document.createElement('li');
-      li.className = 'toc-item' + (depth >= 3 ? ' depth-' + depth : '');
+      li.className = 'toc-item' + (depth >= 2 ? ' depth-' + depth : '');
       const a = document.createElement('a');
       a.href = '#' + h.id;
       a.textContent = h.textContent;
