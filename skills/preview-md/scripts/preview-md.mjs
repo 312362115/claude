@@ -180,6 +180,9 @@ function buildHTML(filePath) {
 <style>
 ${baseCSS}
 
+/* ─── highlight.js 背景覆盖，保持与 base.css 一致 ─── */
+pre code.hljs { background: #1e293b; padding: 16px 20px; }
+
 /* ─── Preview-specific ─── */
 #content {
   background: var(--c-surface);
@@ -241,6 +244,8 @@ ${baseCSS}
   <article id="content"></article>
 </main>
 
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.1/marked.min.js"></script>
 <script>
 window.__mermaidReady = new Promise(function(resolve) { window.__mermaidResolve = resolve; });
@@ -738,6 +743,13 @@ window.__mermaidResolve();
     };
 
     document.getElementById('content').innerHTML = marked.parse(md, { renderer });
+
+    // 语法高亮
+    document.querySelectorAll('pre code').forEach(block => {
+      if (!block.classList.contains('language-mermaid')) {
+        hljs.highlightElement(block);
+      }
+    });
 
     // 后处理
     rewriteImagePaths();
