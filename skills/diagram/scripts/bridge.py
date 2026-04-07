@@ -301,6 +301,10 @@ def adapt_radar(config):
     template = (TEMPLATES_DIR / 'radar.html').read_text(encoding='utf-8')
     engine_match = re.search(r'(function pt\(angle.*?)\s*</script>', template, re.DOTALL)
     engine = engine_match.group(1) if engine_match else ''
+    # 修复：动态计算 max 值，替换模板中硬编码的 /100
+    all_values = [v for s in series_data for v in s['values']]
+    max_val = max(all_values) if all_values else 100
+    engine = engine.replace('v / 100', f'v / {max_val}')
 
     axes = len(d['labels'])
 
