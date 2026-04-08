@@ -9,6 +9,14 @@
 
 ---
 
+## 工作流全景
+
+<p align="center">
+  <img src="docs/assets/workflow-panorama.png" alt="Skill 工作流全景" width="800">
+</p>
+
+---
+
 ## 亮点
 
 - **需求驱动工作流** — open → in-progress → done，需求关闭时自动复盘，形成经验闭环
