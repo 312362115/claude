@@ -4,6 +4,8 @@
 <!-- 当前无 P0 -->
 
 ## P1 — 重要
+- [ ] [Skill 体系扩建](2026-04-08-skill-system-expansion.md) — 新增 14 个 skill + task-start/task-finish 改造，覆盖安全/重构/写作/日常效率
+- [ ] [CI/CD 安全流水线](2026-04-08-cicd-security-pipeline.md) — 三层防线：pre-commit(gitleaks) + PR Check(全量扫描) + Release Gate(AI审查)
 - [x] [Deep Research Skill 升级](2026-03-29-deep-research-upgrade.md) — 从信息搜集升级为专业研究引擎
 - [x] [Deep Research HTML 报告](2026-03-31-deep-research-html-report.md) — 报告支持 HTML 格式输出
 - [x] [画图 Skill 动态布局](2026-03-28-diagram-dynamic-layout.md) — 全模板动态布局引擎
