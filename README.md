@@ -5,7 +5,7 @@
 [![GitHub Issues](https://img.shields.io/github/issues/312362115/claude)](https://github.com/312362115/claude/issues)&nbsp;&nbsp;
 [![License](https://img.shields.io/github/license/312362115/claude)](https://github.com/312362115/claude/blob/main/LICENSE)
 
-一套围绕 [Claude Code](https://docs.anthropic.com/en/docs/claude-code) 构建的 **20 个专业开发技能**，覆盖从需求管理到上线发版的完整开发生命周期。让 Claude 从代码助手进化为全流程开发伙伴。
+一套以**需求状态流转为核心**的 [Claude Code](https://docs.anthropic.com/en/docs/claude-code) 开发工作流。需求从创建到关闭的每个状态变更，驱动对应的开发动作自动发生——对焦、方案、编码、自检、复盘，全程闭环。20 个 skill 围绕这条主线提供调研、写作、图表、安全审查、性能分析等增强能力。
 
 ---
 
