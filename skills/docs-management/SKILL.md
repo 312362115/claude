@@ -8,7 +8,7 @@ description: >
   灵感来源：Karpathy LLM Wiki — LLM 不只是写文档，而是持续维护知识库。
   四个核心操作：Ingest（摄入新信息）、Query（检索知识）、Lint（健康检查）、Index（索引维护）。
   触发词：文档检查、清理文档、文档索引、docs 整理、知识库、文档过期了吗。
-  触发场景：task-finish 后自动触发 Ingest、定期 Lint 健检、用户查询项目历史。
+  触发场景：task-manager 标 done 时自动触发 Ingest、定期 Lint 健检、用户查询项目历史。
   即使用户没有说"文档管理"，只要涉及 docs/ 目录的整理/检查/更新，都应触发此技能。
 ---
 
@@ -36,7 +36,7 @@ Schema（规则）           →  CLAUDE.md 中的文档规范
 > 新信息进来时，不只是新建文件，而是找到已有文档合并更新。
 
 **触发时机**：
-- task-finish 复盘完成后
+- task-manager 标 done 时（复盘完成后自动触发）
 - 新的设计决策产生时
 - 外部信息需要整合到项目文档时
 
