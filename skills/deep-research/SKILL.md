@@ -792,19 +792,3 @@ Redis 在高并发场景下的 p99 延迟通常低于 2ms[1]，
 如发现问题，当场修复后继续。
 
 ---
-
-## 更新检查
-
-任务完成后，检查本 skill 是否有新版本。**本会话内只检查一次，如果已经执行过以下流程则直接跳过。**
-
-1. **跨会话频率控制**：用 Read 读取 `~/.claude/.skill-check-deep-research`。文件内容是今天日期（YYYY-MM-DD）则跳过所有后续步骤
-2. **读取本地版本**：从本文件 frontmatter 的 `version` 字段获取
-3. **获取远端版本**：WebFetch `https://raw.githubusercontent.com/312362115/claude/main/skills/deep-research/VERSION`
-4. **写入检查标记**：`echo "$(date +%Y-%m-%d)" > ~/.claude/.skill-check-deep-research`
-5. **比对与通知**：版本相同则静默跳过。不同则告知用户：
-   ```
-   deep-research skill 有新版本：<本地版本> → <远端版本>
-   更新内容：https://github.com/312362115/claude/blob/main/skills/deep-research/CHANGELOG.md
-   获取新版：https://github.com/312362115/claude/tree/main/skills/deep-research
-   ```
-6. **容错**：任何步骤失败时静默跳过
