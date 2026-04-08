@@ -6,61 +6,11 @@
 
 ---
 
-## 架构：流程 vs 能力分离
+## 工作流全景
 
-```
-流程 skill（调度"做什么"）          能力 skill（负责"怎么做"）
-─────────────────────────          ──────────────────────────
-task-manager    需求管理             writing         通用写作
-task-start      启动调度             deep-research   深度调研
-task-execute    执行管理             tech-evaluation 技术选型
-task-finish     提交自检             diagram         专业图表
-refactoring     重构流程             code-walkthrough 代码导读
-                                    dependency-map   依赖分析
-                                    security-audit   安全审计
-                                    perf-profiling   性能分析
-                                    release          发版
-                                    rapid-prototype  快速原型
-                                    log-analysis     日志分析
-                                    env-troubleshoot 环境排障
-                                    docs-management  知识库引擎
-                                    learning-companion 学习助手
-                                    preview-md       MD 预览
-```
-
----
-
-## 需求状态驱动的工作流
-
-以需求状态变更为核心驱动整个工作流：
-
-```
-task-manager: open → 收集需求、排优先级
-                ↓ 决定做
-task-manager: in-progress → task-start 启动
-                ↓
-            task-start → 对焦 + 方案调度
-                ├─→ deep-research（调研）
-                ├─→ tech-evaluation（选型）
-                ├─→ rapid-prototype（原型验证）
-                └─→ writing（写 spec / plan）
-                ↓
-            task-execute → 编码 + 进度管理
-                ├─→ code-walkthrough（理解代码）
-                ├─→ dependency-map（影响分析）
-                └─→ refactoring（大规模重构）
-                ↓
-            task-finish → 每次提交前 CR 自检
-                ├─→ security-audit（上线前安全审查）
-                └─→ release（发版）
-                ↓
-            （手动测试、bug 修复、调整...可能多轮）
-                ↓
-task-manager: done → 需求彻底完成
-                ├─ 复盘 → docs/decisions/
-                ├─ Ingest → docs-management 更新文档
-                └─ memory → 跨会话索引
-```
+<p align="center">
+  <img src="../docs/assets/workflow-panorama.png" alt="工作流全景" width="700">
+</p>
 
 ### 需求状态
 
@@ -73,11 +23,9 @@ task-manager: done → 需求彻底完成
 
 ### 经验闭环
 
-```
-task-start（检索 decisions/ 历史经验）→ 执行 → task-manager 标 done（产出新经验）
-      ↑                                                    │
-      └──────────────── docs/decisions/ ←──────────────────┘
-```
+<p align="center">
+  <img src="../docs/assets/experience-loop.png" alt="经验闭环" width="550">
+</p>
 
 ---
 
