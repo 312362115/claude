@@ -31,7 +31,24 @@ description: >
 | **收集** | 新需求写入 `docs/backlog/`，更新 INDEX |
 | **排序** | 定期重新评估优先级（P0-P3） |
 | **清理** | 过期/无效需求标记 dropped，保持 backlog 清洁 |
-| **跟踪** | 需求状态从 open → done / dropped |
+| **跟踪** | 需求状态流转：open → in-progress → done / dropped |
+
+### 需求状态定义
+
+```
+open ──→ in-progress ──→ done
+  │                        │
+  └──→ dropped             └─ 触发复盘 + 经验沉淀
+```
+
+| 状态 | 含义 | 触发时机 | 驱动行为 |
+|------|------|---------|---------|
+| **open** | 已收集，待排期 | 需求创建时 | 无 |
+| **in-progress** | 开发中 | task-start 启动时 | 无（方便跨会话跟踪进度） |
+| **done** | 彻底完成 | 用户确认关闭 | 触发复盘 + Ingest |
+| **dropped** | 放弃 | 需求失效/优先级归零 | 记录 drop 原因 |
+
+**in-progress 的价值**：跨会话时能快速定位"上次做到哪了"——看 backlog 中哪些是 in-progress，再看对应的 plan 进度。
 
 ---
 
@@ -137,9 +154,21 @@ plan: （关联计划，如有）
 
 | 变更 | 操作 |
 |------|------|
-| **open → done** | **触发关闭流程**（见下方） |
-| **open → dropped** | 更新 backlog 文件 status + INDEX.md 中加 `~~删除线~~` + 写明 drop 原因 |
+| **open → in-progress** | 更新 backlog 文件 status + INDEX.md 中标注 `[~]`（开发中） |
+| **in-progress → done** | **触发关闭流程**（见下方） |
+| **open/in-progress → dropped** | 更新 backlog 文件 status + INDEX.md 中加 `~~删除线~~` + 写明 drop 原因 |
 | **优先级调整** | 更新 backlog 文件 priority + INDEX.md 中移动到对应分组 |
+
+### open → in-progress
+
+task-start 启动需求时，自动更新对应 backlog 状态：
+
+```
+1. 更新 backlog 文件 frontmatter: status: in-progress
+2. 更新 INDEX.md: [ ] → [~]
+```
+
+> `[~]` 表示开发中，和 `[ ]`（待做）、`[x]`（完成）区分。
 
 ### 需求关闭流程（open → done）
 
@@ -234,7 +263,8 @@ plan: （关联计划，如有）
 <!-- 当前无 P0 -->
 
 ## P1 — 重要
-- [ ] [需求标题](文件名.md) — 一句话描述
+- [~] [开发中的需求](文件名.md) — 一句话描述
+- [ ] [待做需求](文件名.md) — 一句话描述
 - [x] [已完成需求](文件名.md) — 一句话描述
 
 ## P2 — 普通
@@ -244,6 +274,11 @@ plan: （关联计划，如有）
 - [ ] [需求标题](文件名.md) — 一句话描述
 - ~~[已放弃需求](文件名.md) — 一句话描述~~
 ```
+
+- `[ ]` = open（待做）
+- `[~]` = in-progress（开发中）
+- `[x]` = done（完成）
+- `~~删除线~~` = dropped（放弃）
 
 ---
 
