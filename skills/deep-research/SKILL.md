@@ -342,6 +342,8 @@ description: >
 
 报告中的图表是专业性的重要体现。根据内容需要自动选择合适的图表类型，不限制数量。
 
+> **报告配图不带标题**：图表标题由报告正文的章节标题承担，图表本身的 `title` 设为空字符串。避免标题重复。
+
 **统一使用 Diagram Skill 的固化脚本**（`bridge.py` 和 `capture.py`），无需安装额外依赖。
 
 > **禁止手动调用 Playwright MCP 工具截图**（`browser_navigate`、`browser_take_screenshot`、`browser_run_code` 等）。所有图表截图统一通过 bridge.py / capture.py 完成，它们内部已封装 HTTP 服务启动、ELKjs 异步等待、Retina 2x 输出等逻辑。
