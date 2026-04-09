@@ -194,7 +194,7 @@ task-start 启动需求时，自动更新对应 backlog 状态：
   │       └─ 完整复盘：四维回顾
   │
   ├─ Step 4: 复盘产出写入 docs/decisions/YYYY-MM-DD-<主题>.md
-  ├─ Step 5: 从中提取关键经验存 memory（跨会话索引）
+  ├─ Step 5: 记忆管理（详见下方"记忆写入规则"）
   ├─ Step 6: 触发 docs-management.Ingest（更新相关 spec/plan 状态标注）
   ├─ Step 7: 更新 docs/decisions/INDEX.md（如果存在）
   └─ Step 8: 提交代码 — 将本次需求的所有变更（含 backlog 状态、复盘文档）一起 commit，不积攒
@@ -253,6 +253,49 @@ task-start 启动需求时，自动更新对应 backlog 状态：
 | 复盘全文 | `docs/decisions/YYYY-MM-DD-<主题>.md` | 真相源，随 git 提交 |
 | 关键经验 | memory（feedback/project 类型） | 跨会话索引 |
 | 通用规范 | CLAUDE.md | 经验提升为规范 |
+
+### 记忆写入规则（Step 5 详细说明）
+
+> memory 是"下次对话的备忘录"——只存跨会话有用的信息，不存能从代码/git/docs 推导出的东西。
+
+**什么时候写 memory**：
+
+| 触发场景 | 写什么类型 | 示例 |
+|---------|-----------|------|
+| 复盘中发现了**不显然的坑** | feedback | "Prisma migrate 在 SQLite 下不支持 ALTER COLUMN，需要重建表" |
+| 复盘中总结了**可复用的做法** | feedback | "大表加索引用 CONCURRENTLY，否则锁表" |
+| 用户纠正了你的做法 | feedback | "不要在这个项目用 mock 测试，上次踩过坑" |
+| 用户确认了一个非显然的方案 | feedback | "单 PR 打包重构是对的，拆太细反而是 churn" |
+| 了解到项目的阶段性目标/约束 | project | "Q2 前必须完成合规改造，scope 优先合规" |
+| 了解到外部资源的位置 | reference | "性能监控看 Grafana xxx 面板" |
+
+**写入判断三连问**：
+1. **下次对话还需要这个信息吗？** → 不需要则不写
+2. **能从代码/git log/docs 推导出来吗？** → 能推导则不写
+3. **会在 2 周内过期吗？** → 会过期则写 project 类型（方便后续清理）
+
+**不写的**：代码结构、文件路径、函数签名、具体的 bug 修复方案——这些从代码和 git 就能看到。
+
+### 记忆清理规则
+
+> 记忆不清理就是垃圾堆，和 backlog 一样。
+
+**清理触发时机**：
+1. **docs-management Lint 时**：顺带检查 memory，在健康检查报告中加一节"记忆巡检"
+2. **对话开始时读到过期 memory**：发现 memory 内容和当前代码/项目状态不符，当场更新或删除
+3. **memory 条目超过 20 条时**：主动建议用户清理
+
+**清理判断标准**：
+
+| 情况 | 操作 |
+|------|------|
+| project 类型超过 1 个月未更新 | 检查是否仍然有效，失效则删除 |
+| feedback 类型描述的代码/模块已重构或删除 | 删除 |
+| 两条 memory 内容重复或矛盾 | 合并或删除旧的 |
+| memory 中引用的文件/函数已不存在 | 删除 |
+| 内容已被沉淀到 CLAUDE.md 或 docs/ | 删除 memory（docs 已是真相源） |
+
+**清理操作**：删除 memory 文件 + 更新 MEMORY.md 索引，和写入一样是两步。
 
 ---
 

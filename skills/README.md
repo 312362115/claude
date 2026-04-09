@@ -1,6 +1,6 @@
 # Skills 技能体系
 
-20 个 skill 覆盖从需求到上线的完整开发流程。采用**流程与能力分离**架构——流程 skill 负责调度"做什么"，能力 skill 负责"怎么做"。
+22 个 skill 覆盖从需求到上线的完整开发流程。采用**流程与能力分离**架构——流程 skill 负责调度"做什么"，能力 skill 负责"怎么做"。
 
 > 精排 HTML 全景报告：`docs/reports/2026-04-08-skill-system-overview.html`
 
@@ -41,12 +41,13 @@
 | **task-finish** | 提交前 CR 自检（快速/深度） | 提交代码、自检 |
 | **refactoring** | 大规模重构流程（影响分析→安全网→分步→回归） | 重构、解耦、架构调整 |
 
-### 能力 Skill — 安全与质量（2 个）
+### 能力 Skill — 安全与质量（3 个）
 
 | Skill | 定位 | 触发词 |
 |-------|------|--------|
 | **security-audit** | AI 安全审查（注入/认证/敏感数据/配置/业务 5 维度） | 安全审计、上线前检查 |
 | **perf-profiling** | 前后端性能分析（Core Web Vitals + API profiling） | 太慢了、性能优化 |
+| **db-review** | 数据库代码审查 + Migration 安全检查（锁表/索引/慢SQL/Schema漂移） | 数据库检查、migration 检查、慢 SQL |
 
 ### 能力 Skill — 写作与表达（4 个）
 
@@ -80,6 +81,7 @@
 | **env-troubleshoot** | 环境排障（Node/Python/Docker） | 跑不起来、装不上 |
 | **docs-management** | 知识库引擎（Ingest/Query/Lint/Index） | 文档检查、docs 整理 |
 | **learning-companion** | 学习助手（按已有水平用类比教新技术） | 帮我学一下 |
+| **memory** | 记忆管理（全局/项目记忆的写入/查看/清理/迁移） | `/memory list`、`/memory save`、`/memory clean`、`/memory forget` |
 
 ---
 
