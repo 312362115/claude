@@ -67,19 +67,3 @@ node ~/.claude/skills/preview-md/scripts/preview-md.mjs <md-file-absolute-path>
 - 渲染特性：GitHub Markdown CSS + 左侧固定目录（h1-h4）+ 滚动高亮 + 平滑跳转
 
 ---
-
-## 更新检查
-
-任务完成后，检查本 skill 是否有新版本。**本会话内只检查一次，如果已经执行过以下流程则直接跳过。**
-
-1. **跨会话频率控制**：用 Read 读取 `~/.claude/.skill-check-preview-md`。文件内容是今天日期（YYYY-MM-DD）则跳过所有后续步骤
-2. **读取本地版本**：从本文件 frontmatter 的 `version` 字段获取
-3. **获取远端版本**：WebFetch `https://raw.githubusercontent.com/312362115/claude/main/skills/preview-md/VERSION`
-4. **写入检查标记**：`echo "$(date +%Y-%m-%d)" > ~/.claude/.skill-check-preview-md`
-5. **比对与通知**：版本相同则静默跳过。不同则告知用户：
-   ```
-   preview-md skill 有新版本：<本地版本> → <远端版本>
-   更新内容：https://github.com/312362115/claude/blob/main/skills/preview-md/CHANGELOG.md
-   获取新版：https://github.com/312362115/claude/tree/main/skills/preview-md
-   ```
-6. **容错**：任何步骤失败时静默跳过

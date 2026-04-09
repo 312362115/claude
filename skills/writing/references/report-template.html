@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{REPORT_TITLE}}</title>
+<style>
+/*
+ * 汇报模板样式 — 基于 deep-research HTML 模板扩展
+ * 新增组件：metric-card, progress-bar
+ * 调整：去掉调研特有元素（假设验证、来源层级），增强汇报视觉表现
+ */
+
+/* ─── Reset & Base ─── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --sidebar-w: 260px;
+  --content-max: 860px;
+  --font-sans: -apple-system, system-ui, 'PingFang SC', 'Noto Sans CJK SC', 'Microsoft YaHei', sans-serif;
+  --font-mono: 'SF Mono', 'Fira Code', 'Cascadia Code', Menlo, monospace;
+
+  --c-bg: #f8f9fc;
+  --c-surface: #ffffff;
+  --c-border: #e2e8f0;
+  --c-border-light: #f1f5f9;
+  --c-text: #1e293b;
+  --c-text-secondary: #64748b;
+  --c-text-muted: #94a3b8;
+  --c-primary: #3b82f6;
+  --c-primary-light: #eff6ff;
+  --c-primary-dark: #1d4ed8;
+  --c-accent: #0ea5e9;
+  --c-success: #10b981;
+  --c-warning: #f59e0b;
+  --c-danger: #ef4444;
+}
+
+html { font-size: 15px; scroll-behavior: smooth; }
+body {
+  font-family: var(--font-sans);
+  background: var(--c-bg);
+  color: var(--c-text);
+  line-height: 1.8;
+  letter-spacing: 0.01em;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ─── Sidebar ─── */
+.sidebar {
+  position: fixed; top: 0; left: 0;
+  width: var(--sidebar-w); height: 100vh;
+  background: var(--c-surface);
+  border-right: 1px solid var(--c-border);
+  overflow-y: auto; padding: 28px 0;
+  z-index: 100;
+  scrollbar-width: thin;
+  scrollbar-color: var(--c-border) transparent;
+}
+.sidebar::-webkit-scrollbar { width: 4px; }
+.sidebar::-webkit-scrollbar-thumb { background: var(--c-border); border-radius: 4px; }
+.sidebar-title {
+  font-size: 11px; font-weight: 700; color: var(--c-text-muted);
+  text-transform: uppercase; letter-spacing: 1px;
+  padding: 0 20px; margin-bottom: 16px;
+}
+.toc-list { list-style: none; }
+.toc-item a {
+  display: block; padding: 7px 20px;
+  font-size: 13px; color: var(--c-text-secondary);
+  text-decoration: none; border-left: 3px solid transparent;
+  border-bottom: none;
+  transition: all 0.15s ease;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  line-height: 1.4;
+}
+.toc-item a:hover {
+  color: var(--c-primary); background: var(--c-primary-light);
+  border-bottom: none;
+}
+.toc-item.active > a {
+  color: var(--c-primary-dark); border-left-color: var(--c-primary);
+  background: var(--c-primary-light); font-weight: 600;
+  border-bottom: none;
+}
+.toc-item.depth-3 a { padding-left: 36px; font-size: 12px; color: var(--c-text-muted); }
+
+/* ─── Main Content ─── */
+.content {
+  margin-left: var(--sidebar-w);
+  padding: 48px 64px 100px;
+  max-width: calc(var(--content-max) + 128px + var(--sidebar-w));
+}
+
+article > p, article > ul, article > ol,
+article > blockquote, article > .callout,
+article > .chart-container, article > table {
+  margin-bottom: 16px;
+}
+article > p + p { text-indent: 0; margin-top: 4px; }
+article > h2 + p, article > h3 + p { margin-top: 4px; }
+
+/* ─── Report Header ─── */
+.report-header {
+  margin-bottom: 48px; padding-bottom: 36px;
+  border-bottom: 2px solid var(--c-border);
+}
+.report-title {
+  font-size: 2.1rem; font-weight: 800;
+  color: var(--c-text); line-height: 1.35;
+  margin-bottom: 10px; letter-spacing: -0.01em;
+}
+.report-subtitle {
+  font-size: 1.05rem; color: var(--c-text-secondary);
+  margin-bottom: 24px; line-height: 1.6;
+}
+.report-meta {
+  display: flex; flex-wrap: wrap; gap: 12px 32px;
+  font-size: 0.85rem; color: var(--c-text-muted);
+  padding: 14px 20px; background: #f8fafc;
+  border-radius: 8px; border: 1px solid var(--c-border-light);
+}
+.meta-item { display: flex; align-items: center; gap: 6px; }
+.meta-label { font-weight: 600; color: var(--c-text-secondary); }
+.meta-item::before {
+  content: ''; width: 4px; height: 4px; border-radius: 50%;
+  background: var(--c-primary); flex-shrink: 0;
+}
+.meta-item:first-child::before { display: none; }
+
+/* ─── Typography ─── */
+h2 {
+  font-size: 1.45rem; font-weight: 700; color: var(--c-text);
+  margin: 56px 0 20px; padding-bottom: 10px;
+  border-bottom: 1px solid var(--c-border-light);
+}
+h2:first-child { margin-top: 0; }
+h3 { font-size: 1.12rem; font-weight: 600; color: var(--c-text); margin: 36px 0 14px; }
+h4 { font-size: 0.95rem; font-weight: 600; color: var(--c-text-secondary); margin: 28px 0 10px; }
+p { margin: 0 0 14px; color: var(--c-text); word-break: break-word; }
+strong { font-weight: 600; color: var(--c-text); }
+a { color: var(--c-primary); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+a:hover { border-bottom-color: var(--c-primary); }
+ul, ol { margin: 8px 0 16px; padding-left: 24px; }
+li { margin-bottom: 6px; line-height: 1.7; }
+blockquote {
+  margin: 20px 0; padding: 14px 24px;
+  border-left: 4px solid var(--c-primary);
+  background: var(--c-primary-light);
+  color: var(--c-text-secondary);
+  border-radius: 0 8px 8px 0;
+}
+code { font-family: var(--font-mono); font-size: 0.85em; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; color: #e11d48; }
+hr { border: none; border-top: 1px solid var(--c-border); margin: 40px 0; }
+
+/* ─── Tables ─── */
+table {
+  width: 100%; border-collapse: collapse;
+  margin: 20px 0; font-size: 0.88rem;
+  border-radius: 8px; overflow: hidden;
+  border: 1px solid var(--c-border);
+}
+thead th {
+  background: #f1f5f9; font-weight: 600; color: var(--c-text);
+  text-align: left; padding: 12px 16px;
+  border-bottom: 2px solid var(--c-border);
+  font-size: 0.85rem; white-space: nowrap;
+}
+tbody td { padding: 11px 16px; border-bottom: 1px solid var(--c-border-light); vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: #f8fafc; }
+tbody tr:nth-child(even) { background: #fafbfd; }
+
+/* ─── 核心摘要 ─── */
+.exec-summary {
+  background: linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%);
+  border: 1px solid #bfdbfe; border-radius: 12px;
+  padding: 28px 32px; margin: 8px 0 40px;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.06);
+}
+.exec-summary h2 {
+  margin-top: 0; margin-bottom: 14px; border-bottom: none;
+  font-size: 1.15rem; color: var(--c-primary-dark);
+}
+.exec-summary p { font-size: 0.95rem; line-height: 1.75; color: #334155; }
+
+/* ─── Metric Card（指标卡片，汇报专用） ─── */
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px; margin: 24px 0;
+}
+.metric-card {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: 12px;
+  padding: 20px 24px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.metric-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--c-primary);
+}
+.metric-card.metric-success::before { background: var(--c-success); }
+.metric-card.metric-warning::before { background: var(--c-warning); }
+.metric-card.metric-danger::before { background: var(--c-danger); }
+.metric-value {
+  font-size: 2rem; font-weight: 800; color: var(--c-text);
+  line-height: 1.2; margin-bottom: 4px;
+}
+.metric-label {
+  font-size: 0.82rem; color: var(--c-text-muted); font-weight: 500;
+}
+.metric-change {
+  font-size: 0.78rem; font-weight: 600; margin-top: 8px;
+}
+.metric-change.up { color: var(--c-success); }
+.metric-change.down { color: var(--c-danger); }
+.metric-change.flat { color: var(--c-text-muted); }
+
+/* ─── Progress Bar（进度条，汇报专用） ─── */
+.progress-group { margin: 20px 0; }
+.progress-item { margin-bottom: 14px; }
+.progress-header {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin-bottom: 6px;
+}
+.progress-label { font-size: 0.88rem; font-weight: 500; color: var(--c-text); }
+.progress-value { font-size: 0.82rem; font-weight: 600; color: var(--c-text-secondary); }
+.progress-track {
+  height: 8px; background: var(--c-border-light);
+  border-radius: 4px; overflow: hidden;
+}
+.progress-fill {
+  height: 100%; border-radius: 4px;
+  transition: width 0.6s ease;
+}
+.progress-fill.fill-success { background: linear-gradient(90deg, #34d399, var(--c-success)); }
+.progress-fill.fill-primary { background: linear-gradient(90deg, #60a5fa, var(--c-primary)); }
+.progress-fill.fill-warning { background: linear-gradient(90deg, #fbbf24, var(--c-warning)); }
+.progress-fill.fill-danger { background: linear-gradient(90deg, #f87171, var(--c-danger)); }
+
+/* ─── Status Badge ─── */
+.badge {
+  display: inline-block;
+  padding: 2px 10px; border-radius: 14px;
+  font-size: 0.72rem; font-weight: 700;
+  vertical-align: middle; margin-left: 4px;
+}
+.badge-green { background: #d1fae5; color: #059669; }
+.badge-blue { background: var(--c-primary-light); color: var(--c-primary-dark); }
+.badge-orange { background: #fef3c7; color: #b45309; }
+.badge-red { background: #fef2f2; color: var(--c-danger); }
+.badge-gray { background: #f1f5f9; color: var(--c-text-muted); }
+.badge-purple { background: #f3e8ff; color: #7c3aed; }
+
+/* ─── Card Grid ─── */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px; margin: 20px 0;
+}
+.card {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: 12px;
+  padding: 22px 24px;
+  transition: border-color 0.2s;
+  position: relative;
+}
+.card:hover { border-color: var(--c-primary); }
+.card h4 { margin: 0 0 8px; font-size: 0.95rem; color: var(--c-text); }
+.card p { margin: 0; font-size: 0.88rem; color: var(--c-text-secondary); line-height: 1.6; }
+.card-tag {
+  position: absolute; top: 14px; right: 14px;
+  font-size: 0.7rem; font-weight: 700;
+  padding: 2px 10px; border-radius: 14px;
+}
+.tag-primary { background: var(--c-primary-light); color: var(--c-primary-dark); }
+.tag-success { background: #d1fae5; color: var(--c-success); }
+.tag-warning { background: #fef3c7; color: #b45309; }
+
+/* ─── Score Bar ─── */
+.score-bar { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
+.score-bar .label { width: 100px; font-size: 0.82rem; color: var(--c-text-secondary); text-align: right; flex-shrink: 0; }
+.score-bar .bar { flex: 1; height: 6px; background: var(--c-border-light); border-radius: 3px; overflow: hidden; }
+.score-bar .fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
+.fill-high { background: linear-gradient(90deg, var(--c-success), var(--c-accent)); }
+.fill-med { background: linear-gradient(90deg, var(--c-warning), #fbbf24); }
+.fill-low { background: linear-gradient(90deg, var(--c-danger), var(--c-warning)); }
+.score-bar .score-value { font-size: 0.75rem; font-weight: 600; width: 40px; flex-shrink: 0; }
+
+/* ─── VS Block ─── */
+.vs-block {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 0; margin: 24px 0;
+  border-radius: 12px; overflow: hidden;
+  border: 1px solid var(--c-border); background: var(--c-surface);
+}
+.vs-col { padding: 24px 28px; position: relative; }
+.vs-col:first-child { border-right: 1px solid var(--c-border); }
+.vs-col::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+.vs-col:first-child::before { background: var(--c-primary); }
+.vs-col:last-child::before { background: var(--c-text-muted); }
+.vs-label { font-size: 0.8rem; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+.vs-label.label-a { color: var(--c-primary-dark); }
+.vs-label.label-b { color: var(--c-text-secondary); }
+.vs-label .vs-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; border-radius: 6px;
+  font-size: 0.7rem; font-weight: 800; color: #fff;
+}
+.vs-label.label-a .vs-icon { background: var(--c-primary); }
+.vs-label.label-b .vs-icon { background: var(--c-text-muted); }
+.vs-col p { font-size: 0.9rem; line-height: 1.7; }
+.vs-col ul { font-size: 0.9rem; padding-left: 18px; }
+.vs-col li { margin-bottom: 8px; line-height: 1.6; }
+
+/* ─── Timeline ─── */
+.timeline { position: relative; padding-left: 32px; margin: 24px 0; }
+.timeline::before {
+  content: ''; position: absolute; left: 14px; top: 0; bottom: 0;
+  width: 2px; background: linear-gradient(180deg, var(--c-primary), #8b5cf6, var(--c-success));
+}
+.tl-item { position: relative; padding: 14px 0 22px; border-bottom: 1px dashed var(--c-border); }
+.tl-item:last-child { border-bottom: none; }
+.tl-dot {
+  position: absolute; left: -24px; top: 18px;
+  width: 12px; height: 12px; border-radius: 50%;
+  border: 2px solid var(--c-primary); background: var(--c-bg);
+}
+.tl-item:nth-child(2) .tl-dot { border-color: #8b5cf6; }
+.tl-item:nth-child(3) .tl-dot { border-color: var(--c-success); }
+.tl-item:nth-child(4) .tl-dot { border-color: var(--c-warning); }
+.tl-title { font-weight: 700; font-size: 1rem; margin-bottom: 6px; color: var(--c-text); }
+.tl-desc { font-size: 0.88rem; color: var(--c-text-secondary); line-height: 1.6; }
+
+/* ─── Chart Container ─── */
+.chart-container {
+  margin: 28px 0; background: var(--c-surface);
+  border: 1px solid var(--c-border); border-radius: 12px;
+  padding: 28px 24px 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+  overflow: hidden;
+}
+.chart-container .chart-caption {
+  font-size: 0.82rem; color: var(--c-text-muted);
+  margin-top: 16px; padding-top: 12px;
+  text-align: center; border-top: 1px solid var(--c-border-light);
+}
+.chart-container svg { max-width: 100%; height: auto; display: block; margin: 0 auto; }
+.chart-container .chart-inner { display: flex; justify-content: center; align-items: center; min-height: 200px; }
+
+/* ─── Callout ─── */
+.callout {
+  margin: 24px 0; padding: 16px 22px;
+  border-radius: 8px; border-left: 4px solid;
+  font-size: 0.93rem; line-height: 1.7;
+}
+.callout p { margin-bottom: 6px; }
+.callout p:last-child { margin-bottom: 0; }
+.callout .callout-title { font-weight: 700; font-size: 0.88rem; margin-bottom: 6px; }
+.callout-note { background: #eff6ff; border-color: var(--c-primary); }
+.callout-note .callout-title { color: var(--c-primary); }
+.callout-warning { background: #fffbeb; border-color: var(--c-warning); }
+.callout-warning .callout-title { color: var(--c-warning); }
+.callout-danger { background: #fef2f2; border-color: var(--c-danger); }
+.callout-danger .callout-title { color: var(--c-danger); }
+.callout-success { background: #f0fdf4; border-color: var(--c-success); }
+.callout-success .callout-title { color: var(--c-success); }
+
+/* ─── Action Items（行动项列表） ─── */
+.action-list { margin: 20px 0; list-style: none; padding: 0; }
+.action-item {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 14px 18px; margin-bottom: 8px;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border); border-radius: 8px;
+  font-size: 0.9rem;
+}
+.action-item .action-owner {
+  flex-shrink: 0; font-size: 0.78rem; font-weight: 600;
+  padding: 2px 10px; border-radius: 14px;
+  background: var(--c-primary-light); color: var(--c-primary-dark);
+}
+.action-item .action-deadline {
+  flex-shrink: 0; font-size: 0.78rem; color: var(--c-text-muted);
+  margin-left: auto;
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 960px) {
+  .sidebar { display: none; }
+  .content { margin-left: 0; padding: 28px 20px 60px; }
+  .metric-grid { grid-template-columns: repeat(2, 1fr); }
+  .card-grid { grid-template-columns: 1fr; }
+  .vs-block { grid-template-columns: 1fr; }
+  .vs-col:first-child { border-right: none; border-bottom: 1px solid var(--c-border); }
+}
+
+/* ─── Print ─── */
+@media print {
+  .sidebar { display: none; }
+  .content { margin-left: 0; max-width: 100%; padding: 0; }
+  .chart-container { break-inside: avoid; box-shadow: none; }
+  .exec-summary { box-shadow: none; }
+  body { font-size: 12px; background: #fff; }
+  h2 { page-break-after: avoid; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ 侧边目录 ═══ -->
+<nav class="sidebar">
+  <div class="sidebar-title">目录</div>
+  <ul class="toc-list" id="toc"></ul>
+</nav>
+
+<!-- ═══ 主内容区 ═══ -->
+<main class="content">
+
+  <!-- 报告头 -->
+  <header class="report-header">
+    <h1 class="report-title">{{REPORT_TITLE}}</h1>
+    <p class="report-subtitle">{{REPORT_SUBTITLE}}</p>
+    <div class="report-meta">
+      <span class="meta-item"><span class="meta-label">汇报人</span> {{AUTHOR}}</span>
+      <span class="meta-item"><span class="meta-label">日期</span> {{DATE}}</span>
+      <span class="meta-item"><span class="meta-label">汇报类型</span> {{TYPE}}</span>
+      <span class="meta-item"><span class="meta-label">周期</span> {{PERIOD}}</span>
+    </div>
+  </header>
+
+  <!-- 核心摘要 -->
+  <section class="exec-summary">
+    <h2>核心摘要</h2>
+    <!-- 在此写入摘要：一句话结论 + 关键指标 -->
+  </section>
+
+  <article>
+    <!--
+      正文内容区 — 按汇报类型组织章节
+
+      ▸ 指标卡片（关键数字展示）：
+        <div class="metric-grid">
+          <div class="metric-card">
+            <div class="metric-value">92%</div>
+            <div class="metric-label">目标达成率</div>
+            <div class="metric-change up">+12% vs 上期</div>
+          </div>
+          <div class="metric-card metric-success">
+            <div class="metric-value">156</div>
+            <div class="metric-label">完成需求数</div>
+          </div>
+          <div class="metric-card metric-warning">
+            <div class="metric-value">3</div>
+            <div class="metric-label">延期项目</div>
+          </div>
+          <div class="metric-card metric-danger">
+            <div class="metric-value">2</div>
+            <div class="metric-label">高危风险</div>
+          </div>
+        </div>
+
+      ▸ 进度条（项目进度 / 目标达成）：
+        <div class="progress-group">
+          <div class="progress-item">
+            <div class="progress-header">
+              <span class="progress-label">后端开发</span>
+              <span class="progress-value">85%</span>
+            </div>
+            <div class="progress-track">
+              <div class="progress-fill fill-success" style="width: 85%"></div>
+            </div>
+          </div>
+          <div class="progress-item">
+            <div class="progress-header">
+              <span class="progress-label">前端开发</span>
+              <span class="progress-value">60%</span>
+            </div>
+            <div class="progress-track">
+              <div class="progress-fill fill-primary" style="width: 60%"></div>
+            </div>
+          </div>
+        </div>
+        fill-success(绿) / fill-primary(蓝) / fill-warning(橙) / fill-danger(红)
+
+      ▸ 行动项列表：
+        <ul class="action-list">
+          <li class="action-item">
+            <span class="action-owner">张三</span>
+            <span>完成支付模块联调</span>
+            <span class="action-deadline">4/15</span>
+          </li>
+        </ul>
+
+      ▸ 其他组件同 deep-research 模板：
+        card-grid, score-bar, vs-block, timeline, chart-container,
+        callout, badge — 用法相同
+    -->
+  </article>
+
+</main>
+
+<!-- ═══ 目录自动生成 + 滚动高亮 ═══ -->
+<script>
+(function() {
+  const toc = document.getElementById('toc');
+  const headings = document.querySelectorAll('.content h2, .content h3');
+  const tocItems = [];
+
+  headings.forEach((h, i) => {
+    const id = 'section-' + i;
+    h.id = id;
+    const depth = h.tagName === 'H3' ? 3 : 2;
+    const li = document.createElement('li');
+    li.className = 'toc-item depth-' + depth;
+    li.innerHTML = '<a href="#' + id + '">' + h.textContent + '</a>';
+    toc.appendChild(li);
+    tocItems.push({ el: li, target: h });
+  });
+
+  let ticking = false;
+  function updateActive() {
+    let active = tocItems[0];
+    const scrollY = window.scrollY + 80;
+    for (const item of tocItems) {
+      if (item.target.offsetTop <= scrollY) active = item;
+    }
+    tocItems.forEach(i => i.el.classList.remove('active'));
+    if (active) {
+      active.el.classList.add('active');
+      active.el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+    ticking = false;
+  }
+  window.addEventListener('scroll', () => {
+    if (!ticking) { requestAnimationFrame(updateActive); ticking = true; }
+  });
+  updateActive();
+})();
+</script>
+
+</body>
+</html>

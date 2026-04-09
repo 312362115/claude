@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude Code Skill 体系全景</title>
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --sidebar-w: 260px;
+  --content-max: 880px;
+  --font-sans: -apple-system, system-ui, 'PingFang SC', 'Noto Sans CJK SC', 'Microsoft YaHei', sans-serif;
+  --font-mono: 'SF Mono', 'Fira Code', 'Cascadia Code', Menlo, monospace;
+  --c-bg: #f7f8fa;
+  --c-surface: #ffffff;
+  --c-border: #e2e8f0;
+  --c-border-light: #f1f5f9;
+  --c-text: #1e293b;
+  --c-text-secondary: #64748b;
+  --c-text-muted: #94a3b8;
+  --c-primary: #3b82f6;
+  --c-primary-light: #eff6ff;
+  --c-primary-dark: #1d4ed8;
+  --c-accent: #0ea5e9;
+  --c-success: #10b981;
+  --c-warning: #f59e0b;
+  --c-danger: #ef4444;
+}
+
+html { font-size: 15px; scroll-behavior: smooth; }
+body { font-family: var(--font-sans); background: var(--c-bg); color: var(--c-text); line-height: 1.8; letter-spacing: 0.01em; -webkit-font-smoothing: antialiased; }
+
+.sidebar { position: fixed; top: 0; left: 0; width: var(--sidebar-w); height: 100vh; background: var(--c-surface); border-right: 1px solid var(--c-border); overflow-y: auto; padding: 28px 0; z-index: 100; scrollbar-width: thin; scrollbar-color: var(--c-border) transparent; }
+.sidebar::-webkit-scrollbar { width: 4px; }
+.sidebar::-webkit-scrollbar-thumb { background: var(--c-border); border-radius: 4px; }
+.sidebar-title { font-size: 11px; font-weight: 700; color: var(--c-text-muted); text-transform: uppercase; letter-spacing: 1px; padding: 0 20px; margin-bottom: 16px; }
+.toc-list { list-style: none; }
+.toc-item a { display: block; padding: 7px 20px; font-size: 13px; color: var(--c-text-secondary); text-decoration: none; border-left: 3px solid transparent; border-bottom: none; transition: all 0.15s ease; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.4; }
+.toc-item a:hover { color: var(--c-primary); background: var(--c-primary-light); border-bottom: none; }
+.toc-item.active > a { color: var(--c-primary-dark); border-left-color: var(--c-primary); background: var(--c-primary-light); font-weight: 600; border-bottom: none; }
+.toc-item.depth-3 a { padding-left: 36px; font-size: 12px; color: var(--c-text-muted); }
+
+.content { margin-left: var(--sidebar-w); padding: 48px 64px 100px; max-width: calc(var(--content-max) + 128px + var(--sidebar-w)); background: var(--c-surface); min-height: 100vh; }
+article > p, article > ul, article > ol, article > blockquote, article > .callout, article > .chart-container, article > table { margin-bottom: 16px; }
+
+.report-header { margin-bottom: 48px; padding-bottom: 36px; border-bottom: 2px solid var(--c-border); }
+.report-title { font-size: 2.1rem; font-weight: 800; color: var(--c-text); line-height: 1.35; margin-bottom: 10px; letter-spacing: -0.01em; }
+.report-subtitle { font-size: 1.05rem; color: var(--c-text-secondary); margin-bottom: 24px; line-height: 1.6; }
+.report-meta { display: flex; flex-wrap: wrap; gap: 12px 32px; font-size: 0.85rem; color: var(--c-text-muted); padding: 14px 20px; background: #f8fafc; border-radius: 8px; border: 1px solid var(--c-border-light); }
+.meta-item { display: flex; align-items: center; gap: 6px; }
+.meta-label { font-weight: 600; color: var(--c-text-secondary); }
+.meta-item::before { content: ''; width: 4px; height: 4px; border-radius: 50%; background: var(--c-primary); flex-shrink: 0; }
+.meta-item:first-child::before { display: none; }
+
+h2 { font-size: 1.45rem; font-weight: 700; color: var(--c-text); margin: 56px 0 20px; padding-bottom: 10px; border-bottom: 1px solid var(--c-border-light); }
+h2:first-child { margin-top: 0; }
+h3 { font-size: 1.12rem; font-weight: 600; color: var(--c-text); margin: 36px 0 14px; }
+h4 { font-size: 0.95rem; font-weight: 600; color: var(--c-text-secondary); margin: 28px 0 10px; }
+p { margin: 0 0 14px; color: var(--c-text); word-break: break-word; }
+strong { font-weight: 600; color: var(--c-text); }
+a { color: var(--c-primary); text-decoration: none; }
+ul, ol { margin: 8px 0 16px; padding-left: 24px; }
+li { margin-bottom: 6px; line-height: 1.7; }
+code { font-family: var(--font-mono); font-size: 0.85em; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; color: #e11d48; }
+hr { border: none; border-top: 1px solid var(--c-border); margin: 40px 0; }
+table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 0.88rem; border-radius: 8px; overflow: hidden; border: 1px solid var(--c-border); }
+thead th { background: #f1f5f9; font-weight: 600; color: var(--c-text); text-align: left; padding: 12px 16px; border-bottom: 2px solid var(--c-border); font-size: 0.85rem; white-space: nowrap; }
+tbody td { padding: 11px 16px; border-bottom: 1px solid var(--c-border-light); vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: #f8fafc; }
+tbody tr:nth-child(even) { background: #fafbfd; }
+
+.exec-summary { background: linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%); border: 1px solid #bfdbfe; border-radius: 12px; padding: 28px 32px; margin: 8px 0 40px; box-shadow: 0 2px 8px rgba(59, 130, 246, 0.06); }
+.exec-summary h2 { margin-top: 0; margin-bottom: 14px; border-bottom: none; font-size: 1.15rem; color: var(--c-primary-dark); }
+.exec-summary p { font-size: 0.95rem; line-height: 1.75; color: #334155; }
+.exec-summary ul { margin: 10px 0 14px; }
+.exec-summary li { font-size: 0.95rem; color: #334155; margin-bottom: 5px; }
+
+.metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin: 24px 0; }
+.metric-card { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: 12px; padding: 20px 24px; text-align: center; position: relative; overflow: hidden; }
+.metric-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--c-primary); }
+.metric-card.metric-success::before { background: var(--c-success); }
+.metric-card.metric-warning::before { background: var(--c-warning); }
+.metric-card.metric-danger::before { background: var(--c-danger); }
+.metric-card.metric-purple::before { background: #8b5cf6; }
+.metric-value { font-size: 2rem; font-weight: 800; color: var(--c-text); line-height: 1.2; margin-bottom: 4px; }
+.metric-label { font-size: 0.82rem; color: var(--c-text-muted); font-weight: 500; }
+.metric-change { font-size: 0.78rem; font-weight: 600; margin-top: 8px; }
+.metric-change.up { color: var(--c-success); }
+
+.card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin: 20px 0; }
+.card { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: 12px; padding: 22px 24px; transition: border-color 0.2s; position: relative; }
+.card:hover { border-color: var(--c-primary); }
+.card h4 { margin: 0 0 8px; font-size: 0.95rem; color: var(--c-text); }
+.card p { margin: 0; font-size: 0.88rem; color: var(--c-text-secondary); line-height: 1.6; }
+.card-tag { position: absolute; top: 14px; right: 14px; font-size: 0.7rem; font-weight: 700; padding: 2px 10px; border-radius: 14px; }
+.tag-primary { background: var(--c-primary-light); color: var(--c-primary-dark); }
+.tag-success { background: #d1fae5; color: var(--c-success); }
+.tag-warning { background: #fef3c7; color: #b45309; }
+.tag-purple { background: #f3e8ff; color: #7c3aed; }
+.tag-gray { background: #f1f5f9; color: var(--c-text-muted); }
+
+.badge { display: inline-block; padding: 2px 10px; border-radius: 14px; font-size: 0.72rem; font-weight: 700; vertical-align: middle; margin-left: 4px; }
+.badge-green { background: #d1fae5; color: #059669; }
+.badge-blue { background: var(--c-primary-light); color: var(--c-primary-dark); }
+.badge-orange { background: #fef3c7; color: #b45309; }
+.badge-purple { background: #f3e8ff; color: #7c3aed; }
+.badge-gray { background: #f1f5f9; color: var(--c-text-muted); }
+
+.callout { margin: 24px 0; padding: 16px 22px; border-radius: 8px; border-left: 4px solid; font-size: 0.93rem; line-height: 1.7; }
+.callout p { margin-bottom: 6px; }
+.callout p:last-child { margin-bottom: 0; }
+.callout .callout-title { font-weight: 700; font-size: 0.88rem; margin-bottom: 6px; }
+.callout-note { background: #eff6ff; border-color: var(--c-primary); }
+.callout-note .callout-title { color: var(--c-primary); }
+.callout-success { background: #f0fdf4; border-color: var(--c-success); }
+.callout-success .callout-title { color: var(--c-success); }
+
+.timeline { position: relative; padding-left: 32px; margin: 24px 0; }
+.timeline::before { content: ''; position: absolute; left: 14px; top: 0; bottom: 0; width: 2px; background: linear-gradient(180deg, var(--c-primary), #8b5cf6, var(--c-success)); }
+.tl-item { position: relative; padding: 14px 0 22px; border-bottom: 1px dashed var(--c-border); }
+.tl-item:last-child { border-bottom: none; }
+.tl-dot { position: absolute; left: -24px; top: 18px; width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--c-primary); background: var(--c-bg); }
+.tl-item:nth-child(2) .tl-dot { border-color: #8b5cf6; }
+.tl-item:nth-child(3) .tl-dot { border-color: var(--c-success); }
+.tl-item:nth-child(4) .tl-dot { border-color: var(--c-warning); }
+.tl-item:nth-child(5) .tl-dot { border-color: #ec4899; }
+.tl-item:nth-child(6) .tl-dot { border-color: var(--c-accent); }
+.tl-title { font-weight: 700; font-size: 1rem; margin-bottom: 6px; color: var(--c-text); }
+.tl-desc { font-size: 0.88rem; color: var(--c-text-secondary); line-height: 1.6; }
+
+.flow-diagram { margin: 28px 0; padding: 28px; background: var(--c-surface); border: 1px solid var(--c-border); border-radius: 12px; }
+.flow-row { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 12px 0; flex-wrap: wrap; }
+.flow-box { padding: 10px 20px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; text-align: center; min-width: 120px; }
+.flow-main { background: var(--c-primary); color: #fff; }
+.flow-sub { background: var(--c-primary-light); color: var(--c-primary-dark); border: 1px solid #bfdbfe; }
+.flow-accent { background: #f0fdf4; color: #059669; border: 1px solid #a7f3d0; }
+.flow-warn { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
+.flow-arrow { font-size: 1.2rem; color: var(--c-text-muted); }
+.flow-label { font-size: 0.75rem; color: var(--c-text-muted); text-align: center; margin-top: 2px; }
+.flow-group { display: flex; flex-direction: column; gap: 4px; align-items: center; }
+
+@media (max-width: 960px) {
+  .sidebar { display: none; }
+  .content { margin-left: 0; padding: 28px 20px 60px; }
+  .metric-grid { grid-template-columns: repeat(2, 1fr); }
+  .card-grid { grid-template-columns: 1fr; }
+  .flow-row { flex-direction: column; }
+}
+@media print {
+  .sidebar { display: none; }
+  .content { margin-left: 0; max-width: 100%; padding: 0; }
+  body { font-size: 12px; background: #fff; }
+}
+</style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="sidebar-title">目录</div>
+  <ul class="toc-list" id="toc"></ul>
+</nav>
+
+<main class="content">
+
+  <header class="report-header">
+    <h1 class="report-title">Claude Code Skill 体系全景</h1>
+    <p class="report-subtitle">20 个 skill 如何覆盖从需求到上线的完整开发流程</p>
+    <div class="report-meta">
+      <span class="meta-item"><span class="meta-label">日期</span> 2026-04-08</span>
+      <span class="meta-item"><span class="meta-label">汇报类型</span> 能力体系介绍</span>
+      <span class="meta-item"><span class="meta-label">技术栈</span> JS/TS + Python</span>
+    </div>
+  </header>
+
+  <section class="exec-summary">
+    <h2>核心摘要</h2>
+    <p>构建了覆盖<strong>需求管理 → 方案设计 → 编码执行 → 安全审查 → 发版上线</strong>全生命周期的 20 个 skill 体系。采用<strong>流程与能力分离</strong>架构——5 个流程 skill 负责调度"做什么"，15 个能力 skill 负责"怎么做"。核心闭环：task-start 检索历史经验 → 执行 → task-finish 产出新经验 → docs/decisions/ 沉淀。</p>
+  </section>
+
+  <article>
+
+    <h2>体系概览</h2>
+
+    <div class="metric-grid">
+      <div class="metric-card">
+        <div class="metric-value">20</div>
+        <div class="metric-label">Skill 总数</div>
+      </div>
+      <div class="metric-card metric-success">
+        <div class="metric-value">5</div>
+        <div class="metric-label">流程 Skill</div>
+      </div>
+      <div class="metric-card metric-purple">
+        <div class="metric-value">15</div>
+        <div class="metric-label">能力 Skill</div>
+      </div>
+      <div class="metric-card metric-warning">
+        <div class="metric-value">7</div>
+        <div class="metric-label">写作模板</div>
+      </div>
+    </div>
+
+    <div class="callout callout-note">
+      <div class="callout-title">架构理念：流程与能力分离</div>
+      <p><strong>流程 skill</strong> 负责调度"什么时候做什么"，自己不产出具体内容。<br>
+      <strong>能力 skill</strong> 负责"怎么做好某件事"，被流程 skill 按需调用。<br>
+      这样每个 skill 职责单一、可独立使用，也能被组合成完整流程。</p>
+    </div>
+
+    <h2>流程 Skill <span class="badge badge-green">5 个</span></h2>
+    <p>串联整个开发生命周期的骨架，每个 skill 在流程中有明确的位置。</p>
+
+    <div class="card-grid">
+      <div class="card">
+        <span class="card-tag tag-success">流程</span>
+        <h4>task-manager</h4>
+        <p>需求管理：backlog 梳理、优先级排序、过期清理。管"做不做、做哪个"。</p>
+      </div>
+      <div class="card">
+        <span class="card-tag tag-success">流程</span>
+        <h4>task-start</h4>
+        <p>任务启动：需求对焦 + 历史经验检索 + 调度写方案/选型/调研/原型。</p>
+      </div>
+      <div class="card">
+        <span class="card-tag tag-success">流程</span>
+        <h4>task-execute</h4>
+        <p>持续执行：跨会话大型任务的进度管理和上下文维护。</p>
+      </div>
+      <div class="card">
+        <span class="card-tag tag-success">流程</span>
+        <h4>task-finish</h4>
+        <p>任务收尾：CR 自检 + 强制复盘（轻量/完整）→ docs/decisions/ 沉淀。</p>
+      </div>
+      <div class="card">
+        <span class="card-tag tag-success">流程</span>
+        <h4>refactoring</h4>
+        <p>重构流程：影响分析 → 安全网搭建 → 分步重构 → 回归验证。</p>
+      </div>
+    </div>
+
+    <h2>能力 Skill <span class="badge badge-purple">15 个</span></h2>
+    <p>按能力域分为 5 组，覆盖开发者日常工作的各个方面。</p>
+
+    <h3>安全与质量</h3>
+    <div class="card-grid">
+      <div class="card">
+        <span class="card-tag tag-primary">能力</span>
+        <h4>security-audit</h4>
+        <p>AI 安全审查：注入防护、认证授权、敏感数据、配置安全、业务安全 5 个维度。</p>
+      </div>
+      <div class="card">
+        <span class="card-tag tag-primary">能力</span>
+        <h4>perf-profiling</h4>
+        <p>前后端性能分析：Core Web Vitals、API 响应、数据库查询、优化前后对比。</p>
+      </div>
+    </div>
+
+    <h3>写作与表达</h3>
+    <div class="card-grid">
+      <div class="card">
+        <span class="card-tag tag-primary">能力</span>
+        <h4>writing</h4>
+        <p>通用写作：技术文档（spec/plan/API 文档）、产品文档（PRD/运营方案）、汇报（精排 HTML）。</p>
+      </div>
+      <div class="card">
+        <span class="card-tag tag-primary">能力</span>
+        <h4>deep-research</h4>
+        <p>深度调研：系统性调研 + 专业报告，覆盖技术选型、行业分析、竞品分析等。</p>
+      </div>
+      <div class="card">
+        <span class="card-tag tag-primary">能力</span>
+        <h4>tech-evaluation</h4>
+        <p>技术选型：权重矩阵 + PoC 验证 + 决策报告，必须给结论。</p>
+      </div>
+    </div>
+
+    <h3>代码理解与分析</h3>
+    <div class="card-grid">
+      <div class="card">
+        <span class="card-tag tag-primary">能力</span>
+        <h4>code-walkthrough</h4>
+        <p>代码导读：架构 → 核心流程 → 关键设计决策，分层递进建立心智模型。</p>
+      </div>
+      <div class="card">
+        <span class="card-tag tag-primary">能力</span>
+        <h4>dependency-map</h4>
+        <p>依赖分析：追踪调用链和数据流，评估"改这里会影响哪里"。</p>
+      </div>
+    </div>
+
+    <h3>开发辅助</h3>
+    <div class="card-grid">
+      <div class="card">
+        <span class="card-tag tag-primary">能力</span>
+        <h4>release</h4>
+        <p>发版自动化：CalVer 版本号 + git log 生成 changelog + GitHub Releases。</p>
+      </div>
+      <div class="card">
+        <span class="card-tag tag-primary">能力</span>
+        <h4>rapid-prototype</h4>
+        <p>快速原型：5 分钟出可交互 HTML demo，验证想法和交互方案。</p>
+      </div>
+      <div class="card">
+        <span class="card-tag tag-primary">能力</span>
+        <h4>diagram</h4>
+        <p>专业图表：29 种图表类型，统一设计规范，HTML/SVG 生成。</p>
+      </div>
+    </div>
+
+    <h3>日常效率</h3>
+    <div class="card-grid">
+      <div class="card">
+        <span class="card-tag tag-primary">能力</span>
+        <h4>log-analysis</h4>
+        <p>日志分析：定位异常 → 统计分布 → 构建时间线 → 根因分析。</p>
+      </div>
+      <div class="card">
+        <span class="card-tag tag-primary">能力</span>
+        <h4>env-troubleshoot</h4>
+        <p>环境排障：Node/Python/Docker 常见问题结构化排查。</p>
+      </div>
+      <div class="card">
+        <span class="card-tag tag-primary">能力</span>
+        <h4>docs-management</h4>
+        <p>知识库引擎：Ingest 摄入 + Query 查询 + Lint 健检 + Index 索引。</p>
+      </div>
+      <div class="card">
+        <span class="card-tag tag-primary">能力</span>
+        <h4>learning-companion</h4>
+        <p>学习助手：按已有知识水平用类比/对比/渐进法学习新技术。</p>
+      </div>
+    </div>
+
+    <h2>工作流全景</h2>
+    <p>从一个需求的诞生到上线，skill 体系如何协同工作：</p>
+
+    <div class="flow-diagram">
+      <div class="flow-row">
+        <div class="flow-group">
+          <div class="flow-box flow-main">task-manager</div>
+          <div class="flow-label">做不做、做哪个</div>
+        </div>
+        <span class="flow-arrow">&rarr;</span>
+        <div class="flow-group">
+          <div class="flow-box flow-main">task-start</div>
+          <div class="flow-label">对焦 + 方案调度</div>
+        </div>
+        <span class="flow-arrow">&rarr;</span>
+        <div class="flow-group">
+          <div class="flow-box flow-main">task-execute</div>
+          <div class="flow-label">持续编码</div>
+        </div>
+        <span class="flow-arrow">&rarr;</span>
+        <div class="flow-group">
+          <div class="flow-box flow-warn">security-audit</div>
+          <div class="flow-label">安全审查</div>
+        </div>
+        <span class="flow-arrow">&rarr;</span>
+        <div class="flow-group">
+          <div class="flow-box flow-main">task-finish</div>
+          <div class="flow-label">自检 + 复盘</div>
+        </div>
+        <span class="flow-arrow">&rarr;</span>
+        <div class="flow-group">
+          <div class="flow-box flow-accent">release</div>
+          <div class="flow-label">发版</div>
+        </div>
+      </div>
+      <div class="flow-row" style="margin-top:20px; gap: 16px;">
+        <div class="flow-box flow-sub">writing</div>
+        <div class="flow-box flow-sub">deep-research</div>
+        <div class="flow-box flow-sub">tech-evaluation</div>
+        <div class="flow-box flow-sub">code-walkthrough</div>
+        <div class="flow-box flow-sub">dependency-map</div>
+        <div class="flow-box flow-sub">rapid-prototype</div>
+      </div>
+      <div style="text-align:center; font-size:0.78rem; color:var(--c-text-muted); margin-top:8px;">&uarr; 能力 skill 被流程 skill 按需调用 &uarr;</div>
+    </div>
+
+    <h2>经验闭环机制</h2>
+    <p>解决"大任务交付后反复返工但没有复盘记录"的核心痛点。</p>
+
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <div class="tl-title">task-start <span class="badge badge-blue">对焦阶段</span></div>
+        <div class="tl-desc">自动检索 <code>docs/decisions/</code> 历史经验，发现相关踩坑记录时主动提醒："上次类似任务踩过这些坑..."</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <div class="tl-title">task-execute <span class="badge badge-blue">执行阶段</span></div>
+        <div class="tl-desc">基于历史经验规避已知风险，减少重复踩坑。</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <div class="tl-title">task-finish <span class="badge badge-blue">复盘阶段</span></div>
+        <div class="tl-desc">强制复盘判断（不可跳过）→ 轻量/完整复盘 → 写入 <code>docs/decisions/</code> 作为真相源 → 提取关键经验存 memory 作为跨会话索引。</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <div class="tl-title">docs-management <span class="badge badge-purple">知识库维护</span></div>
+        <div class="tl-desc">Ingest 操作将复盘产出整合到相关文档，Lint 操作定期检查文档健康度，确保知识不腐烂。</div>
+      </div>
+    </div>
+
+    <div class="callout callout-success">
+      <div class="callout-title">闭环效果</div>
+      <p><code>docs/decisions/</code> 随 git 提交，团队永久可见。每次新任务启动时自动检索，历史经验变成了团队资产而非个人记忆。</p>
+    </div>
+
+    <h2>Skill 完整清单</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Skill</th>
+          <th>类型</th>
+          <th>一句话定位</th>
+          <th>触发场景</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>1</td><td><strong>task-manager</strong></td><td><span class="badge badge-green">流程</span></td><td>需求管理：backlog 梳理与优先级</td><td>开迭代前、需求积压时</td></tr>
+        <tr><td>2</td><td><strong>task-start</strong></td><td><span class="badge badge-green">流程</span></td><td>任务启动：对焦 + 方案调度</td><td>新功能、复杂任务</td></tr>
+        <tr><td>3</td><td><strong>task-execute</strong></td><td><span class="badge badge-green">流程</span></td><td>持续执行：跨会话进度管理</td><td>大型任务、多阶段项目</td></tr>
+        <tr><td>4</td><td><strong>task-finish</strong></td><td><span class="badge badge-green">流程</span></td><td>任务收尾：自检 + 复盘沉淀</td><td>功能完成、准备提交</td></tr>
+        <tr><td>5</td><td><strong>refactoring</strong></td><td><span class="badge badge-green">流程</span></td><td>大规模重构结构化流程</td><td>多文件重构、架构调整</td></tr>
+        <tr><td>6</td><td><strong>security-audit</strong></td><td><span class="badge badge-purple">能力</span></td><td>AI 安全审查（5 个维度）</td><td>上线前、敏感模块改动</td></tr>
+        <tr><td>7</td><td><strong>writing</strong></td><td><span class="badge badge-purple">能力</span></td><td>通用写作（技术/产品/汇报）</td><td>写文档、写方案、写汇报</td></tr>
+        <tr><td>8</td><td><strong>deep-research</strong></td><td><span class="badge badge-purple">能力</span></td><td>深度调研 + 专业报告</td><td>调研、分析、竞品对比</td></tr>
+        <tr><td>9</td><td><strong>tech-evaluation</strong></td><td><span class="badge badge-purple">能力</span></td><td>技术选型决策</td><td>选框架、选库、选方案</td></tr>
+        <tr><td>10</td><td><strong>code-walkthrough</strong></td><td><span class="badge badge-purple">能力</span></td><td>代码导读：建立心智模型</td><td>接手项目、理解新模块</td></tr>
+        <tr><td>11</td><td><strong>dependency-map</strong></td><td><span class="badge badge-purple">能力</span></td><td>依赖分析：影响面评估</td><td>改动前、删代码前</td></tr>
+        <tr><td>12</td><td><strong>perf-profiling</strong></td><td><span class="badge badge-purple">能力</span></td><td>前后端性能分析</td><td>性能问题、优化验收</td></tr>
+        <tr><td>13</td><td><strong>release</strong></td><td><span class="badge badge-purple">能力</span></td><td>发版自动化（CalVer）</td><td>准备发布</td></tr>
+        <tr><td>14</td><td><strong>rapid-prototype</strong></td><td><span class="badge badge-purple">能力</span></td><td>快速原型：5 分钟可交互 demo</td><td>验证想法、演示方案</td></tr>
+        <tr><td>15</td><td><strong>diagram</strong></td><td><span class="badge badge-purple">能力</span></td><td>专业图表：29 种图表类型</td><td>画图、数据可视化</td></tr>
+        <tr><td>16</td><td><strong>log-analysis</strong></td><td><span class="badge badge-purple">能力</span></td><td>日志分析：异常定位 + 根因</td><td>线上问题排查</td></tr>
+        <tr><td>17</td><td><strong>env-troubleshoot</strong></td><td><span class="badge badge-purple">能力</span></td><td>环境排障</td><td>装不上、跑不起来</td></tr>
+        <tr><td>18</td><td><strong>docs-management</strong></td><td><span class="badge badge-purple">能力</span></td><td>知识库引擎</td><td>文档整理、健康检查</td></tr>
+        <tr><td>19</td><td><strong>learning-companion</strong></td><td><span class="badge badge-purple">能力</span></td><td>学习助手</td><td>学新技术、新概念</td></tr>
+        <tr><td>20</td><td><strong>preview-md</strong></td><td><span class="badge badge-purple">能力</span></td><td>Markdown 浏览器预览</td><td>文档完成后预览</td></tr>
+      </tbody>
+    </table>
+
+  </article>
+
+</main>
+
+<script>
+(function() {
+  const toc = document.getElementById('toc');
+  const headings = document.querySelectorAll('.content h2, .content h3');
+  const tocItems = [];
+  headings.forEach((h, i) => {
+    const id = 'section-' + i;
+    h.id = id;
+    const depth = h.tagName === 'H3' ? 3 : 2;
+    const li = document.createElement('li');
+    li.className = 'toc-item depth-' + depth;
+    li.innerHTML = '<a href="#' + id + '">' + h.textContent + '</a>';
+    toc.appendChild(li);
+    tocItems.push({ el: li, target: h });
+  });
+  let ticking = false;
+  function updateActive() {
+    let active = tocItems[0];
+    const scrollY = window.scrollY + 80;
+    for (const item of tocItems) { if (item.target.offsetTop <= scrollY) active = item; }
+    tocItems.forEach(i => i.el.classList.remove('active'));
+    if (active) { active.el.classList.add('active'); active.el.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+    ticking = false;
+  }
+  window.addEventListener('scroll', () => { if (!ticking) { requestAnimationFrame(updateActive); ticking = true; } });
+  updateActive();
+})();
+</script>
+
+</body>
+</html>
