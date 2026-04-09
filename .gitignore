@@ -21,6 +21,7 @@ history.jsonl
 
 # Claude Code 本地配置（个人偏好，不入版本控制）
 .claude/
+settings.json
 
 # IDE 状态
 ide/
