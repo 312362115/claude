@@ -97,6 +97,10 @@ task-execute — 执行：持续编码 + 跨会话进度管理
 task-finish（本 skill）— 提交前自检
   │
   ├─ 自检通过 → 提交代码
+  ├─ 文档同步提醒（按改动内容判断，可能同时命中多条）：
+  │   ├─ 涉及新模块 / 模块间交互变更？→ 提醒更新 architecture/ 或 user-guide/（docs-management.Synthesize）
+  │   ├─ 涉及依赖/工具链/环境配置变更？→ 提醒更新 guides/
+  │   └─ 涉及部署流程/基础设施变更？→ 提醒更新 runbooks/
   ├─ 涉及上线服务？→ 提示跑 security-audit（安全审查）
   ├─ 准备发版？→ 引导到 release skill
   │

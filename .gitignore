@@ -68,3 +68,4 @@ usage-data/
 playwright-mcp
 node_modules/
 .playwright-mcp/
+memory

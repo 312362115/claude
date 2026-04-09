@@ -6,9 +6,10 @@ repository: https://github.com/312362115/claude
 description: >
   项目知识库引擎：持续维护 docs/ 目录作为活的知识库。
   灵感来源：Karpathy LLM Wiki — LLM 不只是写文档，而是持续维护知识库。
-  四个核心操作：Ingest（摄入新信息）、Query（检索知识）、Lint（健康检查）、Index（索引维护）。
-  触发词：文档检查、清理文档、文档索引、docs 整理、知识库、文档过期了吗。
-  触发场景：task-manager 标 done 时自动触发 Ingest、定期 Lint 健检、用户查询项目历史。
+  五个核心操作：Ingest（摄入新信息）、Query（检索知识）、Lint（健康检查）、Index（索引维护）、Synthesize（聚合全局视图）。
+  触发词：文档检查、清理文档、文档索引、docs 整理、知识库、文档过期了吗、架构文档、用户手册。
+  触发场景：task-manager 标 done 时自动触发 Ingest、定期 Lint 健检、用户查询项目历史、
+  task-finish 提醒后触发 Synthesize 更新 architecture/ 或 user-guide/。
   即使用户没有说"文档管理"，只要涉及 docs/ 目录的整理/检查/更新，都应触发此技能。
 ---
 
@@ -58,6 +59,23 @@ Schema（规则）           →  CLAUDE.md 中的文档规范
 - task-finish 产出复盘 → 写入 `docs/decisions/`，同时检查对应的 spec 是否需要标注"方案已执行，实际偏差见 decisions/xxx"
 - 发现新的最佳实践 → 更新 `docs/guides/` 相关指南
 
+### Ingest 中的 spec 偏差处理
+
+> spec 标 done 时必须反映最终实现，但不是所有偏差都需要同样的处理方式。
+
+```
+偏差判断
+  │
+  ├─ 细节偏差（字段名调整、参数变更、实现细节微调）？
+  │   └─ 直接更新 spec 中的技术方案章节
+  │
+  ├─ 方案偏差（换了实现路径，但目标不变）？
+  │   └─ 更新 spec 技术方案 + 在决策章节补注"实际执行偏差及原因"
+  │
+  └─ 方向偏差（目标或范围发生了变化）？
+      └─ 写 decision 记录完整复盘，spec 中标注"已被 decisions/xxx 覆盖"
+```
+
 ### 操作 2：Query（查询）
 
 > docs/ 是项目的可查询知识库，不是文件堆。
@@ -104,7 +122,8 @@ Schema（规则）           →  CLAUDE.md 中的文档规范
 | 5 | **状态同步** | backlog 状态和实际进度是否匹配 | backlog open 但 plan 已全部完成 |
 | 6 | **孤立文档** | 有没有不被任何 INDEX 或文档引用的文件 | 遗忘的旧 spec |
 | 7 | **过期内容** | 文档描述的代码结构是否还存在 | spec 说"改 src/old.ts"但该文件已重命名 |
-| 8 | **记忆巡检** | memory 中的条目是否仍然有效 | feedback 引用的模块已删除、project 信息已过期 |
+| 8 | **全局视图同步** | architecture/ 和 user-guide/ 的 INDEX 和实际子文档是否一致 | INDEX 列了但文件不存在、新模块有 spec 但 architecture/ 没收录 |
+| 9 | **记忆巡检** | memory 中的条目是否仍然有效 | feedback 引用的模块已删除、project 信息已过期 |
 
 **输出格式**：
 
@@ -140,14 +159,76 @@ Schema（规则）           →  CLAUDE.md 中的文档规范
 
 ---
 
+### 操作 5：Synthesize（聚合）
+
+> 从碎片文档中维护全局视图索引。不是写长文档，是保持索引准确。
+
+**维护对象**：
+
+| 目录 | INDEX.md 的职责 | 子文档 |
+|------|----------------|--------|
+| `docs/architecture/` | 模块列表、模块间关系、核心数据流概览 | 每个模块一份架构文档 |
+| `docs/user-guide/` | 功能目录、快速入门导航 | 每个功能/模块一份用户指南 |
+
+**触发时机**：
+
+| 触发场景 | 操作 | token 成本 |
+|---------|------|-----------|
+| 用户手动要求 | 全量：读所有相关 spec/decision，重建 INDEX | 高 |
+| task-finish 提醒后用户确认 | 增量：只读本次变更涉及的模块，更新对应子文档和 INDEX | 低 |
+| Lint 发现 INDEX 和实际文件不一致 | 修复：对齐 INDEX 和实际文件列表 | 极低 |
+
+**执行流程**：
+
+```
+触发 Synthesize
+  │
+  ├─ 全量模式（首次生成 / 用户要求重建）
+  │   ├─ 扫描 docs/specs/ 和 docs/decisions/ 提取模块列表
+  │   ├─ 每个模块生成/更新 architecture/<模块名>.md
+  │   ├─ 生成 architecture/INDEX.md（模块导航 + 关系概览）
+  │   └─ user-guide 同理
+  │
+  └─ 增量模式（单次改动后）
+      ├─ 只读本次涉及的 spec/decision
+      ├─ 判断是否涉及新模块 / 模块间关系变更
+      │   ├─ 是 → 更新对应子文档 + INDEX
+      │   └─ 否 → 跳过
+      └─ 完成
+```
+
+**INDEX.md 格式示例**：
+
+```markdown
+# 系统架构
+
+## 模块概览
+| 模块 | 职责 | 文档 |
+|------|------|------|
+| auth | 认证与会话管理 | [auth.md](auth.md) |
+| payment | 支付与账单 | [payment.md](payment.md) |
+
+## 模块间关系
+- auth → payment：支付前需要认证
+- ...（或引用 docs/assets/ 中的架构图）
+```
+
+**和 Ingest 的区别**：
+- Ingest：一条新信息 → 归档到一个文档（一对一）
+- Synthesize：多个文档 → 聚合成索引和全局视图（多对一）
+
+---
+
 ## 与其他 skill 的关系
 
 ```
 task-finish（复盘产出）→ docs-management.Ingest（整合到知识库）
+task-finish（提交时）  → 提醒：是否需要 Synthesize（涉及新模块/模块间交互变更？）
 task-start（对焦阶段）→ docs-management.Query（检索历史经验）
 task-manager（需求管理）→ docs-management.Index（维护 backlog INDEX）
 
 定期 / 用户主动 → docs-management.Lint（健康检查）
+用户主动 / Lint 发现不一致 → docs-management.Synthesize（聚合全局视图）
 ```
 
 **docs-management vs writing**：

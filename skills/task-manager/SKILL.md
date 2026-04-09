@@ -196,6 +196,8 @@ task-start 启动需求时，自动更新对应 backlog 状态：
   ├─ Step 4: 复盘产出写入 docs/decisions/YYYY-MM-DD-<主题>.md
   ├─ Step 5: 记忆管理（详见下方"记忆写入规则"）
   ├─ Step 6: 触发 docs-management.Ingest（更新相关 spec/plan 状态标注）
+  ├─ Step 6.1: 复盘中提到环境/工具链的坑？→ 提醒补到 guides/
+  ├─ Step 6.2: 复盘中提到线上问题/部署问题？→ 提醒补到 runbooks/
   ├─ Step 7: 更新 docs/decisions/INDEX.md（如果存在）
   └─ Step 8: 提交代码 — 将本次需求的所有变更（含 backlog 状态、复盘文档）一起 commit，不积攒
 ```
