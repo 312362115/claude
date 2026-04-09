@@ -174,6 +174,7 @@ task-start 启动需求时，自动更新对应 backlog 状态：
 
 > 需求标 done 是整个工作流最重要的节点——这是复盘和经验沉淀的唯一触发点。
 > "编码完成"不等于"需求完成"。需求完成 = 用户确认这个需求彻底搞定了。
+> **标 done 时必须提交代码**：backlog 状态更新、复盘文档等变更不能积攒，随标 done 一起 commit。
 
 ```
 用户说"这个需求做完了" / "标记完成" / "关闭这个需求"
@@ -195,7 +196,8 @@ task-start 启动需求时，自动更新对应 backlog 状态：
   ├─ Step 4: 复盘产出写入 docs/decisions/YYYY-MM-DD-<主题>.md
   ├─ Step 5: 从中提取关键经验存 memory（跨会话索引）
   ├─ Step 6: 触发 docs-management.Ingest（更新相关 spec/plan 状态标注）
-  └─ Step 7: 更新 docs/decisions/INDEX.md（如果存在）
+  ├─ Step 7: 更新 docs/decisions/INDEX.md（如果存在）
+  └─ Step 8: 提交代码 — 将本次需求的所有变更（含 backlog 状态、复盘文档）一起 commit，不积攒
 ```
 
 **强制完整复盘信号**（出现以下任一，不管需求大小）：
