@@ -619,80 +619,80 @@ window.__mermaidResolve();
   }
 
   // 渲染 flow 代码块
+  // 含 ↓ 的块走竖向模式：主干列锁在 block 正中（grid 1fr/auto/1fr），
+  //   横向扩展（→ 分支 / 注释）一律向右延伸，不影响主干对齐
+  // 纯 → 的块走横向模式：整行居中
   function renderFlowBlocks() {
+    const makeNode = text => {
+      const node = document.createElement('span');
+      const isDecision = text.includes('？') || text.includes('?');
+      node.className = isDecision ? 'fc-decision' : 'fc-step';
+      node.textContent = text;
+      return node;
+    };
+
     document.querySelectorAll('pre > code.language-flow').forEach(codeEl => {
       const pre = codeEl.parentElement;
       const raw = codeEl.textContent;
       const lines = raw.split('\\n').filter(l => l.trim());
 
+      const hasVArrow = lines.some(l => /^[↓↑]+$/.test(l.trim()));
       const container = document.createElement('div');
-      container.className = 'fc-block';
+      container.className = 'fc-block ' + (hasVArrow ? 'fc-block-v' : 'fc-block-h');
 
       lines.forEach(line => {
         const trimmed = line.trim();
 
-        // 纯箭头行
-        if (/^[↓↑→←]+$/.test(trimmed)) {
+        // 竖向连接符
+        if (/^[↓↑]+$/.test(trimmed)) {
           const arrow = document.createElement('div');
-          arrow.className = 'fc-arrow';
+          arrow.className = 'fc-v-arrow';
           arrow.textContent = trimmed;
           container.appendChild(arrow);
           return;
         }
 
-        // 含 → 的行：可能是决策分支或连续步骤
+        const row = document.createElement('div');
+        row.className = 'fc-row';
+
+        // 横向流：首段是主干 leader，其余段向右延伸
         if (trimmed.includes('→')) {
-          const parts = trimmed.split('→').map(s => s.trim());
-          const row = document.createElement('div');
-          row.className = 'fc-row';
+          const parts = trimmed.split('→').map(s => s.trim()).filter(Boolean);
+          const leader = makeNode(parts[0]);
+          leader.classList.add('fc-leader');
+          row.appendChild(leader);
 
-          // 第一段是主节点
-          const firstNode = document.createElement('span');
-          const isDecision = parts[0].includes('？') || parts[0].includes('?');
-          firstNode.className = isDecision ? 'fc-decision' : 'fc-step';
-          firstNode.textContent = parts[0];
-          row.appendChild(firstNode);
-
-          // 后续段是水平分支
           if (parts.length > 1) {
-            const branch = document.createElement('div');
-            branch.className = 'fc-branch';
-            branch.innerHTML = '<div class="fc-h-line"></div>';
-
-            const target = document.createElement('span');
-            target.className = 'fc-branch-target';
-            target.textContent = parts.slice(1).join(' → ');
-            branch.appendChild(target);
-            row.appendChild(branch);
+            const ext = document.createElement('div');
+            ext.className = 'fc-ext';
+            parts.slice(1).forEach(part => {
+              const arrow = document.createElement('span');
+              arrow.className = 'fc-h-arrow';
+              arrow.textContent = '→';
+              ext.appendChild(arrow);
+              ext.appendChild(makeNode(part));
+            });
+            row.appendChild(ext);
           }
           container.appendChild(row);
           return;
         }
 
         // 普通步骤行（可能带括号注释）
-        const row = document.createElement('div');
-        row.className = 'fc-row';
-
         const noteMatch = trimmed.match(/^(.+?)([（(].+[）)])$/);
-        const isDecision = trimmed.includes('？') || trimmed.includes('?');
-
         if (noteMatch) {
-          const node = document.createElement('span');
-          node.className = isDecision ? 'fc-decision' : 'fc-step';
-          node.textContent = noteMatch[1].trim();
-          row.appendChild(node);
-
-          const note = document.createElement('span');
-          note.className = 'fc-note';
+          const leader = makeNode(noteMatch[1].trim());
+          leader.classList.add('fc-leader');
+          row.appendChild(leader);
+          const note = document.createElement('div');
+          note.className = 'fc-ext fc-note';
           note.textContent = noteMatch[2];
           row.appendChild(note);
         } else {
-          const node = document.createElement('span');
-          node.className = isDecision ? 'fc-decision' : 'fc-step';
-          node.textContent = trimmed;
-          row.appendChild(node);
+          const leader = makeNode(trimmed);
+          leader.classList.add('fc-leader');
+          row.appendChild(leader);
         }
-
         container.appendChild(row);
       });
 
