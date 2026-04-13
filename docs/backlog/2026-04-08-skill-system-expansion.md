@@ -1,8 +1,8 @@
 ---
 priority: P1
-status: open
-spec: （待创建）
-plan: （待创建）
+status: done
+spec: （未单独创建，设计内容直接写在本 backlog 中）
+plan: （未单独创建，按「建议实施顺序」分批执行）
 ---
 
 # Skill 体系扩建

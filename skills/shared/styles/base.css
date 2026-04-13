@@ -347,6 +347,122 @@ figcaption {
 .callout-danger { background: #fef2f2; border-color: var(--c-danger); }
 .callout-danger .callout-title { color: var(--c-danger); }
 
+/* ─── Terminal Block (```terminal) ─── */
+.terminal-block {
+  margin: 24px 0;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #334155;
+}
+.terminal-header {
+  background: #0f172a;
+  padding: 8px 14px;
+  display: flex; align-items: center; gap: 7px;
+}
+.terminal-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+}
+.terminal-dot-r { background: #ef4444; }
+.terminal-dot-y { background: #f59e0b; }
+.terminal-dot-g { background: #10b981; }
+.terminal-header .terminal-title {
+  font-size: 12px; color: #64748b; margin-left: 6px;
+  font-family: var(--font-mono);
+}
+.terminal-body {
+  background: #1e293b; color: #e2e8f0;
+  padding: 16px 20px; margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.83rem;
+  line-height: 1.8;
+  overflow-x: auto;
+  white-space: pre;
+  border-radius: 0;
+  box-shadow: none;
+  border: none;
+}
+.terminal-body code,
+.terminal-body code.hljs { background: none; padding: 0; color: inherit; font-size: inherit; box-shadow: none; }
+
+/* ─── Flowchart Block (```flow) ─── */
+.fc-block {
+  margin: 24px 0; padding: 32px 24px 32px 80px;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: 10px;
+  display: flex; flex-direction: column; align-items: flex-start;
+  gap: 0;
+}
+.fc-block .fc-arrow {
+  color: var(--c-primary); font-weight: 600;
+  font-size: 0.95rem; line-height: 1.6;
+  padding-left: 28px;
+  user-select: none;
+}
+.fc-block .fc-row {
+  display: flex; align-items: center; gap: 8px;
+  font-family: var(--font-sans); font-size: 0.85rem;
+}
+.fc-block .fc-step {
+  display: inline-block;
+  background: var(--c-primary-light);
+  color: var(--c-primary-dark);
+  padding: 5px 16px;
+  border-radius: 6px;
+  font-weight: 500;
+}
+.fc-block .fc-decision {
+  display: inline-block;
+  background: #fffbeb;
+  color: #b45309;
+  padding: 5px 16px;
+  border-radius: 6px;
+  font-weight: 500;
+}
+.fc-block .fc-note {
+  color: var(--c-text-muted); font-size: 0.82rem;
+}
+.fc-block .fc-branch {
+  display: flex; align-items: center; gap: 0;
+  margin-left: 8px;
+}
+.fc-block .fc-h-line {
+  width: 28px; height: 0;
+  border-top: 2px solid var(--c-border);
+  position: relative;
+}
+.fc-block .fc-h-line::after {
+  content: '▸';
+  position: absolute; right: -6px; top: -9px;
+  color: var(--c-border); font-size: 12px;
+}
+.fc-block .fc-branch-target {
+  display: inline-block;
+  padding: 3px 12px;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  margin-left: 8px;
+  background: #f8fafc;
+  color: var(--c-text-secondary);
+  border: 1px solid var(--c-border);
+}
+
+/* ─── Code Block Language Label ─── */
+pre[data-lang] {
+  position: relative;
+}
+pre[data-lang]::after {
+  content: attr(data-lang);
+  position: absolute; top: 6px; right: 10px;
+  font-size: 11px; font-weight: 500;
+  color: #64748b;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  pointer-events: none;
+}
+
 /* ─── Footnotes ─── */
 sup a { color: var(--c-primary); font-size: 0.8em; font-weight: 600; text-decoration: none; }
 sup a:hover { text-decoration: underline; }

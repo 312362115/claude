@@ -587,6 +587,145 @@ window.__mermaidResolve();
     });
   }
 
+  // 渲染 terminal 代码块
+  function renderTerminalBlocks() {
+    document.querySelectorAll('pre > code.language-terminal').forEach(codeEl => {
+      const pre = codeEl.parentElement;
+      const content = codeEl.textContent;
+
+      const container = document.createElement('div');
+      container.className = 'terminal-block';
+
+      // 从首行提取标题（如果首行是 # 注释）
+      let title = 'Terminal';
+      let body = content;
+      const lines = content.split('\\n');
+      if (lines[0] && lines[0].startsWith('# ')) {
+        title = lines[0].slice(2).trim();
+        body = lines.slice(1).join('\\n');
+      }
+
+      container.innerHTML =
+        '<div class="terminal-header">' +
+          '<span class="terminal-dot terminal-dot-r"></span>' +
+          '<span class="terminal-dot terminal-dot-y"></span>' +
+          '<span class="terminal-dot terminal-dot-g"></span>' +
+          '<span class="terminal-title">' + title + '</span>' +
+        '</div>' +
+        '<pre class="terminal-body"><code>' + escapeHTML(body) + '</code></pre>';
+
+      pre.parentNode.replaceChild(container, pre);
+    });
+  }
+
+  // 渲染 flow 代码块
+  function renderFlowBlocks() {
+    document.querySelectorAll('pre > code.language-flow').forEach(codeEl => {
+      const pre = codeEl.parentElement;
+      const raw = codeEl.textContent;
+      const lines = raw.split('\\n').filter(l => l.trim());
+
+      const container = document.createElement('div');
+      container.className = 'fc-block';
+
+      lines.forEach(line => {
+        const trimmed = line.trim();
+
+        // 纯箭头行
+        if (/^[↓↑→←]+$/.test(trimmed)) {
+          const arrow = document.createElement('div');
+          arrow.className = 'fc-arrow';
+          arrow.textContent = trimmed;
+          container.appendChild(arrow);
+          return;
+        }
+
+        // 含 → 的行：可能是决策分支或连续步骤
+        if (trimmed.includes('→')) {
+          const parts = trimmed.split('→').map(s => s.trim());
+          const row = document.createElement('div');
+          row.className = 'fc-row';
+
+          // 第一段是主节点
+          const firstNode = document.createElement('span');
+          const isDecision = parts[0].includes('？') || parts[0].includes('?');
+          firstNode.className = isDecision ? 'fc-decision' : 'fc-step';
+          firstNode.textContent = parts[0];
+          row.appendChild(firstNode);
+
+          // 后续段是水平分支
+          if (parts.length > 1) {
+            const branch = document.createElement('div');
+            branch.className = 'fc-branch';
+            branch.innerHTML = '<div class="fc-h-line"></div>';
+
+            const target = document.createElement('span');
+            target.className = 'fc-branch-target';
+            target.textContent = parts.slice(1).join(' → ');
+            branch.appendChild(target);
+            row.appendChild(branch);
+          }
+          container.appendChild(row);
+          return;
+        }
+
+        // 普通步骤行（可能带括号注释）
+        const row = document.createElement('div');
+        row.className = 'fc-row';
+
+        const noteMatch = trimmed.match(/^(.+?)([（(].+[）)])$/);
+        const isDecision = trimmed.includes('？') || trimmed.includes('?');
+
+        if (noteMatch) {
+          const node = document.createElement('span');
+          node.className = isDecision ? 'fc-decision' : 'fc-step';
+          node.textContent = noteMatch[1].trim();
+          row.appendChild(node);
+
+          const note = document.createElement('span');
+          note.className = 'fc-note';
+          note.textContent = noteMatch[2];
+          row.appendChild(note);
+        } else {
+          const node = document.createElement('span');
+          node.className = isDecision ? 'fc-decision' : 'fc-step';
+          node.textContent = trimmed;
+          row.appendChild(node);
+        }
+
+        container.appendChild(row);
+      });
+
+      pre.parentNode.replaceChild(container, pre);
+    });
+  }
+
+  // 给代码块添加语言标签
+  function addCodeBlockLabels() {
+    const LANG_DISPLAY = {
+      js: 'JS', javascript: 'JS', ts: 'TS', typescript: 'TS',
+      python: 'Python', py: 'Python', bash: 'Bash', sh: 'Shell', zsh: 'Shell',
+      html: 'HTML', css: 'CSS', json: 'JSON', yaml: 'YAML', yml: 'YAML',
+      sql: 'SQL', rust: 'Rust', go: 'Go', java: 'Java',
+      markdown: 'MD', md: 'MD', xml: 'XML', toml: 'TOML',
+      ruby: 'Ruby', php: 'PHP', swift: 'Swift', kotlin: 'Kotlin',
+      c: 'C', cpp: 'C++', csharp: 'C#',
+    };
+    document.querySelectorAll('pre > code[class*="language-"]').forEach(codeEl => {
+      const cls = [...codeEl.classList].find(c => c.startsWith('language-'));
+      if (!cls) return;
+      const lang = cls.replace('language-', '');
+      // 跳过已处理的特殊语言
+      if (['mermaid', 'terminal', 'flow'].includes(lang)) return;
+      const label = LANG_DISPLAY[lang] || lang.toUpperCase();
+      codeEl.parentElement.setAttribute('data-lang', label);
+    });
+  }
+
+  function escapeHTML(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
   // 渲染 Mermaid DSL 代码块
   async function renderDSLBlocks() {
     if (window.__mermaidReady) await window.__mermaidReady;
@@ -744,9 +883,10 @@ window.__mermaidResolve();
 
     document.getElementById('content').innerHTML = marked.parse(md, { renderer });
 
-    // 语法高亮
+    // 语法高亮（跳过 mermaid/terminal/flow 等自定义渲染块）
+    const SKIP_LANGS = ['language-mermaid', 'language-terminal', 'language-flow'];
     document.querySelectorAll('pre code').forEach(block => {
-      if (!block.classList.contains('language-mermaid')) {
+      if (!SKIP_LANGS.some(cls => block.classList.contains(cls))) {
         hljs.highlightElement(block);
       }
     });
@@ -756,8 +896,11 @@ window.__mermaidResolve();
     wrapImagesInFigure();
     renderTaskLists();
     renderGitHubAlerts();
+    renderTerminalBlocks();
+    renderFlowBlocks();
     await renderDSLBlocks();
     colorizeMermaidCharts();
+    addCodeBlockLabels();
 
     // 生成目录
     const tocList = document.getElementById('toc');
