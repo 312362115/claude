@@ -399,6 +399,27 @@ figcaption {
   font-family: var(--font-sans); font-size: 0.85rem;
 }
 
+/* ASCII-art 退化模式：保留 monospace 原排版 */
+pre.fc-block.fc-block-ascii {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  line-height: 1.55;
+  color: var(--c-text);
+  white-space: pre;
+  overflow-x: auto;
+  text-align: left;
+  padding: 20px 24px;
+}
+pre.fc-block.fc-block-ascii > code {
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  box-shadow: none;
+  white-space: inherit;
+}
+
 /* 横向模式 */
 .fc-block-h { align-items: center; }
 .fc-block-h .fc-row {

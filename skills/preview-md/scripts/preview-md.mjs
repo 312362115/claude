@@ -631,9 +631,24 @@ window.__mermaidResolve();
       return node;
     };
 
+    // 含 box-drawing / 树形绘制字符时，退化为 monospace 预格式化块
+    const ASCII_ART_RE = /[│├└┌┐┘─━┃┏┓┗┛▼▲◀▶┼┤┬┴╭╮╯╰╱╲]/;
+
     document.querySelectorAll('pre > code.language-flow').forEach(codeEl => {
       const pre = codeEl.parentElement;
-      const raw = codeEl.textContent;
+      const raw = codeEl.textContent.replace(/\\n+$/, '');
+
+      // ASCII-art fallback：保留原排版，不拆 pill
+      if (ASCII_ART_RE.test(raw)) {
+        const block = document.createElement('pre');
+        block.className = 'fc-block fc-block-ascii';
+        const code = document.createElement('code');
+        code.textContent = raw;
+        block.appendChild(code);
+        pre.parentNode.replaceChild(block, pre);
+        return;
+      }
+
       const lines = raw.split('\\n').filter(l => l.trim());
 
       const hasVArrow = lines.some(l => /^[↓↑]+$/.test(l.trim()));
