@@ -385,67 +385,85 @@ figcaption {
 .terminal-body code.hljs { background: none; padding: 0; color: inherit; font-size: inherit; box-shadow: none; }
 
 /* ─── Flowchart Block (```flow) ─── */
+/* 两种模式：
+ *   竖向（.fc-block-v）：含 ↓ 的块，主干列用 grid 锁在正中，扩展向右延伸
+ *   横向（.fc-block-h）：纯 → 的块，整行居中铺开
+ */
 .fc-block {
-  margin: 24px 0; padding: 32px 24px 32px 80px;
+  margin: 24px 0; padding: 28px 24px;
   background: var(--c-surface);
   border: 1px solid var(--c-border);
   border-radius: 10px;
-  display: flex; flex-direction: column; align-items: flex-start;
-  gap: 0;
-}
-.fc-block .fc-arrow {
-  color: var(--c-primary); font-weight: 600;
-  font-size: 0.95rem; line-height: 1.6;
-  padding-left: 28px;
-  user-select: none;
-}
-.fc-block .fc-row {
-  display: flex; align-items: center; gap: 8px;
+  display: flex; flex-direction: column;
+  gap: 6px;
   font-family: var(--font-sans); font-size: 0.85rem;
 }
-.fc-block .fc-step {
+
+/* 横向模式 */
+.fc-block-h { align-items: center; }
+.fc-block-h .fc-row {
+  display: flex; align-items: center; gap: 10px;
+  flex-wrap: wrap; justify-content: center;
+}
+
+/* 竖向模式：grid 1fr / auto / 1fr，leader 恒居中列 */
+.fc-block-v { align-items: stretch; }
+.fc-block-v .fc-row {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  column-gap: 12px;
+}
+.fc-block-v .fc-row > .fc-leader {
+  grid-column: 2;
+  justify-self: center;
+}
+.fc-block-v .fc-row > .fc-ext {
+  grid-column: 3;
+  justify-self: start;
+  display: flex; align-items: center; gap: 10px;
+  padding-left: 4px;
+}
+.fc-block-v .fc-v-arrow {
+  text-align: center;
+}
+
+/* 共用元素 */
+.fc-v-arrow {
+  color: var(--c-text-muted);
+  font-size: 1rem; line-height: 1;
+  padding: 2px 0;
+  user-select: none;
+}
+.fc-step {
   display: inline-block;
   background: var(--c-primary-light);
   color: var(--c-primary-dark);
-  padding: 5px 16px;
+  padding: 6px 16px;
   border-radius: 6px;
   font-weight: 500;
+  white-space: nowrap;
 }
-.fc-block .fc-decision {
+.fc-decision {
   display: inline-block;
   background: #fffbeb;
   color: #b45309;
-  padding: 5px 16px;
+  padding: 6px 16px;
   border-radius: 6px;
   font-weight: 500;
+  border: 1px solid #fde68a;
+  white-space: nowrap;
 }
-.fc-block .fc-note {
-  color: var(--c-text-muted); font-size: 0.82rem;
-}
-.fc-block .fc-branch {
-  display: flex; align-items: center; gap: 0;
-  margin-left: 8px;
-}
-.fc-block .fc-h-line {
-  width: 28px; height: 0;
-  border-top: 2px solid var(--c-border);
-  position: relative;
-}
-.fc-block .fc-h-line::after {
-  content: '▸';
-  position: absolute; right: -6px; top: -9px;
-  color: var(--c-border); font-size: 12px;
-}
-.fc-block .fc-branch-target {
-  display: inline-block;
-  padding: 3px 12px;
-  border-radius: 6px;
+.fc-note {
+  color: var(--c-text-muted);
   font-size: 0.82rem;
-  font-weight: 500;
-  margin-left: 8px;
-  background: #f8fafc;
-  color: var(--c-text-secondary);
-  border: 1px solid var(--c-border);
+  font-weight: normal;
+}
+.fc-h-arrow {
+  color: var(--c-text-muted);
+  font-weight: 600;
+  font-size: 1rem;
+  user-select: none;
 }
 
 /* ─── Code Block Language Label ─── */
