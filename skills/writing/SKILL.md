@@ -1,7 +1,7 @@
 ---
 name: writing
 version: 1.0.0
-last_updated: 2026-04-08
+last_updated: 2026-04-17
 repository: https://github.com/312362115/claude
 description: >
   通用写作技能：覆盖技术文档、产品文档、项目汇报三大模式。
@@ -71,7 +71,7 @@ description: >
 | **篇幅预期** | 简短概要还是完整文档？ |
 | **存放位置** | 存 `docs/` 的哪个子目录？（按 CLAUDE.md 文档规范） |
 
-对齐方式：和 task-start 一样，**给出你的理解让用户确认**，不要空泛地问"你想写什么"。
+对齐方式：和 task-start 一样，**给出你的理解让用户确认**，而不是空泛地询问。
 
 ---
 
