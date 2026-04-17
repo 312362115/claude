@@ -21,8 +21,10 @@
 
 ## P2 — 普通
 - [ ] [Diagram Skill 独立发布](2026-04-09-diagram-skill-publish.md) — 拆分为独立仓库，发布到社区 Registry
+- [ ] [deep-research 触发失效 + 方法论/样式解耦](2026-04-17-deep-research-trigger-decouple.md) — Opus 4.7 下 skill 被跳过，模型自由输出样式反而更好，待决策
 
 ## P3 — 低优（长期）
 - [ ] [图表风格统一 + 特殊图表补全](2026-04-01-diagram-style-unification.md) — Mermaid/PNG 视觉对齐 + SWOT/鱼骨/文氏图入 bridge
 - [ ] [MD Preview 深色模式](2026-04-03-md-preview-dark-mode.md) — 跟随系统偏好自动切换
+- [ ] [Skill 瘦身适配 Opus 4.7](2026-04-17-skill-slim-opus-4-7.md) — 去除防御性强调词，3 份最长 skill 可删 ~60 行（3.8%）
 - [x] [MD Preview CSS 样式优化](2026-04-02-md-preview-css-optimization.md) — 预览样式提升阅读体验和视觉质量

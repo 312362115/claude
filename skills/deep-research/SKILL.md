@@ -1,7 +1,7 @@
 ---
 name: deep-research
 version: 1.3.0
-last_updated: 2026-04-02
+last_updated: 2026-04-17
 repository: https://github.com/312362115/claude
 changelog: skills/deep-research/CHANGELOG.md
 description: >
@@ -26,7 +26,7 @@ description: >
 
 ## 第一步：理解命题，摸清现状
 
-收到调研需求后，先花时间理解命题本质和内部现状，不要急着搜索。
+收到调研需求后，先理解命题本质和内部现状，再启动搜索。
 
 ### 1.1 命题解析
 
