@@ -21,6 +21,7 @@
 
 ## P2 — 普通
 - [ ] [Diagram Skill 独立发布](2026-04-09-diagram-skill-publish.md) — 拆分为独立仓库，发布到社区 Registry
+- [ ] [deep-research 触发失效 + 方法论/样式解耦](2026-04-17-deep-research-trigger-decouple.md) — Opus 4.7 下 skill 被跳过，模型自由输出样式反而更好，待决策
 
 ## P3 — 低优（长期）
 - [ ] [图表风格统一 + 特殊图表补全](2026-04-01-diagram-style-unification.md) — Mermaid/PNG 视觉对齐 + SWOT/鱼骨/文氏图入 bridge
