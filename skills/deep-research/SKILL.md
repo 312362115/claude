@@ -1,6 +1,6 @@
 ---
 name: deep-research
-version: 1.5.0
+version: 1.6.0
 last_updated: 2026-04-20
 repository: https://github.com/312362115/claude
 changelog: skills/deep-research/CHANGELOG.md
@@ -59,6 +59,20 @@ description: >
 
 > **评估不是独立类型**。所有调研类型都内含评估逻辑——先理解内部现状，再对标外部水位，识别差距。
 > 用户说"评估一下 xxx"、"诊断"、"差距分析"时，根据具体命题匹配上述 6 种类型，评估视角在 1.4 现状摸底中统一处理。
+
+**加载信源矩阵**（完成归类后执行，详见 `references/sources/_router.md`）：
+
+1. **闸门 1：具体查询 vs 命题调研**
+   - 具体查询（"API 用法 / 命令参数 / bug 复现"）→ Lead 自查官方 docs，跳过 YAML 加载，不走 Multi-Agent
+   - 命题调研 → 进入闸门 2
+2. **闸门 2：关键词匹配**
+   - 金融类（股票/财报/利率/央行/债券/加密/链上/宏观）→ 加载 `references/sources/finance.yaml`
+   - 学术类（论文/研究/综述/预印本）→ 加载 `references/sources/academic.yaml`
+   - 技术/AI/新兴产业 → 加载 `references/sources/_source_heuristics.md`
+3. **闸门 3：全域加载 `references/sources/blacklist.yaml`**（最高优先级过滤）
+4. **搜索预算分配**：有白名单时 70% 倾斜冷门权威 + 20% 开放搜索 + 10% 启发式发现；纯启发式时 60% P1 一手 + 30% P2 原厂/评测 + 10% P3 审核社区
+
+Lead Agent 必须在派发 sub-agent 前，把加载的 YAML 内容注入 sub-agent prompt（见 2.1）。
 
 ### 1.3 确定视觉风格
 
@@ -191,6 +205,11 @@ Lead 整合 → 触发规则命中？
 - 按 Scaling Rules（2.3）决定 sub-agent 数量和预算
 - Spawn 前把调查计划写入 `/tmp/research-plan-<timestamp>.md`（防 context 截断丢失）
 - **维护拓扑记录文件**：每次 spawn 向 `/tmp/research-topology-<timestamp>.json` 追加条目，回传后补 `budget_used` / `findings_count`，Fork sub-sub 时记录 `parent_id`；线索被主动放弃也要记录（格式见 2.5）
+- **注入信源矩阵**：基于 1.2 加载的 YAML/heuristics，在 sub-agent prompt 中注入：
+  1. blacklist（hard 必避 + soft 降级 + patterns）
+  2. 对应领域白名单（finance/academic 的冷门权威列表）或 `_source_heuristics.md` 的规则 + 本命题所属子域推导示例
+  3. 搜索预算分配比例（有白名单 70/20/10，纯启发式 60/30/10）
+  4. 要求 sub-agent 回传 `whitelist_hits` / `heuristic_hits` / `blacklist_avoided` 字段（见 2.4）
 - **只读 sub-agent 的压缩 JSON 回传**，不读原始网页
 - 按节点级触发规则（2.2）判断是否 fork 新 sub-agent
 - 最终 synthesis 阶段整合所有 findings 产出报告，并基于拓扑文件生成 5.2"调查拓扑"段
@@ -291,9 +310,17 @@ Spawn 新一批 sub-agent（可含 sub-sub-agent）
   ],
   "surprises": ["反直觉或意外发现，供 Lead 决定是否深挖"],
   "gaps": ["未能验证的点 / 需其他 agent 补充的信息"],
-  "budget_used": { "search": N, "fetch": M }
+  "budget_used": { "search": N, "fetch": M },
+  "whitelist_hits": N,
+  "heuristic_hits": { "p1_official": 3, "p2_authoritative": 2, "p3_community": 1 },
+  "blacklist_avoided": ["csdn.net", "guba.eastmoney.com"]
 }
 ```
+
+**信源矩阵字段说明**：
+- `whitelist_hits`：若本次加载了 finance.yaml / academic.yaml，命中了几个白名单源（质量指标）
+- `heuristic_hits`：若走启发式，按 P1/P2/P3 分类的命中源数（衡量 heuristics 有效性）
+- `blacklist_avoided`：识别并避开的黑名单域列表（证明过滤生效）
 
 **硬性禁止**：
 - ❌ 回传中包含原始 HTML 或 markdown 全文
