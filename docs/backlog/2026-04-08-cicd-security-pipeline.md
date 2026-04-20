@@ -1,8 +1,10 @@
 ---
 priority: P1
-status: open
+status: in-progress
 spec: （待创建）
 plan: （待创建）
+progress:
+  - 2026-04-14 Layer 1 已落地：全局 git hook + gitleaks 8.30.1
 ---
 
 # CI/CD 安全检测流水线
