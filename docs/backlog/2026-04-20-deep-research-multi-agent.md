@@ -1,8 +1,8 @@
 ---
 priority: P1
-status: open
-spec:
-plan:
+status: in-progress
+spec: docs/specs/2026-04-20-deep-research-sources-industry-audit.md
+plan: docs/plans/2026-04-20-deep-research-sources-plan.md
 ---
 
 # Deep Research Multi-Agent 架构升级 + 行业信源矩阵
@@ -120,3 +120,10 @@ plan:
   - 报告末尾新增"调查拓扑"段（指标表 + sub-agent 分解 + 放弃线索）
   - 6.1 质量自检新增检查 5（拓扑段完整性 + 数字自动回填）
   - **P0 阶段全部完成**。剩余 P1（行业信源矩阵 + CitationAgent 独立化）和 P2（评测体系）待后续单独拆 plan。
+- **2026-04-20（P1 启动）**：完成行业信源调研，产出 spec + plan
+  - 已跑 8 个 sub-agent（含 round 2 补调研量化 API），131 findings 覆盖 互联网/金融 5 子块/学术/量化 API
+  - **架构决策调整**：原"每行业完整 YAML"改为**精简版 A**——只收"LLM top-of-mind 没有的冷门权威"
+    - 放弃 `internet-tech.yaml` 和 `ai-ml.yaml`（走 `_source_heuristics.md` 启发式）
+    - 保留 `finance.yaml` + `academic.yaml`（各 10-15 条冷门权威）
+    - 新增 `blacklist.yaml`（全域共享，最高价值）
+  - 下一步按 plan 落地（M1-M4，约 1 周）

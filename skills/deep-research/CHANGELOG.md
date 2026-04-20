@@ -1,5 +1,20 @@
 # Changelog — deep-research
 
+## 1.6.0 (2026-04-20)
+- 新增：行业信源矩阵（精简版 A 架构）
+  - 新建 `references/sources/` 目录体系：
+    - `_schema.yaml`（YAML 格式规范 + 腐烂标记字段）
+    - `blacklist.yaml`（全域共享黑名单，hard/soft 分级 + patterns 通用识别规则）
+    - `_source_heuristics.md`（一手源识别启发式，互联网/AI 走这条）
+    - `_router.md`（命题 → 路径判断：白名单启用闸门 + 关键词匹配 + 预算倾斜）
+    - `finance.yaml`（精选 15 条 LLM top-of-mind 没有的冷门权威）
+    - `academic.yaml`（精选 10 条）
+  - 架构决策：不做 internet-tech.yaml 和 ai-ml.yaml（穷举不可能 + 快速腐烂），改走启发式
+- 改造：SKILL.md 集成信源矩阵
+  - 1.2 末尾追加"加载信源矩阵"子节（3 闸门 + 预算分配）
+  - 2.1 Lead Agent 职责新增"注入信源矩阵"：派发 sub-agent 时 prompt 附带 blacklist + 对应领域 YAML + heuristics
+  - 2.4 回传 JSON 新增字段：`whitelist_hits` / `heuristic_hits` / `blacklist_avoided`
+
 ## 1.5.0 (2026-04-20)
 - 新增：调查拓扑透明化（P0 第 5 条收尾）
   - 新增 2.5 调查拓扑记录协议：Lead Agent 维护 `/tmp/research-topology-<timestamp>.json`，记录 sub-agent 派发/预算/递归层级/放弃线索

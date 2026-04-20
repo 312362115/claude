@@ -1,0 +1,224 @@
+# ============================================================================
+# 学术研究领域信源白名单（精简版 A）
+# ============================================================================
+#
+# 收录原则：只收"LLM top-of-mind 里没有的冷门权威源"
+#
+# 不收录（LLM 自己知道）：
+# - arXiv / PubMed / Google Scholar
+# - Nature / Science / Cell
+# - IEEE Xplore / Springer / Elsevier（付费主体，LLM 都知道）
+# - Semantic Scholar（AI2 出品，知名度高）
+# - CNKI（中文学术最大，LLM 熟知）
+# ============================================================================
+
+industry: academic
+last_updated: "2026-04-20"
+maintainer_note: |
+  只收冷门但权威的学术源。判断：不看本 YAML，sub-agent 能想到这个源吗？能想到的不进。
+
+  腐烂监控重点：
+  - 迁移/改名（2025 bioRxiv 移交 openRxiv、2022 Papers with Code 并入 HF）
+  - 开放获取政策变化（2026-01 ACM DL 全 OA）
+  - API 变化（2026-08 PMC 旧 FTP 下线）
+  - 安全事件（2025-11 OpenReview API 泄露）
+
+sources:
+
+  # ==================== 综合索引（开放替代传统付费库） ====================
+
+  - name: "OpenAlex"
+    domain: "openalex.org"
+    url: "https://openalex.org/"
+    description: "完全开放的学术索引，Microsoft Academic Graph 开放继承者，CC0 授权，240M+ works"
+    access_method: "API"
+    auth_required: "API key 免费"
+    scores:
+      authority: 4
+      freshness: 4
+      accessibility: 5
+      density: 3
+      chinese_coverage: 3
+    data_coverage: [论文元数据, 引用关系, 作者机构, 研究主题]
+    tier_suggestion: "T1"
+    notes: "2024 被三个主要大学排名系统采用；正在替代 Web of Science/Scopus；对全球南方和非英语文献覆盖优于竞品"
+    last_verified: "2026-04-20"
+    rot_indicator: "active"
+    api_doc_url: "https://api.openalex.org"
+
+  - name: "CrossRef"
+    domain: "crossref.org"
+    url: "https://www.crossref.org/"
+    description: "学术 DOI 注册核心机构，元数据骨干基础设施，月处理 10 亿 API 请求，180M+ 学术对象"
+    access_method: "API"
+    auth_required: "无"
+    scores:
+      authority: 5
+      freshness: 4
+      accessibility: 5
+      density: 2
+      chinese_coverage: 2
+    data_coverage: [DOI元数据, 开放引用, 作者信息, 资助数据]
+    tier_suggestion: "T2"
+    notes: "不是内容平台而是元数据枢纽；开放引用数据（Open Citations）；适合构建引用追踪工具"
+    last_verified: "2026-04-20"
+    rot_indicator: "active"
+    api_doc_url: "https://api.crossref.org"
+
+  # ==================== 学科预印本（非 arXiv） ====================
+
+  - name: "bioRxiv / medRxiv"
+    domain: "biorxiv.org"
+    url: "https://www.biorxiv.org/"
+    description: "生物学（bioRxiv）和健康科学（medRxiv）预印本平台；2025-03 从冷泉港实验室移交 openRxiv 运营"
+    access_method: "API"
+    auth_required: "无"
+    scores:
+      authority: 4
+      freshness: 5
+      accessibility: 5
+      density: 5
+      chinese_coverage: 1
+    data_coverage: [生物学预印本, 临床医学, 流行病学, 公共卫生]
+    tier_suggestion: "T1"
+    notes: "每日连续提交；medRxiv 有更严格的临床影响内容筛查；REST API 免费"
+    last_verified: "2026-04-20"
+    rot_indicator: "migrated"
+    rot_note: "2025-03 从冷泉港实验室移交非营利组织 openRxiv，功能和 URL 延续，但治理主体变更"
+    api_doc_url: "https://api.biorxiv.org"
+
+  - name: "ChemRxiv"
+    domain: "chemrxiv.org"
+    url: "https://chemrxiv.org/"
+    description: "化学/化工领域首个综合预印本平台，ACS 联合多化学学会 2017 年创立"
+    access_method: "WebFetch"
+    auth_required: "无"
+    scores:
+      authority: 4
+      freshness: 4
+      accessibility: 5
+      density: 4
+      chinese_coverage: 1
+    data_coverage: [化学预印本, 化工, 材料科学, 药物化学]
+    tier_suggestion: "T2"
+    notes: "年均 15,000+ 新增；化学领域唯一规模化预印本平台；无内置 API（可通过 CrossRef 索引）"
+    last_verified: "2026-04-20"
+    rot_indicator: "active"
+
+  - name: "SSRN"
+    domain: "ssrn.com"
+    url: "https://www.ssrn.com/"
+    description: "社科/经济/法律/金融领域最大预印本平台，2016 被 Elsevier 收购"
+    access_method: "WebFetch"
+    auth_required: "免费注册"
+    scores:
+      authority: 4
+      freshness: 4
+      accessibility: 3
+      density: 4
+      chinese_coverage: 1
+    data_coverage: [经济学预印本, 社会科学, 法律, 金融, 管理学]
+    tier_suggestion: "T2"
+    notes: "社科领域的 arXiv；被 Elsevier 收购后部分高级功能需付费；无官方公开 API，爬取受限"
+    last_verified: "2026-04-20"
+    rot_indicator: "active"
+
+  - name: "OSF Preprints"
+    domain: "osf.io"
+    url: "https://osf.io/preprints"
+    description: "开放科学框架预印本聚合平台，整合 PsyArXiv / SocArXiv 等学科专属服务器"
+    access_method: "API"
+    auth_required: "无"
+    scores:
+      authority: 3
+      freshness: 4
+      accessibility: 5
+      density: 4
+      chinese_coverage: 1
+    data_coverage: [心理学预印本, 社会学, 教育学, 跨学科]
+    tier_suggestion: "T2"
+    notes: "强调开放科学工作流：论文 + 数据 + 代码一体化；适合社科开放科学实践"
+    last_verified: "2026-04-20"
+    rot_indicator: "active"
+
+  # ==================== ML 专项（独特价值） ====================
+
+  - name: "OpenReview"
+    domain: "openreview.net"
+    url: "https://openreview.net/"
+    description: "ML 顶会开放同行评议平台，托管 NeurIPS/ICLR/ICML/ACL 完整审稿流程"
+    access_method: "SDK(Python)"
+    auth_required: "API key 免费"
+    scores:
+      authority: 5
+      freshness: 4
+      accessibility: 4
+      density: 5
+      chinese_coverage: 1
+    data_coverage: [ML顶会论文, 完整审稿意见, 作者回复, 讨论线索]
+    tier_suggestion: "T1"
+    notes: "独特价值：可访问完整审稿+作者回复+讨论；ML 社区研究质量分析不可替代"
+    last_verified: "2026-04-20"
+    rot_indicator: "active"
+    rot_note: "2025-11 发生 API 身份泄露事件（暴露评审人/作者/区域主席身份），功能未受影响但需关注后续 API 变更"
+
+  - name: "Papers with Code（已并入 HF）"
+    domain: "paperswithcode.com"
+    url: "https://paperswithcode.com/"
+    description: "⚠️ 2022 已被 Hugging Face 收购，paperswithcode.com 已 301 重定向至 HF"
+    access_method: "API"
+    auth_required: "无"
+    scores:
+      authority: 4
+      freshness: 5
+      accessibility: 5
+      density: 4
+      chinese_coverage: 1
+    data_coverage: [ML论文-代码链接, SOTA排行榜, 数据集]
+    tier_suggestion: "T1"
+    notes: "ML 论文-代码-数据集三联仍独特；优先使用 Hugging Face 整合版"
+    last_verified: "2026-04-20"
+    rot_indicator: "migrated"
+    rot_note: "2022 被 HF 收购，域名已重定向；sub-agent 应优先访问 huggingface.co/papers"
+
+  # ==================== 开放获取重大变化 ====================
+
+  - name: "ACM Digital Library（全 OA 转型后）"
+    domain: "dl.acm.org"
+    url: "https://dl.acm.org/"
+    description: "⚠️ 2026-01 完成向全开放获取转型，DL Basic 免费可访问所有 ACM 发表研究全文"
+    access_method: "API"
+    auth_required: "API key 免费"
+    scores:
+      authority: 5
+      freshness: 3
+      accessibility: 4
+      density: 4
+      chinese_coverage: 1
+    data_coverage: [CS顶会论文, 期刊, SIGKDD/WWW/SOSP等]
+    tier_suggestion: "T1"
+    notes: "重大变化：2026-01 起全 OA（CS 领域今年最大可访问性变化）；适合访问 SIGKDD/WWW/SOSP 等顶会"
+    last_verified: "2026-04-20"
+    rot_indicator: "active"
+    rot_note: "2026-01 完成 OA 转型，本条目 authority 权重应随使用反馈上调"
+
+  # ==================== 基础设施变化监控 ====================
+
+  - name: "PubMed Central OA API（2026-08 迁移）"
+    domain: "ncbi.nlm.nih.gov"
+    url: "https://www.ncbi.nlm.nih.gov/pmc/tools/openftlist/"
+    description: "⚠️ 2026-08 旧 FTP/Cloud 文件下线，需迁移到新 OA Web Service API"
+    access_method: "API"
+    auth_required: "无"
+    scores:
+      authority: 5
+      freshness: 5
+      accessibility: 4
+      density: 4
+      chinese_coverage: 1
+    data_coverage: [生物医学OA全文, PMC子集]
+    tier_suggestion: "T1"
+    notes: "PubMed 主体不变，但 PMC OA Subset 的批量下载接口 2026-08 迁移，如果使用旧 FTP 须改"
+    last_verified: "2026-04-20"
+    rot_indicator: "unstable"
+    rot_note: "2026-08 旧 FTP/Cloud 下线；现用 pip install PMC-OAI-PMH 或新 OA Web Service"

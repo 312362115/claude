@@ -1,0 +1,174 @@
+# ============================================================================
+# Deep Research 信源矩阵 YAML 格式规范（Schema）
+# ============================================================================
+#
+# 本文件定义 references/sources/ 下所有行业 YAML 的格式规范与字段含义。
+# 采用"带注释的示例 + 字段说明"格式，不走严格 JSON Schema 验证路线。
+#
+# 适用对象：
+# - finance.yaml
+# - academic.yaml
+# - blacklist.yaml（略有扩展，见文末 §blacklist 专属字段）
+#
+# 维护纪律（核心原则）：
+# 只收"LLM top-of-mind 里没有的冷门权威源"。
+# 判断标准：不看 YAML，sub-agent 自己能想到吗？能想到的不进。
+# ============================================================================
+
+# ---------- 顶层结构 ----------
+
+industry: "<标识符，如 finance / academic / blacklist>"
+# 必填。用于 router.md 的关键词匹配加载。
+
+last_updated: "YYYY-MM-DD"
+# 必填。YAML 最近更新日期。router 加载时会检查：
+# - >90 天警告用户"建议手工 refresh"
+# - >180 天强烈提示（可能腐烂）
+
+maintainer_note: |
+  一段自我提醒文字，面向未来的维护者和 Claude。
+  核心写清楚：
+  1. 本 YAML 的收录标准（LLM top-of-mind 测试）
+  2. 不收录什么（LLM 自己知道的主流源）
+  3. 发现腐烂如何处理
+
+sources:
+  # 源条目列表。见下方"源条目字段"详细说明
+  - name: "数据源名称"
+    # 必填。人类可读名称，用于报告中的引用。
+
+    domain: "example.com"
+    # 必填。根域名，用于 blacklist 匹配和去重。
+    # 不含协议和路径，形如 "example.com" 或 "api.example.com"。
+
+    url: "https://example.com/specific-path"
+    # 必填。具体入口 URL。
+    # 若源有多个入口（如官网 + API 文档），优先填 API 文档。
+
+    description: "≤60 字的一句话说明。覆盖范围 + 核心卖点。"
+    # 必填。sub-agent 根据这个判断"是否该用这个源"。
+
+    access_method: "WebFetch | Playwright | API | SDK(Python) | SDK(多语言) | 邮件申请 | 付费订阅 | 非官方爬取"
+    # 必填。决定 sub-agent 用什么工具访问。
+    # "非官方爬取"要在 notes 明示稳定性风险。
+
+    auth_required: "无 | API key 免费 | API key 付费 | 开户 | 付费订阅"
+    # 必填。鉴权门槛。
+
+    scores:
+      authority: 5
+      # 权威性 0-5：5=原始一手（监管/财报/交易所/原厂），3=主流媒体，1=转引聚合
+
+      freshness: 4
+      # 时效性 0-5：5=实时，4=日，3=周，2=月，1=季度+
+
+      accessibility: 3
+      # 可访问性 0-5：5=免费 WebFetch 直取，3=需 Playwright/注册，1=付费/强反爬
+
+      density: 4
+      # 信息密度 0-5：5=结构化批量（如 XBRL/SDMX），3=全文可提取，1=散乱一句话
+
+      chinese_coverage: 2
+      # 中文覆盖 0-5：5=原生中文+中国市场，0=纯英文非中国，-1=不适用
+
+      free_tier_quota: 4
+      # 免费层额度 0-5（仅量化 API 类源使用；其他源可省略）：
+      # 5=免费可生产，4=免费够原型，3=试用，2=限制严，1=仅付费
+
+    data_coverage:
+      # 可选。源提供的数据类型，列表。用于 router 细粒度匹配。
+      # 常见值：K线 / Tick / 盘口 / 基本面 / 财报 / 公告 / 股东 / 宏观 /
+      #        政策 / 评测榜单 / 论文 / 链上 / 新闻 / 指标时序
+      - K线
+      - 基本面
+
+    tier_suggestion: "T1 | T2 | T3 | china_specific | academic | deprecated"
+    # 必填。Tier 建议。
+    # - T1：一手权威，首选
+    # - T2：二手权威或专项
+    # - T3：补充/社区，低优先
+    # - china_specific：中文/中国市场专项（含国内独占付费）
+    # - academic：学术专用
+    # - deprecated：已腐烂/停服，不可用但保留做迁移指引
+
+    notes: "≤100 字。限制 / 陷阱 / 特殊价值 / 替代建议。"
+    # 必填。反爬 / 付费墙 / 限速 / 特殊技巧写这里。
+
+    last_verified: "YYYY-MM-DD"
+    # 必填。本条目最近一次手工/sub-agent 验证日期。
+    # >90 天提醒核查，>180 天强烈提示可能腐烂。
+
+    rot_indicator: "active | acquired | migrated | deprecated | unstable"
+    # 必填。腐烂/变化指标。
+    # - active：正常运行
+    # - acquired：被收购（如 Polygon→Massive），观察定价策略变化
+    # - migrated：已迁移（如 Papers with Code → Hugging Face）
+    # - deprecated：已停服（如 IEX Cloud 2024-08 停）
+    # - unstable：非官方/接口易变（如 yfinance/AKShare）
+
+    rot_note: "2024-08 IEX Cloud 正式停服，迁移至 Polygon.io 或 Finnhub"
+    # 可选。rot_indicator 非 active 时必填，写清楚变化和迁移路径。
+
+    api_doc_url: "https://api.example.com/docs"
+    # 可选。API 文档 URL，sub-agent 需要具体接口细节时用。
+
+    rate_limit: "5 req/min | 60 req/min | 1200 weight/min"
+    # 可选。已知速率限制。
+
+    # ------- 自定义扩展字段（可选） -------
+    # 允许按领域添加自定义字段，比如：
+    # - free_tier_detail: "免费层详细说明"
+    # - api_key_signup_url: "注册链接"
+    # 不影响 router 加载，只是给 sub-agent 更多上下文。
+
+# ============================================================================
+# §blacklist 专属字段（blacklist.yaml 扩展部分）
+# ============================================================================
+#
+# blacklist.yaml 的 sources 条目可省略 scores / access_method / tier_suggestion，
+# 改用下列字段：
+#
+# blacklist:
+#   - name: "CSDN"
+#     domain: "csdn.net"
+#     reason: "AI 洗稿 + 转引为主，强反爬，内容农场"
+#     category: "tech_spam | finance_spam | crypto_spam | general_spam"
+#     severity: "hard | soft"
+#       # hard = 强制过滤，sub-agent 不得引用
+#       # soft = 降级到 T3，仅作为情绪/热度参考
+#     evidence: "可选，说明结论依据（如样本统计、社区评价链接）"
+#
+# patterns:
+#   - pattern_name: "SEO 内容农场识别规则 1"
+#     signals:
+#       - "无实名作者"
+#       - "无原始数据引用"
+#       - "标题含夸张承诺"
+#     examples:
+#       - "一周涨 10x 必涨清单"
+#       - "震撼！专家揭秘"
+#     action: "blacklist | downgrade_to_t3"
+# ============================================================================
+
+# ---------- 示例：完整条目 ----------
+#
+# 下面是一个完整源条目的示例（BIS Data Portal），供新增条目时参考：
+#
+# - name: "BIS Data Portal"
+#   domain: "data.bis.org"
+#   url: "https://data.bis.org/"
+#   description: "国际清算银行统计数据库，全球离岸债/跨境银行敞口/央行政策利率等独家数据"
+#   access_method: "API"
+#   auth_required: "无"
+#   scores:
+#     authority: 5
+#     freshness: 3
+#     accessibility: 4
+#     density: 4
+#     chinese_coverage: 1
+#   data_coverage: [国际债务, 跨境银行, 央行利率, 有效汇率, 宏观]
+#   tier_suggestion: "T1"
+#   notes: "SDMX 2.1+3.0 免费 API，无需注册，批量 CSV 可下；全球离岸债研究独一档。"
+#   last_verified: "2026-04-20"
+#   rot_indicator: "active"
+#   api_doc_url: "https://data.bis.org/sdmx"
