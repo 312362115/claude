@@ -1,5 +1,14 @@
 # Changelog — deep-research
 
+## 1.5.0 (2026-04-20)
+- 新增：调查拓扑透明化（P0 第 5 条收尾）
+  - 新增 2.5 调查拓扑记录协议：Lead Agent 维护 `/tmp/research-topology-<timestamp>.json`，记录 sub-agent 派发/预算/递归层级/放弃线索
+  - 2.1 Lead Agent 职责追加"维护拓扑记录文件"
+  - 5.2 报告结构末尾新增"调查拓扑"段模板（指标表 + sub-agent 分解 + 放弃线索）
+  - 报告头"调研深度"改写为"派发 N 个 sub-agent，最深 L 层"
+  - 6.1 质量自检新增检查 5（调查拓扑段完整性 + 数字对齐自动回填）
+  - 原 2.5 搜索执行 → 2.6；2.6 页面抓取 → 2.7；2.7 信息记录 → 2.8；2.8 信息验证 → 2.9
+
 ## 1.4.0 (2026-04-20)
 - 重构：第二步"多跳信息搜集"改造为 Orchestrator-Subagent 架构（对齐 Anthropic 官方 Research）
   - 新增 2.1 Multi-Agent 执行模型：Lead Agent 规划整合 + Sub-agent 并行深挖

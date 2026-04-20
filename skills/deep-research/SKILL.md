@@ -1,6 +1,6 @@
 ---
 name: deep-research
-version: 1.4.0
+version: 1.5.0
 last_updated: 2026-04-20
 repository: https://github.com/312362115/claude
 changelog: skills/deep-research/CHANGELOG.md
@@ -190,9 +190,10 @@ Lead 整合 → 触发规则命中？
 - 基于 1.6 假设拆解子问题（每个子问题独立可回答）
 - 按 Scaling Rules（2.3）决定 sub-agent 数量和预算
 - Spawn 前把调查计划写入 `/tmp/research-plan-<timestamp>.md`（防 context 截断丢失）
+- **维护拓扑记录文件**：每次 spawn 向 `/tmp/research-topology-<timestamp>.json` 追加条目，回传后补 `budget_used` / `findings_count`，Fork sub-sub 时记录 `parent_id`；线索被主动放弃也要记录（格式见 2.5）
 - **只读 sub-agent 的压缩 JSON 回传**，不读原始网页
 - 按节点级触发规则（2.2）判断是否 fork 新 sub-agent
-- 最终 synthesis 阶段整合所有 findings 产出报告
+- 最终 synthesis 阶段整合所有 findings 产出报告，并基于拓扑文件生成 5.2"调查拓扑"段
 
 **Sub-agent 职责**：
 - 独立 context window，专注一个子问题
@@ -314,7 +315,48 @@ Spawn 新一批 sub-agent（可含 sub-sub-agent）
 - 需要核对原文时按 URL 或 `/tmp/` 路径**按需**读取
 - 避免一次性把所有 sub-agent 的原始内容塞进 context
 
-### 2.5 搜索执行
+### 2.5 调查拓扑记录协议（强制）
+
+**目的**：让调研过程可观测——派发了几个 sub-agent、递归了几层、消耗了多少搜索/抓取、放弃了哪些线索，最终写入报告"调查拓扑"段（见 5.2）。
+
+**记录文件**：`/tmp/research-topology-<timestamp>.json`（同次调研使用同一文件名，与 plan 文件共享 timestamp）。
+
+**条目结构**：
+
+```json
+{
+  "session_id": "<timestamp>",
+  "root_topic": "本次调研命题",
+  "complexity_class": "simple|comparison|complex|super-deep",
+  "agents": [
+    {
+      "agent_id": "sub-01",
+      "parent_id": null,
+      "round": 1,
+      "topic": "子问题摘要",
+      "spawn_reason": "初始拆解 | confidence_low | surprise_followup | contradiction | devils_advocate | missing_t1",
+      "budget_plan": { "search": 10, "fetch": 15 },
+      "budget_used": { "search": 8, "fetch": 11 },
+      "findings_count": 4,
+      "status": "completed|aborted|budget_exceeded"
+    }
+  ],
+  "abandoned_leads": [
+    { "topic": "放弃的线索", "reason": "反爬无法验证 | 时效性不足 | 预算触顶 | 其他" }
+  ]
+}
+```
+
+**硬性约束**：
+- Spawn 前追加 `agents[]` 条目（填 `budget_plan` + `spawn_reason`，`budget_used` 和 `findings_count` 留空）
+- 回传后 Lead 更新该条目的 `budget_used` / `findings_count` / `status`
+- Fork sub-sub-agent 时必须填 `parent_id` 和 `round`，识别出递归层级
+- 主动放弃的线索写入 `abandoned_leads`，不得静默丢弃
+- 报告完成后，拓扑文件连同 `/tmp/` 下其他本次调研产物一并清理（synthesis 结束后 Lead 负责）
+
+**简单事实查询**：Lead 自查不开 Multi-Agent 时（见 2.3），仍需生成最小拓扑文件（`agents` 为空，记录自查的 `budget_used`），保证报告拓扑段统一。
+
+### 2.6 搜索执行
 
 - 使用 WebSearch 进行网络搜索，使用 WebFetch 获取具体页面内容
 - 如果命题涉及本地项目，同时用 Grep/Read 检索本地代码库和文档
@@ -325,7 +367,7 @@ Spawn 新一批 sub-agent（可含 sub-sub-agent）
   - 不同 sub-agent 之间通过 Lead 并行 spawn 实现跨 agent 并行
   - Sub-agent 搜索策略："start broad, then narrow"——先用短宽关键词扫全景，再聚焦深挖
 
-### 2.6 页面抓取策略
+### 2.7 页面抓取策略
 
 很多高价值网站有反爬机制，WebFetch 可能拿不到内容。采用分层抓取策略：
 
@@ -367,7 +409,7 @@ Spawn 新一批 sub-agent（可含 sub-sub-agent）
 - 如果一个站点连续 2 次抓取失败，放弃该站点，从其他来源获取同类信息
 - Playwright 浏览器用完即关，不保持长连接
 
-### 2.7 信息记录与来源分级
+### 2.8 信息记录与来源分级
 
 搜索过程中，对每条关键信息记录：
 
@@ -395,7 +437,7 @@ Spawn 新一批 sub-agent（可含 sub-sub-agent）
 - 跨来源对比前，先检查数据口径是否一致（地域/时间/定义）
 - 不同来源的同一指标出现显著差异时，优先采信一手来源，并在报告中标注分歧
 
-### 2.8 信息验证原则
+### 2.9 信息验证原则
 
 - **多源交叉**：关键结论至少 2 个独立来源佐证
 - **时效性**：优先采用近 1-2 年的数据，标注信息的时间
@@ -676,7 +718,7 @@ docs/research/
 |------|------|
 | **调研日期** | YYYY-MM-DD |
 | **调研类型** | 技术选型 / 行业分析 / ... |
-| **调研深度** | 搜索 N 层，参考 M 个来源 |
+| **调研深度** | 派发 N 个 sub-agent，最深 L 层，参考 M 个来源（详见"调查拓扑"段） |
 | **内部数据** | 已纳入 / 未纳入（标注原因） |
 
 ---
@@ -720,6 +762,33 @@ docs/research/
 
 ### 未覆盖的问题
 - 本次调研未深入探讨的方向，供后续研究参考
+
+---
+
+## 调查拓扑
+
+> 基于 `/tmp/research-topology-<timestamp>.json` 生成，让调研深度可观测。简单事实查询（Lead 自查）也需保留最小拓扑。
+
+| 指标 | 数值 |
+|------|------|
+| 命题复杂度 | simple / comparison / complex / super-deep |
+| 派发 Sub-agent 数 | N（含 sub-sub） |
+| 最深递归层级 | L |
+| Synthesis 轮次 | R |
+| 总 WebSearch 次数 | Σ search |
+| 总 WebFetch 次数 | Σ fetch |
+
+**Sub-agent 分解**：
+
+| ID | Parent | Round | Topic | Spawn Reason | Budget Used (search/fetch) | Findings | Status |
+|----|--------|-------|-------|--------------|---------------------------|----------|--------|
+| sub-01 | — | 1 | 子问题摘要 | 初始拆解 | 8/11 | 4 | completed |
+| sub-02 | sub-01 | 2 | 深挖反面证据 | devils_advocate | 6/5 | 2 | completed |
+
+**放弃的线索**：
+
+- 线索 X — 原因：反爬无法验证
+- 线索 Y — 原因：时效性不足（>5 年）
 
 ---
 
@@ -821,7 +890,7 @@ Redis 在高并发场景下的 p99 延迟通常低于 2ms[1]，
 
 ## 第六步：质量自检
 
-报告写完后，自动执行以下 4 项检查。可自动修复的问题直接修复，需要判断的列出供用户决定。
+报告写完后，自动执行以下 5 项检查。可自动修复的问题直接修复，需要判断的列出供用户决定。
 
 ### 6.1 检查维度
 
@@ -838,6 +907,7 @@ Redis 在高并发场景下的 p99 延迟通常低于 2ms[1]，
 | 反面观点与回应 | 存在 `## 反面观点与回应` 且非空 |
 | 核心结论 | 存在结论章节，含带来源标注的结论条目 |
 | 行动建议 | 存在建议/推荐章节 |
+| 调查拓扑 | 存在 `## 调查拓扑` 且含指标表 + sub-agent 分解 |
 | 参考资料 | 存在 `## 参考资料` 且按 T1/T2/T3 分组 |
 
 **处理方式**：不可自动修复。缺失章节在终端列出，提示用户是否补写。
@@ -879,20 +949,37 @@ Redis 在高并发场景下的 p99 延迟通常低于 2ms[1]，
 
 **处理方式**：不可自动修复。在终端逐条列出不达标结论及其当前来源情况，询问用户是否补充搜索。
 
+#### 检查 5：调查拓扑段完整性
+
+核对报告的"调查拓扑"段与 `/tmp/research-topology-<timestamp>.json` 记录文件：
+
+- 报告是否包含 `## 调查拓扑` 段
+- 指标表的"派发 Sub-agent 数 / 最深递归层级 / 总 search / 总 fetch"与拓扑文件聚合值一致
+- Sub-agent 分解表中每条 `agent_id` / `parent_id` / `budget_used` / `status` 字段与拓扑文件一致，不得遗漏
+- `abandoned_leads` 非空时，报告必须列出"放弃的线索"子节
+- 报告头元信息中的"调研深度"数字与拓扑段聚合值一致
+
+**处理方式**：可自动修复。
+- 拓扑段缺失 → 读取拓扑文件，按 5.2 模板自动生成
+- 数字不一致 → 以拓扑文件为准自动回填
+- 拓扑文件缺失 → 终端告警"过程记录缺失，无法可观测"，不阻塞报告交付但提示用户下次确保 Lead Agent 写入
+
 ### 6.2 执行流程
 
 ```
 报告写完
   ↓
-读取报告全文，逐项执行 4 项检查
+读取报告全文 + 拓扑文件 `/tmp/research-topology-<timestamp>.json`，逐项执行 5 项检查
   ↓
-自动修复可修项（检查 2 引用格式、检查 3 表格式）
+自动修复可修项（检查 2 引用格式、检查 3 表格式、检查 5 拓扑段）
   ↓
 在终端输出检查摘要
   ↓
 有不可修项？→ 列出问题，逐项询问用户处理意见
   ↓
 用户决策（补写 / 补充搜索 / 跳过）→ 执行 → 完成
+  ↓
+清理 `/tmp/` 下本次调研产物（拓扑 / 计划 / 子文档）
 ```
 
 ### 6.3 终端输出格式
@@ -908,6 +995,7 @@ Redis 在高并发场景下的 p99 延迟通常低于 2ms[1]，
 ⚠️ 核心结论来源支撑：
    · "结论内容摘要A" → 仅 1 个 T3 来源，不达标
    · "结论内容摘要B" → 2 个独立 T2 来源，达标
+🔧 调查拓扑：派发 N 个 sub-agent，最深 L 层，search/fetch 共 M 次；自动回填 X 处数字
 
 总计：N 项通过，M 项需处理
 ─────────────────────────────────────
