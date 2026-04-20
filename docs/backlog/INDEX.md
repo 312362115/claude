@@ -4,7 +4,7 @@
 <!-- 当前无 P0 -->
 
 ## P1 — 重要
-- [ ] [Deep Research Multi-Agent 架构升级](2026-04-20-deep-research-multi-agent.md) — Orchestrator-Subagent 拓扑 + 行业信源矩阵，对齐 Anthropic Research 架构
+- [ ] [Deep Research Multi-Agent 架构升级](2026-04-20-deep-research-multi-agent.md) — P0 已完成；P1 信源矩阵进行中（精简版 A 架构，spec + plan 已出）
 - [x] [Skill 体系扩建](2026-04-08-skill-system-expansion.md) — 新增 14 个 skill + task-start/task-finish 改造，覆盖安全/重构/写作/日常效率
 - [ ] [CI/CD 安全流水线](2026-04-08-cicd-security-pipeline.md) — 三层防线：pre-commit(gitleaks) + PR Check(全量扫描) + Release Gate(AI审查)
 - [x] [Deep Research Skill 升级](2026-03-29-deep-research-upgrade.md) — 从信息搜集升级为专业研究引擎
