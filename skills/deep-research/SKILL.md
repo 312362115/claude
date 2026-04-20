@@ -1,7 +1,7 @@
 ---
 name: deep-research
-version: 1.3.0
-last_updated: 2026-04-02
+version: 1.5.0
+last_updated: 2026-04-20
 repository: https://github.com/312362115/claude
 changelog: skills/deep-research/CHANGELOG.md
 description: >
@@ -9,7 +9,9 @@ description: >
   覆盖技术选型、行业分析、学术研究、竞品分析、概念探索等所有调研场景。
   核心方法论：快速扫描→假设驱动研究、内外数据结合（先摸清内部现状再对标外部水位）、
   反面证据强制搜索、数据来源三级分类、结论置信度分级、多层次报告输出。
-  包含多跳网络搜索、信息交叉验证、专业图表生成（Diagram Bridge 统一图表体系）、
+  采用 Orchestrator-Subagent 架构（Lead+Sub-agent 并行深挖、压缩回传、Scaling Rules 预算控制），
+  对齐 Anthropic 官方 Research 工程实践。
+  包含信息交叉验证、专业图表生成（Diagram Bridge 统一图表体系）、
   数据来源分级标注、分析框架自动选择、报告结构自适应、质量自检（6 步工作流）。
   触发词：调研、研究、分析报告、对比分析、行业报告、技术选型、竞品分析、
   市场调研、深度研究、出一份报告、帮我调研一下、了解一下xxx、
@@ -148,7 +150,9 @@ description: >
 调研类型：技术选型
 报告风格：商务蓝灰
 输出格式：Markdown / HTML
-搜索深度：3 层
+命题复杂度：对比类 / 复杂研究 / 超深度
+执行预算：派发 N 个 sub-agent，每个 WebSearch ≤ X / WebFetch ≤ Y
+预计 Token 消耗：约 Mx chat 基准
 初始假设：
   1. xxx
   2. xxx
@@ -168,45 +172,202 @@ description: >
 
 ## 第二步：多跳信息搜集
 
-这是调研的核心环节。采用**广度优先 + 深度受限**的搜索策略，确保信息全面且不失控。
+这是调研的核心环节。采用 **Orchestrator-Subagent 架构**：Lead Agent 负责规划与整合，Sub-agent 独立并行深挖，避免单一 context 被原始材料撑爆导致细节丢失。架构参考 Anthropic 官方 Research 系统实践。
 
-### 2.1 搜索策略
+### 2.1 Multi-Agent 执行模型
 
-```
-第 1 层：核心搜索（在 1.5 扫描基础上深入搜索）
-    │
-    ├── 基于 1.5 扫描发现的关键线索，设计深度搜索关键词
-    ├── 围绕初始假设（1.6）的验证点逐一搜索，深入阅读全文
-    ├── 覆盖：官方文档、权威技术博客、论文、行业报告
-    └── 产出：核心事实 + 发现的重要子话题列表 + 假设初步验证状态
-
-第 2 层：扩展搜索 + 反面证据搜索（Devil's Advocate）
-    │
-    ├── 子话题搜索：每个子话题 1-2 次搜索，交叉验证第 1 层的关键结论
-    ├── 反面证据搜索：对第 1 层形成的初步结论，主动搜索反面证据
-    │   ├── 关键词策略："<主题> limitations/problems/criticism/failure/risk/drawbacks"
-    │   ├── 目标：找到反对意见、失败案例、已知缺陷
-    │   └── 产出：反面论据清单 + 对初步结论的信心调整
-    └── 产出：补充细节 + 数据佐证 + 反面证据
-
-第 3 层：补充搜索（按需，填补信息空白）
-    │
-    ├── 仅在发现关键信息缺口时触发
-    ├── 检查所有假设是否都有足够证据（支撑或证伪）
-    └── 产出：填补空白、解决矛盾
+```flow
+Lead Agent（主 agent）
+↓ 拆子问题 → 派发
+Sub-agent A / B / C  并行（独立 context + 独立预算）
+↓ 压缩回传
+Lead 整合 → 触发规则命中？
+↓ 命中 → 再 fork sub-agent
+↓ 未命中 → synthesis 出报告
 ```
 
-**深度上限**：默认最多 3 层。每层搜索前评估"继续搜索能否显著提升报告质量"，如果边际收益低就停止。
+**Lead Agent 职责**：
+- 基于 1.6 假设拆解子问题（每个子问题独立可回答）
+- 按 Scaling Rules（2.3）决定 sub-agent 数量和预算
+- Spawn 前把调查计划写入 `/tmp/research-plan-<timestamp>.md`（防 context 截断丢失）
+- **维护拓扑记录文件**：每次 spawn 向 `/tmp/research-topology-<timestamp>.json` 追加条目，回传后补 `budget_used` / `findings_count`，Fork sub-sub 时记录 `parent_id`；线索被主动放弃也要记录（格式见 2.5）
+- **只读 sub-agent 的压缩 JSON 回传**，不读原始网页
+- 按节点级触发规则（2.2）判断是否 fork 新 sub-agent
+- 最终 synthesis 阶段整合所有 findings 产出报告，并基于拓扑文件生成 5.2"调查拓扑"段
 
-### 2.2 搜索执行
+**Sub-agent 职责**：
+- 独立 context window，专注一个子问题
+- 可自行并行调用多个搜索/抓取工具
+- 在预算内查完，超预算强制收尾
+- 回传结构化 JSON（格式见 2.4）
+- 发现反直觉线索写入 `surprises` 字段供 Lead 判断是否深挖
+- 长文档按 Filesystem Pattern 存 `/tmp/`，不塞进回传
+
+**硬性约束**：
+- 所有 sub-agent 必须使用 Agent 工具派发，指定 `subagent_type: "general-purpose"` + `model: "sonnet"`
+- Lead Agent 保持当前调用模型不变
+- Sub-agent 之间**不**直接通信，所有协作通过 Lead 协调
+
+### 2.2 迭代式深挖与触发规则
+
+废弃"固定 3 层广度优先"模型，改为**按节点兴趣度动态深挖**。
+
+**迭代上限**：
+- Synthesis 轮次 ≤ 3 轮（Lead 汇总 → 看缺口 → 再派发）
+- 单轮内 sub-agent 可递归 fork sub-sub-agent，递归深度 ≤ 3
+
+**单轮流程**：
+
+```flow
+Round N
+↓
+Lead 读全部 findings → 识别信息缺口 / 触发点
+↓
+Spawn 新一批 sub-agent（可含 sub-sub-agent）
+↓
+收集压缩回传
+↓
+满足终止条件 → 结束；否则 Round N+1
+```
+
+**节点级 Fork 触发规则**（满足任一条件，Lead 必须派新 agent）：
+
+| 触发条件 | 深挖方向 |
+|---------|---------|
+| `confidence: low` 且 finding 关系核心结论 | 派专员找 T1 源补证 |
+| 出现 `surprises`（反直觉线索） | 单独派 agent 深挖该线索 |
+| 不同 sub-agent 的 evidence 矛盾 | 派"裁判 agent"回溯权威一手源 |
+| 某核心命题反面 findings 数 < 2 | 派反面证据专员（Devil's Advocate） |
+| 关键命题仅有 T2/T3 支撑、未找到 T1 | 派一手源专员 |
+
+**终止条件**（满足任一即可结束）：
+- 所有假设都有 T1 源或 2+ 独立 T2 源支撑
+- 反面证据搜索已执行且无新发现
+- 进入 Round 3 后仍无新信息
+
+### 2.3 Scaling Rules（强制预算）
+
+根据命题复杂度配置 sub-agent 数量和工具预算。**超预算必须强制收尾**，防止 runaway。
+
+| 命题类型 | 示例 | Sub-agent 数 | WebSearch / sub-agent | WebFetch / sub-agent |
+|---------|------|-------------|----------------------|---------------------|
+| **简单事实** | "Redis 7 新特性" | **不开 Multi-Agent**，Lead 自查 | ≤ 10 | ≤ 10 |
+| **对比类** | "Redis vs Dragonfly 性能" | 2-4 | ≤ 8 | ≤ 12 |
+| **复杂研究** | "AI Agent 赛道格局" | 5-10 | ≤ 10 | ≤ 15 |
+| **超深度** | "半导体产业链 + 国产替代" | 10+ 按需迭代 | ≤ 12 | ≤ 20 |
+
+**Lead Agent 在派发前必须声明**（写入 plan 文件，并在 1.7 对齐阶段展示给用户）：
+
+```
+命题复杂度评估：<类型>
+计划派发：<N> 个 sub-agent
+每个预算：WebSearch ≤ X / WebFetch ≤ Y
+预计 Token 消耗：约 <M>x chat 基准
+```
+
+**Token 成本红线**：
+- Multi-Agent 架构消耗约 **15x chat tokens**（参考 Anthropic 工程数据）
+- **简单事实查询禁止开 Multi-Agent**，直接由 Lead 自查
+- 如评估为复杂研究但用户明确要求"快速了解"，降级为对比类预算
+
+### 2.4 Sub-agent 压缩回传协议（强制）
+
+**核心原则**：Sub-agent 不得将原始网页内容回流给 Lead Agent。回传必须是结构化压缩摘要，避免 Lead context 被撑爆导致细节丢失。
+
+**标准回传 JSON**：
+
+```json
+{
+  "topic": "本次调查的子问题",
+  "findings": [
+    {
+      "claim": "一句话结论",
+      "evidence": ["关键引文片段，每段 ≤100 字"],
+      "urls": ["https://..."],
+      "source_tier": "T1|T2|T3",
+      "confidence": "high|mid|low",
+      "date": "证据时间戳，如 2026-03"
+    }
+  ],
+  "surprises": ["反直觉或意外发现，供 Lead 决定是否深挖"],
+  "gaps": ["未能验证的点 / 需其他 agent 补充的信息"],
+  "budget_used": { "search": N, "fetch": M }
+}
+```
+
+**硬性禁止**：
+- ❌ 回传中包含原始 HTML 或 markdown 全文
+- ❌ 未精简的搜索结果列表
+- ❌ 单条引文超过 100 字
+- ❌ 省略 `source_tier` 或 `confidence` 字段
+
+**Filesystem Pattern（处理大文档）**：
+
+| 场景 | 做法 |
+|------|------|
+| 长文档（财报 / 论文 / 长博客）需保全文 | Sub-agent 存到 `/tmp/<subagent-id>-<topic>.md`，回传只记录路径 |
+| 后续 agent 需核对原文 | 按 `urls` 或 `/tmp/` 路径按需回访，不塞进 Lead context |
+| CitationAgent 做引用对齐 | 独立读取 `/tmp/` 文件做位置校对 |
+| 报告完成后 | 清理 `/tmp/` 下本次调查产生的临时文件 |
+
+**Lead Agent Synthesis 阶段**：
+- Context 中只有压缩 findings JSON，不含原文
+- 需要核对原文时按 URL 或 `/tmp/` 路径**按需**读取
+- 避免一次性把所有 sub-agent 的原始内容塞进 context
+
+### 2.5 调查拓扑记录协议（强制）
+
+**目的**：让调研过程可观测——派发了几个 sub-agent、递归了几层、消耗了多少搜索/抓取、放弃了哪些线索，最终写入报告"调查拓扑"段（见 5.2）。
+
+**记录文件**：`/tmp/research-topology-<timestamp>.json`（同次调研使用同一文件名，与 plan 文件共享 timestamp）。
+
+**条目结构**：
+
+```json
+{
+  "session_id": "<timestamp>",
+  "root_topic": "本次调研命题",
+  "complexity_class": "simple|comparison|complex|super-deep",
+  "agents": [
+    {
+      "agent_id": "sub-01",
+      "parent_id": null,
+      "round": 1,
+      "topic": "子问题摘要",
+      "spawn_reason": "初始拆解 | confidence_low | surprise_followup | contradiction | devils_advocate | missing_t1",
+      "budget_plan": { "search": 10, "fetch": 15 },
+      "budget_used": { "search": 8, "fetch": 11 },
+      "findings_count": 4,
+      "status": "completed|aborted|budget_exceeded"
+    }
+  ],
+  "abandoned_leads": [
+    { "topic": "放弃的线索", "reason": "反爬无法验证 | 时效性不足 | 预算触顶 | 其他" }
+  ]
+}
+```
+
+**硬性约束**：
+- Spawn 前追加 `agents[]` 条目（填 `budget_plan` + `spawn_reason`，`budget_used` 和 `findings_count` 留空）
+- 回传后 Lead 更新该条目的 `budget_used` / `findings_count` / `status`
+- Fork sub-sub-agent 时必须填 `parent_id` 和 `round`，识别出递归层级
+- 主动放弃的线索写入 `abandoned_leads`，不得静默丢弃
+- 报告完成后，拓扑文件连同 `/tmp/` 下其他本次调研产物一并清理（synthesis 结束后 Lead 负责）
+
+**简单事实查询**：Lead 自查不开 Multi-Agent 时（见 2.3），仍需生成最小拓扑文件（`agents` 为空，记录自查的 `budget_used`），保证报告拓扑段统一。
+
+### 2.6 搜索执行
 
 - 使用 WebSearch 进行网络搜索，使用 WebFetch 获取具体页面内容
 - 如果命题涉及本地项目，同时用 Grep/Read 检索本地代码库和文档
-- **并行搜索**：同一层内的多个搜索方向可以用 Agent 工具并行执行，提高效率。**所有搜索类 Agent 子代理必须指定 `model: "sonnet"`**，节省 token 且搜索质量足够
 - **搜索关键词设计**：每个搜索用不同角度的关键词，避免信息重复
-  - 例：调研 Redis → "Redis performance benchmark 2025"、"Redis vs alternatives comparison"、"Redis use cases limitations"
+  - 例：调研 Redis → "Redis performance benchmark 2026"、"Redis vs alternatives comparison"、"Redis use cases limitations"
+- **并行原则**：
+  - 同一 sub-agent 内的多个工具调用尽量并行（单次消息多个 tool call）
+  - 不同 sub-agent 之间通过 Lead 并行 spawn 实现跨 agent 并行
+  - Sub-agent 搜索策略："start broad, then narrow"——先用短宽关键词扫全景，再聚焦深挖
 
-### 2.3 页面抓取策略
+### 2.7 页面抓取策略
 
 很多高价值网站有反爬机制，WebFetch 可能拿不到内容。采用分层抓取策略：
 
@@ -248,7 +409,7 @@ description: >
 - 如果一个站点连续 2 次抓取失败，放弃该站点，从其他来源获取同类信息
 - Playwright 浏览器用完即关，不保持长连接
 
-### 2.4 信息记录与来源分级
+### 2.8 信息记录与来源分级
 
 搜索过程中，对每条关键信息记录：
 
@@ -276,13 +437,13 @@ description: >
 - 跨来源对比前，先检查数据口径是否一致（地域/时间/定义）
 - 不同来源的同一指标出现显著差异时，优先采信一手来源，并在报告中标注分歧
 
-### 2.5 信息验证原则
+### 2.9 信息验证原则
 
 - **多源交叉**：关键结论至少 2 个独立来源佐证
 - **时效性**：优先采用近 1-2 年的数据，标注信息的时间
 - **去伪存真**：发现信息冲突时，列出不同说法，注明分歧，优先采信一手来源 [T1]
 - **标注不确定性**：仅单一来源的信息标注"据 xxx 称"；无法验证的数据标注"未经独立验证"
-- **假设对照**：每搜完一层，回顾初始假设（见 1.6），标记哪些假设已获得支撑/被削弱/证据不足
+- **假设对照**：每轮 synthesis 后回顾初始假设（见 1.6），标记哪些假设已获得支撑/被削弱/证据不足
 
 ---
 
@@ -557,7 +718,7 @@ docs/research/
 |------|------|
 | **调研日期** | YYYY-MM-DD |
 | **调研类型** | 技术选型 / 行业分析 / ... |
-| **调研深度** | 搜索 N 层，参考 M 个来源 |
+| **调研深度** | 派发 N 个 sub-agent，最深 L 层，参考 M 个来源（详见"调查拓扑"段） |
 | **内部数据** | 已纳入 / 未纳入（标注原因） |
 
 ---
@@ -601,6 +762,33 @@ docs/research/
 
 ### 未覆盖的问题
 - 本次调研未深入探讨的方向，供后续研究参考
+
+---
+
+## 调查拓扑
+
+> 基于 `/tmp/research-topology-<timestamp>.json` 生成，让调研深度可观测。简单事实查询（Lead 自查）也需保留最小拓扑。
+
+| 指标 | 数值 |
+|------|------|
+| 命题复杂度 | simple / comparison / complex / super-deep |
+| 派发 Sub-agent 数 | N（含 sub-sub） |
+| 最深递归层级 | L |
+| Synthesis 轮次 | R |
+| 总 WebSearch 次数 | Σ search |
+| 总 WebFetch 次数 | Σ fetch |
+
+**Sub-agent 分解**：
+
+| ID | Parent | Round | Topic | Spawn Reason | Budget Used (search/fetch) | Findings | Status |
+|----|--------|-------|-------|--------------|---------------------------|----------|--------|
+| sub-01 | — | 1 | 子问题摘要 | 初始拆解 | 8/11 | 4 | completed |
+| sub-02 | sub-01 | 2 | 深挖反面证据 | devils_advocate | 6/5 | 2 | completed |
+
+**放弃的线索**：
+
+- 线索 X — 原因：反爬无法验证
+- 线索 Y — 原因：时效性不足（>5 年）
 
 ---
 
@@ -702,7 +890,7 @@ Redis 在高并发场景下的 p99 延迟通常低于 2ms[1]，
 
 ## 第六步：质量自检
 
-报告写完后，自动执行以下 4 项检查。可自动修复的问题直接修复，需要判断的列出供用户决定。
+报告写完后，自动执行以下 5 项检查。可自动修复的问题直接修复，需要判断的列出供用户决定。
 
 ### 6.1 检查维度
 
@@ -719,6 +907,7 @@ Redis 在高并发场景下的 p99 延迟通常低于 2ms[1]，
 | 反面观点与回应 | 存在 `## 反面观点与回应` 且非空 |
 | 核心结论 | 存在结论章节，含带来源标注的结论条目 |
 | 行动建议 | 存在建议/推荐章节 |
+| 调查拓扑 | 存在 `## 调查拓扑` 且含指标表 + sub-agent 分解 |
 | 参考资料 | 存在 `## 参考资料` 且按 T1/T2/T3 分组 |
 
 **处理方式**：不可自动修复。缺失章节在终端列出，提示用户是否补写。
@@ -760,20 +949,37 @@ Redis 在高并发场景下的 p99 延迟通常低于 2ms[1]，
 
 **处理方式**：不可自动修复。在终端逐条列出不达标结论及其当前来源情况，询问用户是否补充搜索。
 
+#### 检查 5：调查拓扑段完整性
+
+核对报告的"调查拓扑"段与 `/tmp/research-topology-<timestamp>.json` 记录文件：
+
+- 报告是否包含 `## 调查拓扑` 段
+- 指标表的"派发 Sub-agent 数 / 最深递归层级 / 总 search / 总 fetch"与拓扑文件聚合值一致
+- Sub-agent 分解表中每条 `agent_id` / `parent_id` / `budget_used` / `status` 字段与拓扑文件一致，不得遗漏
+- `abandoned_leads` 非空时，报告必须列出"放弃的线索"子节
+- 报告头元信息中的"调研深度"数字与拓扑段聚合值一致
+
+**处理方式**：可自动修复。
+- 拓扑段缺失 → 读取拓扑文件，按 5.2 模板自动生成
+- 数字不一致 → 以拓扑文件为准自动回填
+- 拓扑文件缺失 → 终端告警"过程记录缺失，无法可观测"，不阻塞报告交付但提示用户下次确保 Lead Agent 写入
+
 ### 6.2 执行流程
 
 ```
 报告写完
   ↓
-读取报告全文，逐项执行 4 项检查
+读取报告全文 + 拓扑文件 `/tmp/research-topology-<timestamp>.json`，逐项执行 5 项检查
   ↓
-自动修复可修项（检查 2 引用格式、检查 3 表格式）
+自动修复可修项（检查 2 引用格式、检查 3 表格式、检查 5 拓扑段）
   ↓
 在终端输出检查摘要
   ↓
 有不可修项？→ 列出问题，逐项询问用户处理意见
   ↓
 用户决策（补写 / 补充搜索 / 跳过）→ 执行 → 完成
+  ↓
+清理 `/tmp/` 下本次调研产物（拓扑 / 计划 / 子文档）
 ```
 
 ### 6.3 终端输出格式
@@ -789,6 +995,7 @@ Redis 在高并发场景下的 p99 延迟通常低于 2ms[1]，
 ⚠️ 核心结论来源支撑：
    · "结论内容摘要A" → 仅 1 个 T3 来源，不达标
    · "结论内容摘要B" → 2 个独立 T2 来源，达标
+🔧 调查拓扑：派发 N 个 sub-agent，最深 L 层，search/fetch 共 M 次；自动回填 X 处数字
 
 总计：N 项通过，M 项需处理
 ─────────────────────────────────────
