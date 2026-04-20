@@ -1,0 +1,316 @@
+# ============================================================================
+# 金融领域信源白名单（精简版 A）
+# ============================================================================
+#
+# 收录原则：只收"LLM top-of-mind 里没有的冷门权威源"
+# 判断标准：不看本 YAML，sub-agent 能想到这个源吗？能想到的不进。
+#
+# 不收录（LLM 自己知道）：
+# - SEC EDGAR / NYSE / NASDAQ
+# - FRED / 美联储官网
+# - 中国人民银行 / 国家统计局
+# - 巨潮资讯网 / 证监会 / 上交所/深交所
+# - Bloomberg / Reuters / WSJ / CNBC
+# - Yahoo Finance / CoinGecko / CoinMarketCap
+# - Binance API / Coinbase API / Etherscan / DefiLlama
+# - AKShare / Tushare Pro / yfinance / Alpha Vantage / Polygon.io
+# ============================================================================
+
+industry: finance
+last_updated: "2026-04-20"
+maintainer_note: |
+  只收冷门但权威的金融源。每条都要能通过"LLM top-of-mind 测试"。
+
+  腐烂监控重点（每 3 个月 refresh 一次）：
+  - API 停服（如 2024 IEX Cloud）
+  - 并购改名（如 Polygon→Massive，Quandl→Nasdaq Data Link）
+  - 免费层缩水（如 Alpha Vantage 500→25/day）
+  - 监管变化（如 SFC 新立法）
+
+  不要扩张到"大众源"——那些走 _source_heuristics.md 即可。
+
+sources:
+
+  # ==================== 宏观 / 跨境资本 ====================
+
+  - name: "BIS Data Portal"
+    domain: "data.bis.org"
+    url: "https://data.bis.org/"
+    description: "国际清算银行统计数据库，全球离岸债 IDS / 跨境银行敞口 / 各国央行政策利率汇总独一档"
+    access_method: "API"
+    auth_required: "无"
+    scores:
+      authority: 5
+      freshness: 3
+      accessibility: 4
+      density: 4
+      chinese_coverage: 1
+    data_coverage: [国际债务, 跨境银行, 央行利率, 有效汇率, 宏观]
+    tier_suggestion: "T1"
+    notes: "SDMX 2.1 + 3.0 免费 API 无需注册；研究人民币国际化和跨境资本流动唯一能机读的权威源"
+    last_verified: "2026-04-20"
+    rot_indicator: "active"
+    api_doc_url: "https://data.bis.org/sdmx"
+
+  - name: "美国财政部 Fiscal Data"
+    domain: "fiscaldata.treasury.gov"
+    url: "https://fiscaldata.treasury.gov/"
+    description: "美财政部官方 REST API，国债收益率原始来源（FRED 数据的上游镜像源）"
+    access_method: "API"
+    auth_required: "无"
+    scores:
+      authority: 5
+      freshness: 5
+      accessibility: 5
+      density: 3
+      chinese_coverage: 0
+    data_coverage: [国债收益率, 财政收支, 债务余额]
+    tier_suggestion: "T2"
+    notes: "无需 API key 的 JSON REST；常被 FRED 名气盖过但其实是上游；适合需要高频日度收益率的场景"
+    last_verified: "2026-04-20"
+    rot_indicator: "active"
+
+  # ==================== 中国专项 ====================
+
+  - name: "中债登 yield.chinabond"
+    domain: "yield.chinabond.com.cn"
+    url: "https://yield.chinabond.com.cn/"
+    description: "中央结算公司（CCDC），中国国债/政金债估值定价的法定权威机构，境外机构持债数据"
+    access_method: "WebFetch"
+    auth_required: "部分公开 / 机构级需邮件申请"
+    scores:
+      authority: 5
+      freshness: 4
+      accessibility: 2
+      density: 4
+      chinese_coverage: 5
+    data_coverage: [中债收益率曲线, 中债估值, 中债指数, 境外机构持债]
+    tier_suggestion: "T1"
+    notes: "中国债市核心估值；机构级数据发邮件 dataservice@chinabond.com.cn；网页可拉基础曲线"
+    last_verified: "2026-04-20"
+    rot_indicator: "active"
+
+  - name: "中国货币网 CFETS"
+    domain: "chinamoney.com.cn"
+    url: "https://www.chinamoney.com.cn/chinese/"
+    description: "中国外汇交易中心，Shibor/DR007/银行间实时收益率曲线唯一权威来源"
+    access_method: "WebFetch"
+    auth_required: "部分公开 / 机构级需 CFETS 会员"
+    scores:
+      authority: 5
+      freshness: 5
+      accessibility: 2
+      density: 4
+      chinese_coverage: 5
+    data_coverage: [Shibor, DR007, 银行间收益率曲线, 外汇报价, 债券通]
+    tier_suggestion: "T1"
+    notes: "债券实时收益率曲线每分钟更新（09:30-17:00），中国市场最高频利率源；机构访问壁垒高"
+    last_verified: "2026-04-20"
+    rot_indicator: "active"
+
+  - name: "外汇管理局 SAFE"
+    domain: "safe.gov.cn"
+    url: "https://www.safe.gov.cn/safe/sjfb/index.html"
+    description: "国家外汇管理局，人民币跨境资金流动和外汇储备权威来源"
+    access_method: "WebFetch"
+    auth_required: "无"
+    scores:
+      authority: 5
+      freshness: 3
+      accessibility: 3
+      density: 3
+      chinese_coverage: 5
+    data_coverage: [国际收支 BOP, 外汇储备, 跨境资金流, 境外机构境内债券]
+    tier_suggestion: "T2"
+    notes: "配合央行数据理解汇率压力；网页为主无 API；Excel 可下"
+    last_verified: "2026-04-20"
+    rot_indicator: "active"
+
+  - name: "上清所 SHCH"
+    domain: "shclearing.cn"
+    url: "https://www.shclearing.cn/"
+    description: "上海清算所，信用债（非金融企业债务融资工具）估值 + IRS 定盘价权威"
+    access_method: "WebFetch"
+    auth_required: "部分公开 / 机构需申请"
+    scores:
+      authority: 4
+      freshness: 4
+      accessibility: 2
+      density: 3
+      chinese_coverage: 5
+    data_coverage: [信用债估值, IRS定盘价, 利率互换, 集中清算数据]
+    tier_suggestion: "T2"
+    notes: "信用债研究必需；与中债登（利率债）形成互补；Excel/PDF 下载为主"
+    last_verified: "2026-04-20"
+    rot_indicator: "active"
+
+  - name: "申万宏源行业指数"
+    domain: "swsindex.com"
+    url: "http://www.swsindex.com/"
+    description: "申万行业分类指数官方源，31 个一级行业分类是 A 股研究事实标准"
+    access_method: "Playwright"
+    auth_required: "无"
+    scores:
+      authority: 4
+      freshness: 3
+      accessibility: 2
+      density: 4
+      chinese_coverage: 5
+    data_coverage: [行业分类, 行业指数历史, 成分股]
+    tier_suggestion: "china_specific"
+    notes: "官网响应不稳（本次调研时超时），实务多通过 Tushare/聚宽间接获取；值得备录"
+    last_verified: "2026-04-20"
+    rot_indicator: "unstable"
+    rot_note: "官网访问不稳定是长期问题，sub-agent 首选从二手（Tushare/聚宽）获取再回溯到此验证"
+
+  # ==================== 港股专项 ====================
+
+  - name: "HKEX 披露易权益披露 SDI"
+    domain: "hkexnews.hk"
+    url: "https://www.hkexnews.hk/di/LFT2/index.aspx"
+    description: "港股大股东/董监高持股变动申报系统（SFO Part XV 法定披露）"
+    access_method: "WebFetch"
+    auth_required: "无"
+    scores:
+      authority: 5
+      freshness: 4
+      accessibility: 3
+      density: 4
+      chinese_coverage: 5
+    data_coverage: [5%以上股东变动, 董监高持股, 空头仓位]
+    tier_suggestion: "T1"
+    notes: "追踪港股大股东增减持/H 股回购/举牌的核心源；与披露易主站不同入口"
+    last_verified: "2026-04-20"
+    rot_indicator: "active"
+
+  - name: "HKEX CCASS 南向持股查询"
+    domain: "hkexnews.hk"
+    url: "https://www3.hkexnews.hk/sdw/search/mutualmarket.aspx?t=hk"
+    description: "港交所官方 CCASS 南向持股明细查询，研究内地券商/机构港股持仓的核心工具"
+    access_method: "WebFetch"
+    auth_required: "无"
+    scores:
+      authority: 5
+      freshness: 4
+      accessibility: 3
+      density: 4
+      chinese_coverage: 5
+    data_coverage: [CCASS 持股, 南向资金个股明细, 券商持仓]
+    tier_suggestion: "T1"
+    notes: "⚠️ 仅保留 12 个月滚动数据，超期不可查；历史研究必须提前存档"
+    last_verified: "2026-04-20"
+    rot_indicator: "active"
+
+  # ==================== 加密货币专项 ====================
+
+  - name: "Tardis.dev"
+    domain: "tardis.dev"
+    url: "https://tardis.dev/"
+    description: "加密货币历史 Tick 级数据回放，含完整 L2/L3 orderbook 快照"
+    access_method: "API"
+    auth_required: "API key 付费（每月 1 号数据免费）"
+    scores:
+      authority: 4
+      freshness: 2
+      accessibility: 3
+      density: 5
+      free_tier_quota: 2
+      chinese_coverage: 1
+    data_coverage: [Tick, 盘口, 完整orderbook, 衍生品]
+    tier_suggestion: "T1"
+    notes: "业界最完整历史 Tick 数据库；每月 1 号数据免费（无需 key）——低成本回测框架验证入口"
+    last_verified: "2026-04-20"
+    rot_indicator: "active"
+
+  - name: "香港证监会 SFC 虚拟资产专页"
+    domain: "sfc.hk"
+    url: "https://www.sfc.hk/TC/Rules-and-Standards/Virtual-assets/"
+    description: "SFC 虚拟资产监管官方信源，VASP 牌照名单 + 中文监管咨询文件"
+    access_method: "WebFetch"
+    auth_required: "无"
+    scores:
+      authority: 5
+      freshness: 3
+      accessibility: 4
+      density: 2
+      chinese_coverage: 5
+    data_coverage: [VASP牌照, 监管通告, 投资者警告]
+    tier_suggestion: "china_specific"
+    notes: "中文加密监管不可替代；2026 年香港新立法（经销商+托管人规则）追踪重点"
+    last_verified: "2026-04-20"
+    rot_indicator: "active"
+
+  # ==================== 量化 API（开发者向） ====================
+
+  - name: "BaoStock"
+    domain: "baostock.com"
+    url: "http://www.baostock.com/"
+    description: "A 股免费开源量化 API，K线 1990+ 日/1999+ 分钟/2007+ 财报，稳定性优于 AKShare"
+    access_method: "SDK(Python)"
+    auth_required: "无"
+    scores:
+      authority: 3
+      freshness: 3
+      accessibility: 5
+      density: 3
+      free_tier_quota: 5
+      chinese_coverage: 5
+    data_coverage: [K线, 基本面, 财报]
+    tier_suggestion: "china_specific"
+    notes: "A 股量化首选的免费可生产 API；无 Tick/盘口；不覆盖港股/期货"
+    last_verified: "2026-04-20"
+    rot_indicator: "active"
+
+  - name: "Finnhub"
+    domain: "finnhub.io"
+    url: "https://finnhub.io/"
+    description: "美股量化 API，免费 60 次/分钟（同类最慷慨），含 WebSocket + 新闻情绪"
+    access_method: "API"
+    auth_required: "API key 免费"
+    scores:
+      authority: 3
+      freshness: 4
+      accessibility: 5
+      density: 3
+      free_tier_quota: 4
+      chinese_coverage: 1
+    data_coverage: [K线, 基本面, 新闻情绪]
+    tier_suggestion: "T1"
+    notes: "免费层额度同类最大，足够原型甚至低频生产；基本面完整度不及 Alpha Vantage"
+    last_verified: "2026-04-20"
+    rot_indicator: "active"
+
+  # ==================== 腐烂标记（迁移指引） ====================
+
+  - name: "IEX Cloud（已停服）"
+    domain: "iexcloud.io"
+    url: "https://iexcloud.io/"
+    description: "⚠️ 已于 2024-08-31 正式停服；保留条目作迁移指引"
+    access_method: "API"
+    auth_required: "API key 付费"
+    scores: { authority: 0, freshness: 0, accessibility: 0, density: 0, chinese_coverage: 0 }
+    tier_suggestion: "deprecated"
+    notes: "迁移替代：Polygon.io（美股 Tick）/ Finnhub（免费层大）/ Databento（机构 Tick）"
+    last_verified: "2026-04-20"
+    rot_indicator: "deprecated"
+    rot_note: "2024-05 宣布、2024-08-31 正式停服；IEX Group 原用户被引导至 Intrinio；前员工以 Blue Sky Data 名义重启部分资产"
+
+  - name: "Polygon.io（已被收购，观察定价）"
+    domain: "polygon.io"
+    url: "https://polygon.io/"
+    description: "⚠️ 2024 被 Massive.com 收购，域名已重定向至 massive.com，定价策略待观察"
+    access_method: "API"
+    auth_required: "API key 免费/付费"
+    scores:
+      authority: 4
+      freshness: 5
+      accessibility: 3
+      density: 5
+      free_tier_quota: 2
+      chinese_coverage: 1
+    data_coverage: [K线, Tick, 盘口, 基本面]
+    tier_suggestion: "T1"
+    notes: "美股 Tick 质量优秀；免费 5 次/分钟；收购后定价变化值得追踪"
+    last_verified: "2026-04-20"
+    rot_indicator: "acquired"
+    rot_note: "2024 被 Massive.com 收购；polygon.io 已 301 重定向；原 API 端点短期内仍可用"

@@ -1,0 +1,127 @@
+# ============================================================================
+# Deep Research 信源黑名单（全域共享，最高优先级过滤）
+# ============================================================================
+#
+# 本文件是 sub-agent 搜索与引用的"禁区"。
+# 所有领域的调研都加载此 YAML，优先级高于任何行业白名单。
+#
+# 为什么 blacklist 是 YAML 体系最大价值所在：
+# - LLM 自己识别 SEO 内容农场/AI 洗稿站/转引聚合站的准确率不高
+# - 维护一份显式黑名单比改 prompt 更可靠
+# - blacklist 相对稳定（CSDN 这类 10 年不会变）
+# ============================================================================
+
+industry: blacklist
+last_updated: "2026-04-20"
+maintainer_note: |
+  收录标准：
+  1. 内容以 AI 洗稿/转引为主（非原创）
+  2. 机器人刷帖/水军/付费软文占主导
+  3. 反爬+强制登录+数据质量低三合一
+  4. 有学术样本或权威评价佐证的负面标记
+
+  不收录：
+  - 有原创机制的聚合站（如 HN、Reddit 大部分 sub）
+  - 单纯付费墙（如 Bloomberg/WSJ）——付费不等于低质
+  - 仅因为反爬而被排除的正规站点（反爬在源条目 notes 注明即可）
+
+  发现新的黑名单候选：补充前需评估，避免误杀原创优质源。
+
+# ---------- 具名黑名单 ----------
+
+blacklist:
+  # ========== 技术/互联网类 ==========
+
+  - name: "CSDN"
+    domain: "csdn.net"
+    reason: "AI 洗稿 + 转引为主，强反爬 + 强制登录，内容农场特征明显；HN 社区明确评价为质量存疑的聚合平台"
+    category: "tech_spam"
+    severity: "hard"
+    evidence: "本次调研多次 fetch 失败；HN 讨论 2024-2026 多次标记"
+
+  - name: "百度百家号（转载部分）"
+    domain: "baijiahao.baidu.com"
+    reason: "SEO 优化聚合，大量纯转载无原创"
+    category: "tech_spam"
+    severity: "soft"
+    evidence: "搜索结果常出现同一内容的百家号转载版"
+
+  # ========== 金融/A 股类 ==========
+
+  - name: "东方财富股吧"
+    domain: "guba.eastmoney.com"
+    reason: "680 万条学术样本中确认大规模机器刷帖/水军；无监管背书"
+    category: "finance_spam"
+    severity: "hard"
+    evidence: "学术研究记录的样本污染问题"
+
+  - name: "雪球"
+    domain: "xueqiu.com"
+    reason: "WAF 强反爬，数据为转发聚合非原创；用户讨论含大量情绪化噪声"
+    category: "finance_spam"
+    severity: "soft"
+    evidence: "本次调研 fetch 返回加密内容；公认为情绪指标而非数据源"
+
+  # ========== Crypto 类 ==========
+
+  - name: "金色财经"
+    domain: "jinse.cn"
+    reason: "中文最大加密媒体，付费软文/项目推广混杂，原创研究极少"
+    category: "crypto_spam"
+    severity: "soft"
+    evidence: "本次加密货币调研明确标注"
+
+# ---------- 通用识别模式（patterns）----------
+# sub-agent 搜索时遇到未在具名 blacklist 中的站点，按这些模式自行判断
+
+patterns:
+  - pattern_name: "SEO 内容农场 - 夸张承诺型"
+    signals:
+      - "无实名作者或作者名为通用化名"
+      - "无原始数据引用"
+      - "标题含「震撼」「揭秘」「必涨」「神预言」「一定要看」"
+    examples:
+      - "一周涨 10x 必涨清单"
+      - "震撼！内幕消息泄露"
+      - "AI 选股神器，专家推荐"
+    action: "blacklist"
+
+  - pattern_name: "AI 洗稿/纯机器生成内容"
+    signals:
+      - "段落之间逻辑跳跃明显"
+      - "大量并列短句无实质信息"
+      - "文末固定模板式署名"
+      - "同一事件在多个站点以高度相似措辞出现"
+    examples:
+      - "大量 `*-news.com` / `*-daily.com` 短命域名"
+      - "百家号/头条号 2024+ 大量 AI 生成文"
+    action: "blacklist"
+
+  - pattern_name: "转引聚合站 - 原创比例极低"
+    signals:
+      - "内容 90%+ 来自第三方"
+      - "无明确编辑审核机制"
+      - "依赖 SEO 而非直接流量"
+    examples:
+      - "多数二线财经聚合站"
+      - "中文加密行业大量"XX 号"聚合"
+    action: "downgrade_to_t3"
+
+  - pattern_name: "付费项目推广软文"
+    signals:
+      - "文末明确标注「赞助内容」「商务合作」"
+      - "内容高度正面，缺乏风险讨论"
+      - "同一媒体对竞品报道明显偏颇"
+    examples:
+      - "Crypto 媒体的项目推介文"
+      - "部分 VC/FA 机构的软性报道"
+    action: "downgrade_to_t3"
+
+# ---------- 关联注意事项 ----------
+# 1. 具名 blacklist 的 severity:
+#    - hard = 硬过滤，sub-agent 必须避免，不得在 findings 中引用
+#    - soft = 降级到 T3，可作为情绪/热度/舆情参考，但不作为权威数据源
+# 2. patterns 的 action:
+#    - blacklist = 发现时加入黑名单，不引用
+#    - downgrade_to_t3 = 降级为 T3，仅作补充
+# 3. 发现疑似黑名单但证据不足时：记录到调研报告的 surprises 段，留待后续验证
