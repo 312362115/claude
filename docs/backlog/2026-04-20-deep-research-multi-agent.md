@@ -111,3 +111,8 @@ plan:
 
 - 本条需求规模大、跨多个改造点，建议出 spec 时拆成多个 plan（P0 一个 plan、P1 信源一个 plan、P2 评测一个 plan）
 - Token 成本提醒：multi-agent 架构大约消耗 15x chat tokens，需在 skill 里加预算提示
+
+## 进度
+
+- **2026-04-20**：完成 P0 第 1-4 条（Orchestrator-Subagent 拓扑 + 压缩回传协议 + Scaling Rules + 节点级触发规则），skill 升级到 1.4.0
+  - P0 第 5 条"调查拓扑透明化"（报告末尾附拓扑数据）尚未实施，待后续 P1 改造时一并处理
