@@ -1,5 +1,49 @@
 # Changelog — finance-analysis
 
+## 0.3.0 (2026-04-20)
+
+**战斗力补全 + 自我迭代机制**。0.2.0 搭完骨架，本版补核心能力 + 闭环。
+
+### 新增
+
+- **`templates/earnings-deep-dive.md`**（套路 C 核心 template）
+  - 3 层信息拆解（表层/中层/**里层=Alpha**）
+  - 4 维预判（T+3 / T+6 / T+12 / T+24）每个可证伪
+  - 5 组数据间关系必查（营收/应收/库存/Capex/毛利率二阶导）
+  - 沉默字段检查（电话会 Q&A / MD&A 措辞变化 / 财务附注新披露）
+  - 产业链传导推演（≥ 2 跳）
+  - NVDA FY25-Q1 worked example（验证 4 维预判全中）
+  - **体现"数据深度 + 透过表象"两大核心价值**
+
+- **`frameworks/self-improvement-loop.md`**（自我迭代 4 层闭环）
+  - L1 决策留档（每次决策强制归档到 `docs/trading-journal/`）
+  - L2 事后验证（每张卡自带验证日程，到期触发复盘）
+  - L3 错判归因（5 类错判标签：D1 数据盲区/D2 分析深度/D3 预判废话/D4 纪律失控/D5 认知盲点）
+  - L4 Framework 升级（同类错判累积 ≥ 3 次强制触发升级）
+  - 命中率季度 KPI（T+3 > 60% / 盈亏比 > 2:1）
+  - 冷启动 3 个月纯投入，6 个月首次评估
+
+- **`integrations/local-data-stack.md`**（可选增强对接契约）
+  - 三层架构：skill / 接口 / 数据
+  - Tier 1 基础能力（WebSearch+WebFetch，80% 命题分析）
+  - Tier 2 增强能力（本地 PG + Python 量化栈，高阶 20%）
+  - 标准接口定义（fa-data CLI 或 psql）
+  - PG schema 建议 + 常用 SQL 片段
+  - Python CLI 骨架示例
+  - **明确核心：skill 战斗力在方法论，不依赖量化栈**
+
+### 修改
+
+- SKILL.md 顶部新增"能力两档"说明（Tier 1 基础 / Tier 2 增强）
+- SKILL.md 新增"自我迭代闭环"章节（指向 self-improvement-loop）
+- frameworks / templates 双索引更新
+
+### 核心洞察（本轮讨论沉淀）
+
+- **能力分档**：Claude Code 原生 WebFetch 已能做 80% 的深度命题分析，量化栈是加速器不是前置条件
+- **自我迭代**：skill 和人类分析师一样，没有"决策→验证→归因→升级"的闭环，永远不会变强
+- **财报深度 > 财报表层**：Alpha 在 10-Q 的 MD&A 小字 + 电话会 Q&A 回避 + 财务附注新披露
+
 ## 0.2.0 (2026-04-20)
 
 **核心定位升级**：从"决策导向 skill"进化为"**命题驱动 + 3 大核心价值**"的深度分析 skill。

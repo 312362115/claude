@@ -18,16 +18,22 @@
 | [ai-daily-checkup.md](./ai-daily-checkup.md) | ai-thematic-investing | 日度多源扫描 + 警报触发（可选） |
 | [ai-monthly-checkup.md](./ai-monthly-checkup.md) | ai-thematic-investing | 月度 8 层系统扫描（可选） |
 
+## 核心分析 templates（0.3.0 新增）
+
+| Template | 关联 Framework | 用途 |
+|----------|--------------|------|
+| [earnings-deep-dive.md](./earnings-deep-dive.md) | command-driven 套路 C + alpha-generation | **财报深度解读**（3 层拆解 + 4 维预判），体现"透过表象 + 读财报小字段"核心能力 |
+
 ## 占位扩展（TODO）
 
 | Template | 关联 Framework | 版本目标 |
 |----------|--------------|---------|
-| earnings-deep-dive.md | alpha-generation + command-driven 套路 C | 0.2.0 — 10-Q 深度解读（透过表象找里层信号） |
-| policy-impact-map.md | command-driven 套路 B | 0.2.0 — 政策影响地图 |
-| industry-chain-mapping.md | ai-thematic-investing | 0.2.0 — 产业链推演图（≥ 2 跳） |
-| ipo-watchlist.md | alpha-generation | 0.2.0 — 顶级 IPO 监控清单 |
-| stock-pitch.md | stock-selection（待落地） | 0.3.0 — 个股 Buy/Sell 提案 |
-| ipo-post-mortem.md | hk-ipo-arbitrage | 0.2.0 — 打新事后复盘 |
+| decision-postmortem.md | self-improvement-loop L3 | 0.4.0 — 错判归因模板（5 类错判分类） |
+| quarterly-performance.md | self-improvement-loop KPI | 0.4.0 — 季度命中率统计 |
+| policy-impact-map.md | command-driven 套路 B | 0.4.0 — 政策影响地图 |
+| industry-chain-mapping.md | ai-thematic-investing | 0.4.0 — 产业链推演图（≥ 2 跳） |
+| ipo-watchlist.md | alpha-generation | 0.4.0 — 顶级 IPO 监控清单 |
+| ipo-post-mortem.md | hk-ipo-arbitrage | 0.4.0 — 打新事后复盘 |
 
 ## 使用方式
 

@@ -8,13 +8,20 @@
 |-----------|------|
 | **[command-driven-analysis.md](./command-driven-analysis.md)** | **主入口**。定义 3 大核心价值（数据深度/分析深度/透过表象预判未来）+ 4 类命题（个股/政策/事件/主题）+ 执行检查单 |
 
-## 辅助 framework（0.1.0）
+## 辅助 framework（0.1.0-0.3.0）
 
 | Framework | 适用场景 | 被谁调用 |
 |-----------|---------|---------|
 | [hk-ipo-arbitrage.md](./hk-ipo-arbitrage.md) | 港股 IPO 首日套利 | 套路 A 涉及打新时 |
 | [alpha-generation.md](./alpha-generation.md) | 10x 股 + 顶级 IPO 早期捕捉（5 执行差） | 套路 A 长期持有 / 套路 D 主题 |
 | [ai-thematic-investing.md](./ai-thematic-investing.md) | AI 革命主题（8 层产业链 + 趋势启动识别） | 套路 D 主题 / 套路 A AI 标的 |
+| [self-improvement-loop.md](./self-improvement-loop.md) | skill 自我迭代 4 层闭环（决策留档/验证/归因/升级） | 每次分析后 / "复盘"触发词 |
+
+## Integrations
+
+| Integration | 定位 |
+|-------------|------|
+| [../integrations/local-data-stack.md](../integrations/local-data-stack.md) | 可选增强：对接本地 PG + Python 量化栈（Tier 2 能力） |
 
 ## 占位扩展（TODO，按需迭代）
 
