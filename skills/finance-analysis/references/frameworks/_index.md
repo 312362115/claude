@@ -1,14 +1,20 @@
 # Frameworks 路由表
 
-> SKILL.md 触发后，根据命题关键词路由到对应 framework。
+> SKILL.md 触发后，先进 **command-driven-analysis.md** 主流程识别命题类型，然后调用对应辅助 framework。
 
-## 已落地（0.1.0）
+## 主入口（必读）
 
-| Framework | 适用场景 | 关键词触发 |
-|-----------|---------|-----------|
-| [hk-ipo-arbitrage.md](./hk-ipo-arbitrage.md) | 港股 IPO 首日套利 | 打新、IPO、孖展、暗盘、港股新股 |
-| [alpha-generation.md](./alpha-generation.md) | 10x 股 + 顶级 IPO 早期捕捉 | 10 倍股、中长期机会、大牛股、Alpha |
-| [ai-thematic-investing.md](./ai-thematic-investing.md) | AI 革命主题投资 + 趋势启动识别 | AI 投资、英伟达、CPO、具身智能、空间智能、大模型投资 |
+| Framework | 定位 |
+|-----------|------|
+| **[command-driven-analysis.md](./command-driven-analysis.md)** | **主入口**。定义 3 大核心价值（数据深度/分析深度/透过表象预判未来）+ 4 类命题（个股/政策/事件/主题）+ 执行检查单 |
+
+## 辅助 framework（0.1.0）
+
+| Framework | 适用场景 | 被谁调用 |
+|-----------|---------|---------|
+| [hk-ipo-arbitrage.md](./hk-ipo-arbitrage.md) | 港股 IPO 首日套利 | 套路 A 涉及打新时 |
+| [alpha-generation.md](./alpha-generation.md) | 10x 股 + 顶级 IPO 早期捕捉（5 执行差） | 套路 A 长期持有 / 套路 D 主题 |
+| [ai-thematic-investing.md](./ai-thematic-investing.md) | AI 革命主题（8 层产业链 + 趋势启动识别） | 套路 D 主题 / 套路 A AI 标的 |
 
 ## 占位扩展（TODO，按需迭代）
 

@@ -1,21 +1,30 @@
 # Templates 索引
 
-> 可直接填的决策卡 / 监控表模板。每个 framework 至少对应 1 个 template。
+> 可直接填的决策卡 / 监控表模板。
 
-## 已落地（0.1.0）
+## 核心决策 templates（0.1.0）
 
 | Template | 关联 Framework | 用途 |
 |----------|--------------|------|
-| [ipo-decision-card.md](./ipo-decision-card.md) | hk-ipo-arbitrage | 打新决策卡（T-1 晚填，T0 执行） |
+| [ipo-decision-card.md](./ipo-decision-card.md) | hk-ipo-arbitrage | **打新决策卡**（T-1 晚填，T0 执行） |
+| [alpha-thesis-card.md](./alpha-thesis-card.md) | alpha-generation + command-driven-analysis | **个股投资论点卡**（7 问法 + bear case + 证伪条件） |
+
+## 辅助执行 templates（0.1.0，可选）
+
+> ⚠️ 这些是执行节奏辅助，skill 不主动触发。用户想用定时器自己配。
+
+| Template | 关联 Framework | 用途 |
+|----------|--------------|------|
+| [ai-daily-checkup.md](./ai-daily-checkup.md) | ai-thematic-investing | 日度多源扫描 + 警报触发（可选） |
+| [ai-monthly-checkup.md](./ai-monthly-checkup.md) | ai-thematic-investing | 月度 8 层系统扫描（可选） |
 
 ## 占位扩展（TODO）
 
 | Template | 关联 Framework | 版本目标 |
 |----------|--------------|---------|
-| alpha-thesis-card.md | alpha-generation | 0.2.0 — 10x 股投资论点卡 |
-| ai-monthly-checkup.md | ai-thematic-investing | 0.2.0 — AI 月度巡检可填版 |
-| earnings-deep-dive.md | alpha-generation | 0.2.0 — 10-Q 深度解读模板 |
-| industry-chain-mapping.md | ai-thematic-investing | 0.2.0 — 产业链推演图 |
+| earnings-deep-dive.md | alpha-generation + command-driven 套路 C | 0.2.0 — 10-Q 深度解读（透过表象找里层信号） |
+| policy-impact-map.md | command-driven 套路 B | 0.2.0 — 政策影响地图 |
+| industry-chain-mapping.md | ai-thematic-investing | 0.2.0 — 产业链推演图（≥ 2 跳） |
 | ipo-watchlist.md | alpha-generation | 0.2.0 — 顶级 IPO 监控清单 |
 | stock-pitch.md | stock-selection（待落地） | 0.3.0 — 个股 Buy/Sell 提案 |
 | ipo-post-mortem.md | hk-ipo-arbitrage | 0.2.0 — 打新事后复盘 |
