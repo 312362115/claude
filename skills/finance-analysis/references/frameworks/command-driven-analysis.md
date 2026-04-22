@@ -52,14 +52,27 @@
 源 1 失败 → 源 2 → 源 3 → 源 4 → ... → 穷尽 → 明确告诉用户"N 个源都试过，抓不到"
 ```
 
-**A 股股价多源备选**（任一 OK 即可）：
-1. 东财 quote.eastmoney.com/sz{code}.html
-2. 新浪 finance.sina.com.cn/realstock/company/sz{code}/nc.shtml
-3. 证券时报 stcn.com/quotes/index/sz{code}.html
-4. 雪球快照页 xueqiu.com/S/SZ{code}（仅查看不用讨论）
-5. 同花顺 stockpage.10jqka.com.cn/{code}
-6. Investing.com
-7. WebSearch "<ticker> 今日股价 YYYY-MM-DD"
+**A 股股价多源备选**（WebFetch 有效性实测，按优先级）：
+
+| 源 | WebFetch 可抓 | 备注 |
+|----|------------|------|
+| **cn.investing.com/equities/** | ✅ **最可靠** | 数据完整 + 含 PE/PB/RSI/52周等 |
+| investing.com（英文版） | ✅ | 同上 |
+| 同花顺 basic.10jqka.com.cn/{code}/ | ⚠️ 部分 | F10 页可抓基本面 |
+| 雪球 xueqiu.com/S/SZ{code} | 🔴 WAF 反爬 | blacklist |
+| 东财 quote.eastmoney.com | ❌ JS 渲染 | WebFetch 拿空 |
+| 新浪 realstock | ❌ JS 渲染 | WebFetch 拿空 |
+| 证券时报 stcn | ❌ JS 渲染 | WebFetch 拿空 |
+| WebSearch "<ticker> 今日股价" | ⚠️ 兜底 | 只能拿"截至发稿"，**不是收盘价** |
+
+**实战经验**（2026-04-22 东山精密压测）：
+- WebSearch 拿到 178.80（盘中"截至发稿"）→ 真实收盘 186.34
+- **Investing.com 一次 WebFetch 拿到精准收盘价 + PE/PB/RSI/目标价/52 周**
+- 优先 **Investing.com，不要从 WebSearch 摘"发稿"时点的数据当收盘价**
+
+**港股 / 美股**：
+- 美股：stockanalysis.com / finance.yahoo.com（WebFetch 可）/ cn.investing.com
+- 港股：aastocks.com / futunn.com / cn.investing.com
 
 **A 股财报多源备选**：
 1. 巨潮 static.cninfo.com.cn（若 PDF 抓不到）→
