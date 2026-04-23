@@ -77,14 +77,14 @@ plan: docs/plans/2026-04-23-finance-analysis-0.2.0-plan.md
 
 ## 剩余待做
 
-### 近期（0.2.0 节奏，约 2-4 周）— 2026-04-23 启动
-- [ ] `frameworks/valuation-relative.md`（相对估值 PE/PS/PB 对标）
-- [ ] `frameworks/valuation-dcf.md`（DCF 估值 + 情景分析 + 概率加权）
-- [ ] `frameworks/stock-selection.md`（alpha-generation 可执行简化版，4 步筛选器）
-- [ ] `frameworks/us-ipo-arbitrage.md`（美股 IPO，对照港股）
-- [ ] `templates/valuation-card.md`（估值卡，覆盖相对估值 + DCF 三情景）
-- [ ] `templates/stock-screening-card.md`（选股筛选卡）
-- [ ] `docs/tests/finance-analysis-0.2.0.md`（回归用例）
+### 近期（0.2.0 节奏）— 2026-04-23 完成 ✅
+- [x] `frameworks/valuation-relative.md`（相对估值 PE/PS/PB 对标）— 2026-04-23
+- [x] `frameworks/valuation-dcf.md`（DCF 估值 + 情景分析 + 概率加权）— 2026-04-23
+- [x] `frameworks/stock-selection.md`（alpha-generation 可执行简化版，4 步筛选器）— 2026-04-23
+- [x] `frameworks/us-ipo-arbitrage.md`（美股 IPO，对照港股）— 2026-04-23
+- [x] `templates/valuation-card.md`（估值卡，覆盖相对估值 + DCF 三情景）— 2026-04-23
+- [x] `templates/stock-screening-card.md`（选股筛选卡）— 2026-04-23
+- [x] `docs/tests/finance-analysis-0.2.0.md`（回归用例，7 条）— 2026-04-23
 - [x] `templates/alpha-thesis-card.md`（Alpha 论点卡）— 0.1.0 已落地
 - [x] `templates/ai-monthly-checkup.md`（月度巡检可填版）— 0.1.0 已落地
 - [x] `templates/earnings-deep-dive.md`（10-Q 深度解读）— 0.1.0 已落地

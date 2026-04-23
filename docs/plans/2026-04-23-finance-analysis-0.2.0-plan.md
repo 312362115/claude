@@ -23,7 +23,7 @@ M5 收尾（SKILL + VERSION + CHANGELOG + _index + 测试） 1 commit
 
 ### M1 — 相对估值 framework
 
-- [ ] 1. 写 `frameworks/valuation-relative.md`
+- [x] 1. 写 `frameworks/valuation-relative.md`
   - 做什么：相对估值 framework（9 要素完整）
   - 涉及：`skills/finance-analysis/references/frameworks/valuation-relative.md`（新建，500-600 行）
   - 核心内容：商业模型分类 → 对标池构建 → 三情景 × 合理 PE → 概率加权 → 主题溢价 → 隐含预期位置
@@ -34,7 +34,7 @@ M5 收尾（SKILL + VERSION + CHANGELOG + _index + 测试） 1 commit
     - [ ] 决策树末端是可执行动作（输出决策卡）
     - [ ] Worked Example 数据和 command-driven-analysis 里的东山精密段落一致（不矛盾）
 
-- [ ] 2. 写 `templates/valuation-card.md`
+- [x] 2. 写 `templates/valuation-card.md`
   - 做什么：估值决策卡，通用模板（覆盖相对估值 + DCF 三情景）
   - 涉及：`skills/finance-analysis/references/templates/valuation-card.md`（新建，~200 行）
   - 核心字段：三情景表格 / 概率权重 / 期望价 / 盈亏比 / 隐含预期位置 / 关键假设列表 / 敏感性（DCF 用）/ 买卖触发
@@ -43,14 +43,14 @@ M5 收尾（SKILL + VERSION + CHANGELOG + _index + 测试） 1 commit
     - [ ] 包含空白填写版（用户可复制使用）
     - [ ] 提供 1 个填充示例（东山精密）
 
-- [ ] 3. M1 commit
+- [x] 3. M1 commit
   - commit msg：`feat(finance-analysis): 0.2.0 M1 - valuation-relative framework + valuation-card`
 
 ---
 
 ### M2 — DCF 估值 framework
 
-- [ ] 4. 写 `frameworks/valuation-dcf.md`
+- [x] 4. 写 `frameworks/valuation-dcf.md`
   - 做什么：DCF 估值 framework（三情景 + 敏感性必选）
   - 涉及：`skills/finance-analysis/references/frameworks/valuation-dcf.md`（新建，500-600 行）
   - 核心内容：适用性判断 → 三情景收入假设 → 利润率演进 → FCF 公式 → WACC → 终值 → NPV 概率加权 → 敏感性 ±10%
@@ -62,19 +62,19 @@ M5 收尾（SKILL + VERSION + CHANGELOG + _index + 测试） 1 commit
     - [ ] 和 valuation-relative 的重叠内容用引用代替重复展开
     - [ ] 明确"什么情况应该用 DCF，什么情况不应该用"（适用性判断）
 
-- [ ] 5. 扩展 `valuation-card` 增加 DCF 专用字段（如 WACC / 终值倍数 / 敏感性表格）
+- [x] 5. 扩展 `valuation-card` 增加 DCF 专用字段（如 WACC / 终值倍数 / 敏感性表格）
   - 做什么：在 M1 的 valuation-card 基础上加 DCF 专属段
   - 涉及：`skills/finance-analysis/references/templates/valuation-card.md`（改）
   - 验收：DCF 填充示例（NVDA 或 TSLA）跑通，三情景 + 敏感性完整
 
-- [ ] 6. M2 commit
+- [x] 6. M2 commit
   - commit msg：`feat(finance-analysis): 0.2.0 M2 - valuation-dcf framework + valuation-card 扩展`
 
 ---
 
 ### M3 — 选股 framework
 
-- [ ] 7. 写 `frameworks/stock-selection.md`
+- [x] 7. 写 `frameworks/stock-selection.md`
   - 做什么：alpha-generation 可执行简化版，4 步筛选器 + 30/60/100 打分
   - 涉及：`skills/finance-analysis/references/frameworks/stock-selection.md`（新建，400-500 行）
   - 核心内容：赛道边界 → 候选集构建 → 4 步筛（赛道/龙头/质量/成长）→ 30/60/100 打分 → Top-N 输出
@@ -86,21 +86,21 @@ M5 收尾（SKILL + VERSION + CHANGELOG + _index + 测试） 1 commit
     - [ ] 明确和 alpha-generation 的边界（alpha 讲方法论，本 framework 讲可执行流程）
     - [ ] 产出"待研究清单"而非"买入清单"，保留深度研究环节
 
-- [ ] 8. 写 `templates/stock-screening-card.md`
+- [x] 8. 写 `templates/stock-screening-card.md`
   - 做什么：选股筛选卡（候选集 → 4 步筛结果 → 30/60/100 打分表 → Top-N）
   - 涉及：`skills/finance-analysis/references/templates/stock-screening-card.md`（新建，~200 行）
   - 验收：
     - [ ] 空白版 + CATL 填充示例各 1
     - [ ] 打分表四维度（赛道 25 / 龙头 25 / 质量 25 / 成长 25）
 
-- [ ] 9. M3 commit
+- [x] 9. M3 commit
   - commit msg：`feat(finance-analysis): 0.2.0 M3 - stock-selection framework + stock-screening-card`
 
 ---
 
 ### M4 — 美股 IPO framework
 
-- [ ] 10. 写 `frameworks/us-ipo-arbitrage.md`
+- [x] 10. 写 `frameworks/us-ipo-arbitrage.md`
   - 做什么：美股 IPO framework，对照港股写差异
   - 涉及：`skills/finance-analysis/references/frameworks/us-ipo-arbitrage.md`（新建，500-600 行）
   - 核心内容：S-1 核心数据 → 定价区间评估 → Lockup 抛压 → 首日机制 → 三路径对比（不参与等 Lockup / 首日追涨 / 长期持有）
@@ -112,14 +112,14 @@ M5 收尾（SKILL + VERSION + CHANGELOG + _index + 测试） 1 commit
     - [ ] EV 计算调整为"三路径期望值比较"，不是"打不打"
     - [ ] Worked Example 数据经核对准确
 
-- [ ] 11. M4 commit
+- [x] 11. M4 commit
   - commit msg：`feat(finance-analysis): 0.2.0 M4 - us-ipo-arbitrage framework`
 
 ---
 
 ### M5 — 收尾（SKILL + 版本 + 测试 + 索引）
 
-- [ ] 12. 更新 SKILL.md（版本 + 路线图 + 触发词 + 命题路由）
+- [x] 12. 更新 SKILL.md（版本 + 路线图 + 触发词 + 命题路由）
   - 涉及：`skills/finance-analysis/SKILL.md`
   - 做什么：
     - frontmatter `version: 0.2.0`
@@ -131,11 +131,11 @@ M5 收尾（SKILL + VERSION + CHANGELOG + _index + 测试） 1 commit
     - [ ] 路由表能指向新 framework
     - [ ] 触发词能捕获估值/选股/美股 IPO 命题
 
-- [ ] 13. 更新 VERSION / CHANGELOG
+- [x] 13. 更新 VERSION / CHANGELOG
   - 涉及：`skills/finance-analysis/VERSION`（改 0.1.0 → 0.2.0），`CHANGELOG.md`（新增 0.2.0 段落）
   - 验收：CHANGELOG 含 4 个新 framework + 2 个新 template + 回归测试说明
 
-- [ ] 14. 更新 frameworks/_index.md 和 templates/_index.md
+- [x] 14. 更新 frameworks/_index.md 和 templates/_index.md
   - 涉及：
     - `frameworks/_index.md`（占位扩展表移除 4 个已完成项 + 辅助 framework 表新增 4 行）
     - `templates/_index.md`（新增 2 个 template 入口）
@@ -143,12 +143,12 @@ M5 收尾（SKILL + VERSION + CHANGELOG + _index + 测试） 1 commit
     - [ ] 占位扩展表只保留 0.3.0+ 未做项
     - [ ] 辅助 framework 表按命题分类标注新 framework 适用场景
 
-- [ ] 15. 写回归测试
+- [x] 15. 写回归测试
   - 涉及：`docs/tests/finance-analysis-0.2.0.md`（新建）
   - 做什么：5+ 用例覆盖 4 个新 framework + 1 个跨 framework 组合
   - 验收：每个用例有前置条件 / 输入命题 / 预期加载 framework / 预期输出字段
 
-- [ ] 16. M5 commit
+- [x] 16. M5 commit
   - commit msg：`feat(finance-analysis): 0.2.0 - SKILL + 版本 + 索引 + 回归测试`
 
 ---
