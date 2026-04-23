@@ -18,7 +18,8 @@ description: >
   宏观配置、哪些行业值得投、板块轮动、加息降息预期、Fed 转向、十五五、五年规划、政策解读、
   自上而下、自下而上、降息受益、加息受损、衰退配置、繁荣期板块、滞胀、
   基金分析、选基金、ETF 选哪只、SMH、QQQ、沪深 300 ETF、主动基金、被动基金、
-  夏普比率、最大回撤、α/β、基金经理、晨星评级、持仓分析、冠军魔咒、定投。
+  夏普比率、最大回撤、α/β、基金经理、晨星评级、持仓分析、冠军魔咒、定投、
+  复盘、回看、verify、业绩验证、错判归因、命中率、季度报告、framework 升级、月度汇总。
   即使用户没有明确说"投资"或"金融"，只要意图是
   "在金融资产上做买卖持有决策"，都应触发此技能。
 ---
@@ -80,7 +81,7 @@ description: >
 
 主流程：**`references/frameworks/command-driven-analysis.md`**（必读）
 
-### 4 类命题 + 路由
+### 5 类命题 + 路由
 
 | 命题类型 | 触发词 | 主流程 | 输出 |
 |---------|-------|-------|------|
@@ -88,6 +89,25 @@ description: >
 | **B. 政策/监管事件** | "XX 政策 / 监管 / 制裁 / 会议 对哪些股利好" | 套路 B | 受益/受损标的表 |
 | **C. 公司事件驱动** | "财报 / 业绩 / 并购 / 发布 / 新产品" | 套路 C | 事件解读 + 传导 + 跟投清单 |
 | **D. 主题/赛道命题** | "AI 电力 / 机器人 / CPO / 某赛道 / 建仓晚不晚" | 套路 D | 主题定位 + Layer 地图 + 标的排序 |
+| **E. 自我迭代闭环** | "复盘 / 回看 / verify / 错判归因 / 命中率 / framework 升级" | 套路 E（不走命题分析）| 复盘 / 归因 / 季度报告 |
+
+**套路 E 路由（复盘类命题，0.3.0 新增）**：
+
+| 触发词 | skill 动作 | 产出 / 更新位置 |
+|-------|----------|---------------|
+| "复盘持仓" / "复盘到期决策" | 扫 `docs/finance-journal/`，找"待验证队列"到期项，批量生成验证报告 | `docs/finance-journal/*-verify-T+N.md` + INDEX 更新 |
+| "复盘 <ticker>" | 单股复盘：加载该标的原决策卡 + 最新数据 + 生成验证 | `docs/finance-journal/*-verify-T+N.md` |
+| "错判归因" | 对已验证为"错"的决策生成归因 | `docs/finance-journal/postmortem/*-D<类型>.md` 用 `templates/decision-postmortem.md` A |
+| "成功归因" | 对已验证为"成功"的决策生成复盘 | `docs/finance-journal/postmortem/*-success.md` 用模板 B |
+| "命中率统计" / "季度报告" | 扫全量决策卡 + postmortem，计算 KPI | `docs/finance-journal/quarterly/YYYY-QN.md` 用 `templates/quarterly-performance.md` |
+| "framework 升级审查 D_" | 列出指定错判类型的 3+ 案例，引导升级 | 修改对应 framework + 填迭代日志 |
+| "月度汇总" | 统计本月决策 + 错判分布 | `docs/finance-journal/monthly/YYYY-MM.md` |
+
+**核心区别**：套路 E 和套路 A-D 是**两种不同模式**。
+- A-D：**命题驱动分析**（输入命题 → 输出决策卡）
+- E：**自我迭代闭环**（输入历史决策 → 输出验证 / 归因 / KPI）
+
+详见 `frameworks/self-improvement-loop.md` 4 层机制。
 
 ### 辅助 framework（按命题类型调用）
 

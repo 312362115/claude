@@ -20,18 +20,25 @@
 | [ai-daily-checkup.md](./ai-daily-checkup.md) | ai-thematic-investing | 日度多源扫描 + 警报触发（可选） |
 | [ai-monthly-checkup.md](./ai-monthly-checkup.md) | ai-thematic-investing | 月度 8 层系统扫描（可选） |
 
-## 核心分析 templates（0.3.0 新增）
+## 核心分析 templates
 
-| Template | 关联 Framework | 用途 |
-|----------|--------------|------|
-| [earnings-deep-dive.md](./earnings-deep-dive.md) | command-driven 套路 C + alpha-generation | **财报深度解读**（3 层拆解 + 4 维预判），体现"透过表象 + 读财报小字段"核心能力 |
+| Template | 关联 Framework | 用途 | 版本 |
+|----------|--------------|------|------|
+| [earnings-deep-dive.md](./earnings-deep-dive.md) | command-driven 套路 C + alpha-generation | **财报深度解读**（3 层拆解 + 4 维预判），体现"透过表象 + 读财报小字段"核心能力 | 0.1.0 |
+
+## 自我迭代闭环 templates（0.3.0 新增）
+
+> 对应 `frameworks/self-improvement-loop.md`。没有这两个模板，闭环是空转的。
+
+| Template | 关联 Framework | 用途 | 版本 |
+|----------|--------------|------|------|
+| [decision-postmortem.md](./decision-postmortem.md) | self-improvement-loop §L3 | **决策复盘卡**（错判归因 A + 成功复盘 B 双用 / 5 类错判互斥判断 / 5 Why 根因 / 强制 framework 修改项） | 0.3.0 |
+| [quarterly-performance.md](./quarterly-performance.md) | self-improvement-loop §L4 | **季度 / 年度业绩报告**（命中率 / 盈亏比 / Top 3 赢单 / Top 3 输单 / 错判分布 / 改进重点） | 0.3.0 |
 
 ## 占位扩展（TODO）
 
 | Template | 关联 Framework | 版本目标 |
 |----------|--------------|---------|
-| decision-postmortem.md | self-improvement-loop L3 | 0.4.0 — 错判归因模板（5 类错判分类） |
-| quarterly-performance.md | self-improvement-loop KPI | 0.4.0 — 季度命中率统计 |
 | policy-impact-map.md | command-driven 套路 B | 0.4.0 — 政策影响地图 |
 | industry-chain-mapping.md | ai-thematic-investing | 0.4.0 — 产业链推演图（≥ 2 跳） |
 | ipo-watchlist.md | alpha-generation | 0.4.0 — 顶级 IPO 监控清单 |
@@ -40,9 +47,11 @@
 ## 使用方式
 
 1. 调用 skill 时，Lead 根据命题加载对应 framework + template
-2. 填写 template 到 `docs/research/YYYY-MM-DD-<subject>-<type>.md`
+2. 填写 template 到 `docs/finance-journal/YYYY-MM-DD-<subject>-<type>.md`
 3. 执行决策
-4. 事后补复盘段，归档到 `docs/decisions/`
+4. 到期触发验证 → `YYYY-MM-DD-<ticker>-verify-T+N.md`
+5. 错判 / 成功 → `docs/finance-journal/postmortem/`
+6. 季度 / 年度汇总 → `docs/finance-journal/quarterly/`
 
 ## 输出格式铁律
 
