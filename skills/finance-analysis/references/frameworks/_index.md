@@ -28,6 +28,7 @@
 | [valuation-dcf.md](./valuation-dcf.md) | DCF 估值（三情景 + 敏感性 + 交叉验证） | 套路 A 成长股 / 独家商业模型 | 0.2.0 |
 | [stock-selection.md](./stock-selection.md) | **自下而上**：选股筛选（4 步筛 + 30/60/100 打分 + Top-N 清单） | 套路 D 主题 → Top-N 清单 | 0.2.0 |
 | [top-down-selection.md](./top-down-selection.md) | **自上而下**：宏观→行业→板块→赛道池（Fed 预期 + 周期阶段 + 五年规划） | 宏观命题 / 板块配置 / 行业轮动 | 0.3.0 |
+| [fund-analysis.md](./fund-analysis.md) | **基金 / ETF 分析**：管理人 + α/β + 夏普 / 回撤 + 持仓归因 + 费率流动性 | 选基金 / ETF 对比 / 组合配置 | 0.3.0 |
 
 ## Integrations
 
@@ -37,11 +38,10 @@
 
 ## 占位扩展（TODO，按需迭代）
 
-### 选基 / 债券类
+### 债券类
 | Framework | 场景 | 版本目标 |
 |-----------|------|---------|
-| fund-analysis.md | 基金分析（夏普 / 回撤 / 持仓归因） | 0.3.0 |
-| bond-analysis.md | 债券（久期 / 信用 / 利差） | 0.3.0 |
+| bond-analysis.md | 债券（久期 / 信用 / 利差） | 0.3.0（剩余） |
 
 ### 事件 / 技术面
 | Framework | 场景 | 版本目标 |
@@ -93,7 +93,7 @@ Lead agent 接到命题时：
 
 - **0.1.0**：command-driven-analysis（主入口，承接所有认知基础）+ hk-ipo-arbitrage / alpha-generation / ai-thematic-investing / self-improvement-loop
 - **0.2.0**：valuation-relative / valuation-dcf / stock-selection / us-ipo-arbitrage（估值 + 选股 + 美股 IPO 补全）
-- **0.3.0**（进行中）：top-down-selection（自上而下选股，补齐宏观→行业→板块→赛道池路径）
+- **0.3.0**（进行中）：top-down-selection（自上而下选股，补齐宏观→行业→板块→赛道池路径）+ fund-analysis（基金 / ETF 分析）
 
 **不做**：
 - 日内技术分析（和决策导向定位不符）
