@@ -26,7 +26,8 @@
 |-----------|---------|---------|------|
 | [valuation-relative.md](./valuation-relative.md) | 相对估值（三情景 + 概率加权 + 主题溢价 + 隐含预期位置） | 套路 A 估值命题（PE/PS/PB 对标） | 0.2.0 |
 | [valuation-dcf.md](./valuation-dcf.md) | DCF 估值（三情景 + 敏感性 + 交叉验证） | 套路 A 成长股 / 独家商业模型 | 0.2.0 |
-| [stock-selection.md](./stock-selection.md) | 选股筛选（4 步筛 + 30/60/100 打分 + Top-N 清单） | 套路 D 主题 → Top-N 清单 | 0.2.0 |
+| [stock-selection.md](./stock-selection.md) | **自下而上**：选股筛选（4 步筛 + 30/60/100 打分 + Top-N 清单） | 套路 D 主题 → Top-N 清单 | 0.2.0 |
+| [top-down-selection.md](./top-down-selection.md) | **自上而下**：宏观→行业→板块→赛道池（Fed 预期 + 周期阶段 + 五年规划） | 宏观命题 / 板块配置 / 行业轮动 | 0.3.0 |
 
 ## Integrations
 
@@ -66,6 +67,10 @@ Lead agent 接到命题时：
    - "成长股估值"（如 NVDA）→ `valuation-dcf` + `valuation-relative`（交叉验证）
    - "MiniMax / Zhipu IPO 分析" → `hk-ipo-arbitrage` + `alpha-generation` + `ai-thematic-investing`
    - "从 XX 赛道筛 N 只" → `stock-selection` → 每只 `valuation-relative` / `valuation-dcf`
+   - **"哪些行业值得投 / 宏观配置"** → `top-down-selection`（主）→ 推荐赛道池 → `stock-selection`
+   - **"降息预期下怎么配板块"** → `top-down-selection`（§4.1.2 加息降息预期）
+   - **"十五五规划利好哪些赛道"** → `top-down-selection`（§4.5.1 中长期结构性政策）
+   - **"主题 + 宏观叠加判断"** → `top-down-selection` + `ai-thematic-investing`（基础锚 + 主题超配）
 3. **未匹配**（框架缺失）→ fallback 到 `alpha-generation.md` 的通用方法论
 
 ## Framework 写作规范（新增 framework 时遵循）
@@ -88,6 +93,7 @@ Lead agent 接到命题时：
 
 - **0.1.0**：command-driven-analysis（主入口，承接所有认知基础）+ hk-ipo-arbitrage / alpha-generation / ai-thematic-investing / self-improvement-loop
 - **0.2.0**：valuation-relative / valuation-dcf / stock-selection / us-ipo-arbitrage（估值 + 选股 + 美股 IPO 补全）
+- **0.3.0**（进行中）：top-down-selection（自上而下选股，补齐宏观→行业→板块→赛道池路径）
 
 **不做**：
 - 日内技术分析（和决策导向定位不符）
