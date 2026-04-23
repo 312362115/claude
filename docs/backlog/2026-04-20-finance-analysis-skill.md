@@ -1,8 +1,10 @@
 ---
 priority: P1
-status: in-progress
+status: done
 spec: docs/specs/2026-04-23-finance-analysis-0.2.0-frameworks.md
 plan: docs/plans/2026-04-23-finance-analysis-0.2.0-plan.md
+retro: docs/decisions/2026-04-23-finance-analysis-0.3.0-retro.md
+closed_at: 2026-04-23
 ---
 
 # finance-analysis skill（金融分析技能）

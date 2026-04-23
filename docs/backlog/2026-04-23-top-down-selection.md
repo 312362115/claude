@@ -1,8 +1,10 @@
 ---
 priority: P1
-status: in-progress
+status: done
 spec: （简版，直接在本 backlog 内联）
 plan: （简版，M1 一次交付）
+retro: docs/decisions/2026-04-23-finance-analysis-0.3.0-retro.md
+closed_at: 2026-04-23
 ---
 
 # top-down-selection framework（自上而下选股）
