@@ -8,14 +8,25 @@
 |-----------|------|
 | **[command-driven-analysis.md](./command-driven-analysis.md)** | **主入口**。定义 3 大核心价值（数据深度/分析深度/透过表象预判未来）+ 4 类命题（个股/政策/事件/主题）+ 执行检查单 |
 
-## 辅助 framework（0.1.0-0.3.0）
+## 辅助 framework（0.1.0-0.2.0）
 
-| Framework | 适用场景 | 被谁调用 |
-|-----------|---------|---------|
-| [hk-ipo-arbitrage.md](./hk-ipo-arbitrage.md) | 港股 IPO 首日套利 | 套路 A 涉及打新时 |
-| [alpha-generation.md](./alpha-generation.md) | 10x 股 + 顶级 IPO 早期捕捉（5 执行差） | 套路 A 长期持有 / 套路 D 主题 |
-| [ai-thematic-investing.md](./ai-thematic-investing.md) | AI 革命主题（8 层产业链 + 趋势启动识别） | 套路 D 主题 / 套路 A AI 标的 |
-| [self-improvement-loop.md](./self-improvement-loop.md) | skill 自我迭代 4 层闭环（决策留档/验证/归因/升级） | 每次分析后 / "复盘"触发词 |
+### 核心分析 / 决策
+
+| Framework | 适用场景 | 被谁调用 | 版本 |
+|-----------|---------|---------|------|
+| [hk-ipo-arbitrage.md](./hk-ipo-arbitrage.md) | 港股 IPO 首日套利 | 套路 A 涉及打新时 | 0.1.0 |
+| [us-ipo-arbitrage.md](./us-ipo-arbitrage.md) | 美股 IPO（三路径 EV 比较 / Lockup 抛压） | 套路 A + 套路 C 美股 IPO 命题 | 0.2.0 |
+| [alpha-generation.md](./alpha-generation.md) | 10x 股 + 顶级 IPO 早期捕捉（5 执行差） | 套路 A 长期持有 / 套路 D 主题 | 0.1.0 |
+| [ai-thematic-investing.md](./ai-thematic-investing.md) | AI 革命主题（8 层产业链 + 趋势启动识别） | 套路 D 主题 / 套路 A AI 标的 | 0.1.0 |
+| [self-improvement-loop.md](./self-improvement-loop.md) | skill 自我迭代 4 层闭环（决策留档/验证/归因/升级） | 每次分析后 / "复盘"触发词 | 0.1.0 |
+
+### 估值 / 选股
+
+| Framework | 适用场景 | 被谁调用 | 版本 |
+|-----------|---------|---------|------|
+| [valuation-relative.md](./valuation-relative.md) | 相对估值（三情景 + 概率加权 + 主题溢价 + 隐含预期位置） | 套路 A 估值命题（PE/PS/PB 对标） | 0.2.0 |
+| [valuation-dcf.md](./valuation-dcf.md) | DCF 估值（三情景 + 敏感性 + 交叉验证） | 套路 A 成长股 / 独家商业模型 | 0.2.0 |
+| [stock-selection.md](./stock-selection.md) | 选股筛选（4 步筛 + 30/60/100 打分 + Top-N 清单） | 套路 D 主题 → Top-N 清单 | 0.2.0 |
 
 ## Integrations
 
@@ -25,17 +36,11 @@
 
 ## 占位扩展（TODO，按需迭代）
 
-### 估值类
+### 选基 / 债券类
 | Framework | 场景 | 版本目标 |
 |-----------|------|---------|
-| valuation-relative.md | 相对估值（PE/PS/PB 对标同业） | 0.2.0 |
-| valuation-dcf.md | DCF 估值（成长股 / 现金流折现） | 0.2.0 |
-
-### 选股 / 选基类
-| Framework | 场景 | 版本目标 |
-|-----------|------|---------|
-| stock-selection.md | 选股（赛道 + 龙头 + 质量 + 成长） | 0.2.0 |
 | fund-analysis.md | 基金分析（夏普 / 回撤 / 持仓归因） | 0.3.0 |
+| bond-analysis.md | 债券（久期 / 信用 / 利差） | 0.3.0 |
 
 ### 事件 / 技术面
 | Framework | 场景 | 版本目标 |
@@ -43,16 +48,10 @@
 | event-driven.md | 财报 / 政策 / 并购事件交易 | 0.4.0 |
 | technical.md | 技术面（支撑压力 / 趋势 / 量价） | 0.4.0 |
 
-### 债券 / 宏观
+### 宏观 / 加密
 | Framework | 场景 | 版本目标 |
 |-----------|------|---------|
-| bond-analysis.md | 债券（久期 / 信用 / 利差） | 0.3.0 |
 | macro-overlay.md | 宏观择时（利率 / 汇率 / 大宗） | 0.4.0 |
-
-### 美股 / 加密
-| Framework | 场景 | 版本目标 |
-|-----------|------|---------|
-| us-ipo-arbitrage.md | 美股 IPO 规则（不同于港股） | 0.2.0 |
 | crypto-thematic.md | 加密货币主题投资 | 0.5.0 |
 
 ## 路由规则
@@ -62,8 +61,11 @@ Lead agent 接到命题时：
 1. **匹配关键词** → 加载对应 framework
 2. **跨 framework 组合**（一个命题可能触发多个）：
    - "港股打新 + 中长期持有" → `hk-ipo-arbitrage` + `alpha-generation`
-   - "AI 选股 + 估值分析" → `ai-thematic-investing` + `valuation-relative`
+   - "AI 选股 + 估值分析" → `stock-selection` + `valuation-relative` + `ai-thematic-investing`
+   - "美股 IPO 分析"（如 DoorDash / Coinbase）→ `us-ipo-arbitrage` + `valuation-dcf`
+   - "成长股估值"（如 NVDA）→ `valuation-dcf` + `valuation-relative`（交叉验证）
    - "MiniMax / Zhipu IPO 分析" → `hk-ipo-arbitrage` + `alpha-generation` + `ai-thematic-investing`
+   - "从 XX 赛道筛 N 只" → `stock-selection` → 每只 `valuation-relative` / `valuation-dcf`
 3. **未匹配**（框架缺失）→ fallback 到 `alpha-generation.md` 的通用方法论
 
 ## Framework 写作规范（新增 framework 时遵循）
@@ -80,14 +82,14 @@ Lead agent 接到命题时：
 8. **相关 template**：决策卡 / 监控表指向 `templates/`
 9. **诚实 disclaimer**：方法论不等于预测
 
-**长度**：一个 framework 应 800-1500 行（过短不深入，过长读者退出）。
+**长度**：一个 framework 一般 400-600 行（过短不深入，过长读者退出）。0.1.0 / 0.2.0 实测均在此区间。
 
-## 优先级说明
+## 已落地版本
 
-**0.2.0 最优先落地**：
-- `valuation-relative.md`（所有选股必备）
-- `stock-selection.md`（alpha-generation 的可执行简化版）
+- **0.1.0**：command-driven-analysis（主入口，承接所有认知基础）+ hk-ipo-arbitrage / alpha-generation / ai-thematic-investing / self-improvement-loop
+- **0.2.0**：valuation-relative / valuation-dcf / stock-selection / us-ipo-arbitrage（估值 + 选股 + 美股 IPO 补全）
 
 **不做**：
 - 日内技术分析（和决策导向定位不符）
 - 期权策略（本 skill 专注股票/债券/基金/IPO）
+- SPAC DeSPAC（规则完全不同，退 event-driven 0.4.0）

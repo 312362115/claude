@@ -1,20 +1,20 @@
 ---
 name: finance-analysis
-version: 0.1.0
-last_updated: 2026-04-20
+version: 0.2.0
+last_updated: 2026-04-23
 repository: https://github.com/312362115/claude
 changelog: skills/finance-analysis/CHANGELOG.md
 description: >
   金融分析技能：股票 / 基金 / 债券 / IPO 打新 等投资决策场景的结构化分析。
   核心定位：决策导向（买/卖/持 + 目标价 + 止损），区别于 deep-research 的研究导向。
-  核心方法论：决策树 + EV 计算 + 概率纪律，不是假设-验证-交叉。
-  首版覆盖：HK IPO 打新套利（群核案例沉淀）；估值/选股/基金/债券/技术面/事件驱动
-  作为 framework 占位扩展。
+  核心方法论：决策树 + EV 计算 + 概率纪律 + 预期驱动的情景分析（不是静态 PE 对标）。
+  0.1.0 覆盖：HK IPO 打新 + Alpha Generation + AI 主题投资。
+  0.2.0 新增：相对估值 / DCF 估值 / 选股筛选（4 步 + 30/60/100 打分）/ 美股 IPO（三路径 EV）。
   信源复用：引用 deep-research 的 finance.yaml + blacklist.yaml。
   触发词：打新、IPO 分析、选股、选基金、买入、卖出、止损、
-  估值分析、DCF、PE/PS 对比、这股票怎么样、这基金值得买吗、
-  财报解读、仓位建议、港股打新、美股 IPO、孖展杠杆、
-  首日套利、暗盘。
+  估值分析、相对估值、DCF、PE/PS 对比、合理估值、合理价、这股票怎么样、这基金值得买吗、
+  财报解读、仓位建议、港股打新、美股 IPO、DoorDash、Coinbase、孖展杠杆、
+  首日套利、暗盘、Lockup、筛选、选股清单、Top-N、赛道龙头、情景分析。
   即使用户没有明确说"投资"或"金融"，只要意图是
   "在金融资产上做买卖持有决策"，都应触发此技能。
 ---
@@ -87,20 +87,30 @@ description: >
 
 ### 辅助 framework（按命题类型调用）
 
-| Framework | 使用时机 |
-|-----------|---------|
-| `frameworks/hk-ipo-arbitrage.md` | 港股打新套利决策 |
-| `frameworks/alpha-generation.md` | 10x 股 + 顶级 IPO 长期持有 |
-| `frameworks/ai-thematic-investing.md` | AI 主题投资（8 层产业链） |
+**核心分析 / 决策**：
+
+| Framework | 使用时机 | 版本 |
+|-----------|---------|------|
+| `frameworks/hk-ipo-arbitrage.md` | 港股打新套利决策 | 0.1.0 |
+| `frameworks/us-ipo-arbitrage.md` | 美股 IPO（三路径 EV + Lockup 抛压） | 0.2.0 |
+| `frameworks/alpha-generation.md` | 10x 股 + 顶级 IPO 长期持有 | 0.1.0 |
+| `frameworks/ai-thematic-investing.md` | AI 主题投资（8 层产业链） | 0.1.0 |
+
+**估值 / 选股**（0.2.0 新增）：
+
+| Framework | 使用时机 | 版本 |
+|-----------|---------|------|
+| `frameworks/valuation-relative.md` | 相对估值（PE/PS/PB 对标 + 三情景 + 概率加权） | 0.2.0 |
+| `frameworks/valuation-dcf.md` | DCF 估值（成长股 / 独家商业模型 / 主题失真期） | 0.2.0 |
+| `frameworks/stock-selection.md` | 赛道池 → Top-N 待研究清单（4 步筛 + 30/60/100） | 0.2.0 |
 
 ### 计划扩展（按需）
 
 | Framework | 场景 | 版本 |
 |-----------|------|------|
-| valuation-relative / valuation-dcf | 估值方法 | 0.2.0 |
-| stock-selection | 选股简化版 | 0.2.0 |
 | fund-analysis / bond-analysis | 基金 / 债券 | 0.3.0 |
 | technical / event-driven | 技术面 / 事件 | 0.4.0 |
+| macro-overlay / crypto-thematic | 宏观择时 / 加密 | 0.4.0-0.5.0 |
 
 详见 `references/frameworks/_index.md`。
 
@@ -261,9 +271,9 @@ skill 触发后：
 
 | 版本 | 内容 | 状态 |
 |------|------|------|
-| 0.1.0 | HK IPO 打新 framework + 群核案例 + 决策卡 template | ✅ 本版 |
-| 0.2.0 | 股票估值（相对估值 + DCF）+ 选股 framework | 待做 |
-| 0.3.0 | 基金分析（夏普 / 最大回撤 / 持仓归因） | 待做 |
-| 0.4.0 | 债券分析（久期 / 信用 / 利差） | 待做 |
-| 0.5.0 | 技术面 + 事件驱动 | 待做 |
-| 1.0.0 | 所有核心 framework 稳定 + 回归测试集 | 里程碑 |
+| 0.1.0 | HK IPO 打新 + Alpha Generation + AI 主题 + self-improvement + 命题驱动主入口 | ✅ |
+| 0.2.0 | 相对估值 / DCF / 选股（4 步筛 + 30/60/100） / 美股 IPO（三路径 EV）+ valuation-card / stock-screening-card | ✅ **本版** |
+| 0.3.0 | 基金分析（夏普 / 最大回撤 / 持仓归因）+ 债券分析（久期 / 信用 / 利差） | 待做 |
+| 0.4.0 | 技术面 + 事件驱动 + 宏观择时 | 待做 |
+| 0.5.0 | 加密货币主题投资 | 待做 |
+| 1.0.0 | 所有核心 framework 稳定 + 回归测试集 + 实战命中率 ≥ 60% | 里程碑 |

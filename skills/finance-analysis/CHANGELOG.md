@@ -1,5 +1,54 @@
 # Changelog — finance-analysis
 
+## 0.2.0（2026-04-23）
+
+**估值 + 选股 + 美股 IPO 补全**。从单股决策扩展到"从赛道到 Top-N，从现价到三情景，从 HK IPO 到 US IPO"的完整决策链。
+
+### Frameworks（新增 4）
+
+- `valuation-relative.md`（364 行）：相对估值，三段式（对标池 → 三情景 × 合理 PE × 概率加权 → 主题溢价 → 隐含预期位置）。承接"股市是预期驱动"认知，Worked Example：东山精密。
+- `valuation-dcf.md`（449 行）：DCF 估值，只讲三情景 + 敏感性必选。Gordon & 出口倍数交叉验证。Worked Example：NVDA 2023 成长期。
+- `stock-selection.md`（416 行）：alpha-generation 的可执行简化版。4 步筛选器（赛道/龙头/质量/成长）+ 30/60/100 打分 + Top-N 待研究清单。Worked Example：A 股动力电池（CATL 92 / 比亚迪 87 / 亿纬 79）。
+- `us-ipo-arbitrage.md`（479 行）：美股 IPO，对照港股差异，核心命题从"打不打"转为"三路径 EV 比较"（不参与等 Lockup / 首日追涨 / 长期持有）。Worked Example：DoorDash 2020-12。
+
+### Templates（新增 2）
+
+- `valuation-card.md`（479 行）：通用估值决策卡，同时支持 valuation-relative 和 valuation-dcf。含东山精密 + NVDA 填充示例（双方法论覆盖）。
+- `stock-screening-card.md`（311 行）：选股筛选卡，记录 4 步筛过程 + 30/60/100 打分 + Top-N 清单（Core/Satellite 标注）。CATL 填充示例。
+
+### SKILL.md
+
+- frontmatter 版本 0.1.0 → 0.2.0，last_updated 2026-04-23
+- 触发词扩充：相对估值 / DCF / 合理估值 / DoorDash / Coinbase / Lockup / 筛选 / Top-N / 赛道龙头 / 情景分析
+- 辅助 framework 表补齐 4 个新 framework + 版本标注
+- 路线图表 0.2.0 标 ✅ 本版
+
+### frameworks/_index.md
+
+- 辅助 framework 表分组（核心分析/估值选股）+ 版本标注
+- 占位扩展表移除 0.2.0 已完成项（valuation-relative / valuation-dcf / stock-selection / us-ipo-arbitrage）
+- 路由规则补充新命题映射（"美股 IPO" / "成长股估值" / "从赛道筛 N 只"）
+- 长度校准：从"800-1500 行"改为"400-600 行（实测）"
+
+### 回归测试（新增）
+
+- `docs/tests/finance-analysis-0.2.0.md`：5+ 用例覆盖 4 个新 framework + 跨 framework 组合
+
+### 架构决策
+
+- **长度校准**：_index.md 原规范"800-1500 行/framework"实测从未达到。0.2.0 统一到 400-600 行（与 0.1.0 现状一致），避免注水
+- **us-ipo 提前**：原计划 0.5.0（加密 + 美股 IPO），本轮提前到 0.2.0（补齐估值/选股姐妹篇）
+- **stock-selection 定位**：不重复 alpha-generation 的方法论，只做"可执行简化版"（4 步筛选器 + Top-N 清单）
+- **valuation-card 双用**：一张 template 同时支持相对估值和 DCF，通过 §6 DCF 专用字段切换
+
+### 关联
+
+- 关联 backlog：`docs/backlog/2026-04-20-finance-analysis-skill.md`
+- 关联 spec：`docs/specs/2026-04-23-finance-analysis-0.2.0-frameworks.md`
+- 关联 plan：`docs/plans/2026-04-23-finance-analysis-0.2.0-plan.md`
+
+---
+
 ## 0.1.0（开发中，待 merge 后确定版本号）
 
 从群核科技（0068.HK）首日套利案例 + AI 主题投资 + 数据深度 + 自我迭代 系列讨论中沉淀的决策导向金融分析 skill。
