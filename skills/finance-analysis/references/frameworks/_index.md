@@ -29,6 +29,7 @@
 | [stock-selection.md](./stock-selection.md) | **自下而上**：选股筛选（4 步筛 + 30/60/100 打分 + Top-N 清单） | 套路 D 主题 → Top-N 清单 | 0.2.0 |
 | [top-down-selection.md](./top-down-selection.md) | **自上而下**：宏观→行业→板块→赛道池（Fed 预期 + 周期阶段 + 五年规划） | 宏观命题 / 板块配置 / 行业轮动 | 0.3.0 |
 | [fund-analysis.md](./fund-analysis.md) | **基金 / ETF 分析**：管理人 + α/β + 夏普 / 回撤 + 持仓归因 + 费率流动性 | 选基金 / ETF 对比 / 组合配置 | 0.3.0 |
+| [bond-analysis.md](./bond-analysis.md) | **债券分析**：久期 + 信用 + 利差三维 + 可转债（股性/债底/溢价）+ TLT 等债券 ETF | 债券配置 / 债基选择 / 固收决策 | 0.3.0 |
 
 ## Integrations
 
@@ -37,11 +38,6 @@
 | [../integrations/local-data-stack.md](../integrations/local-data-stack.md) | 可选增强：对接本地 PG + Python 量化栈（Tier 2 能力） |
 
 ## 占位扩展（TODO，按需迭代）
-
-### 债券类
-| Framework | 场景 | 版本目标 |
-|-----------|------|---------|
-| bond-analysis.md | 债券（久期 / 信用 / 利差） | 0.3.0（剩余） |
 
 ### 事件 / 技术面
 | Framework | 场景 | 版本目标 |
@@ -71,6 +67,10 @@ Lead agent 接到命题时：
    - **"降息预期下怎么配板块"** → `top-down-selection`（§4.1.2 加息降息预期）
    - **"十五五规划利好哪些赛道"** → `top-down-selection`（§4.5.1 中长期结构性政策）
    - **"主题 + 宏观叠加判断"** → `top-down-selection` + `ai-thematic-investing`（基础锚 + 主题超配）
+   - **"基金 / ETF 选哪只"** → `fund-analysis`（主）+ `top-down-selection`（赛道锚）
+   - **"TLT / 国债 / 债券能买吗"** → `bond-analysis` + `top-down-selection`（利率预期）
+   - **"可转债分析"** → `bond-analysis` §7 + `valuation-relative`（正股估值）
+   - **"复盘 / 命中率 / 归因"** → 套路 E（不走命题分析，见 SKILL.md）
 3. **未匹配**（框架缺失）→ fallback 到 `alpha-generation.md` 的通用方法论
 
 ## Framework 写作规范（新增 framework 时遵循）
@@ -93,7 +93,7 @@ Lead agent 接到命题时：
 
 - **0.1.0**：command-driven-analysis（主入口，承接所有认知基础）+ hk-ipo-arbitrage / alpha-generation / ai-thematic-investing / self-improvement-loop
 - **0.2.0**：valuation-relative / valuation-dcf / stock-selection / us-ipo-arbitrage（估值 + 选股 + 美股 IPO 补全）
-- **0.3.0**（进行中）：top-down-selection（自上而下选股，补齐宏观→行业→板块→赛道池路径）+ fund-analysis（基金 / ETF 分析）
+- **0.3.0**：top-down-selection + fund-analysis + bond-analysis（自上而下 / 基金 / 债券三块补齐）+ self-improvement-loop Phase 2（decision-postmortem + quarterly-performance 模板 + 套路 E 路由 + INDEX 守护检查）
 
 **不做**：
 - 日内技术分析（和决策导向定位不符）
