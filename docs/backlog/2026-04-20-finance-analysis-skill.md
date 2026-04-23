@@ -1,8 +1,8 @@
 ---
 priority: P1
 status: in-progress
-spec:
-plan:
+spec: docs/specs/2026-04-23-finance-analysis-0.2.0-frameworks.md
+plan: docs/plans/2026-04-23-finance-analysis-0.2.0-plan.md
 ---
 
 # finance-analysis skill（金融分析技能）
@@ -56,10 +56,10 @@ plan:
 | 版本 | 内容 | 状态 |
 |------|------|------|
 | 0.1.0 | HK IPO + Alpha Generation + AI 主题 framework | ✅ 本版 |
-| 0.2.0 | 估值（相对 + DCF）+ 选股 framework + AI 月度 checkup template | 待做 |
+| 0.2.0 | 估值（相对 + DCF）+ 选股 + 美股 IPO framework | 🚧 进行中（2026-04-23 启动） |
 | 0.3.0 | 基金分析 + 债券分析 | 待做 |
 | 0.4.0 | 技术面 + 事件驱动 + 宏观择时 | 待做 |
-| 0.5.0 | 加密主题 + 美股 IPO | 待做 |
+| 0.5.0 | 加密主题 | 待做 |
 | 1.0.0 | 所有核心 framework 稳定 + 回归测试集 | 里程碑 |
 
 ## 关联资产
@@ -77,12 +77,17 @@ plan:
 
 ## 剩余待做
 
-### 近期（0.2.0 节奏，约 2-4 周）
-- [ ] `frameworks/valuation-relative.md`（相对估值）
-- [ ] `frameworks/stock-selection.md`（选股简化版）
-- [ ] `templates/alpha-thesis-card.md`（Alpha 论点卡）
-- [ ] `templates/ai-monthly-checkup.md`（月度巡检可填版）
-- [ ] `templates/earnings-deep-dive.md`（10-Q 深度解读）
+### 近期（0.2.0 节奏，约 2-4 周）— 2026-04-23 启动
+- [ ] `frameworks/valuation-relative.md`（相对估值 PE/PS/PB 对标）
+- [ ] `frameworks/valuation-dcf.md`（DCF 估值 + 情景分析 + 概率加权）
+- [ ] `frameworks/stock-selection.md`（alpha-generation 可执行简化版，4 步筛选器）
+- [ ] `frameworks/us-ipo-arbitrage.md`（美股 IPO，对照港股）
+- [ ] `templates/valuation-card.md`（估值卡，覆盖相对估值 + DCF 三情景）
+- [ ] `templates/stock-screening-card.md`（选股筛选卡）
+- [ ] `docs/tests/finance-analysis-0.2.0.md`（回归用例）
+- [x] `templates/alpha-thesis-card.md`（Alpha 论点卡）— 0.1.0 已落地
+- [x] `templates/ai-monthly-checkup.md`（月度巡检可填版）— 0.1.0 已落地
+- [x] `templates/earnings-deep-dive.md`（10-Q 深度解读）— 0.1.0 已落地
 
 ### 中期（0.3.0-0.4.0）
 - 基金 / 债券 / 技术面 / 事件驱动 frameworks 逐个落地
@@ -100,3 +105,11 @@ plan:
   - 2 份 _index（frameworks / templates）
   - SKILL.md + VERSION + CHANGELOG
   - 本次迭代触发来源：群核科技 0068.HK 2026-04-17 上市 + 用户关于 "Alpha 本质" 的 5 次反问
+- **2026-04-20 → 2026-04-22**：0.1.0 追加沉淀（未发版）
+  - 新增 4 条 framework（alpha-thesis-card / earnings-deep-dive / ai-daily-checkup / ai-monthly-checkup）+ self-improvement-loop + command-driven-analysis 主入口
+  - command-driven-analysis 补入 3 大核心价值 + 4 类命题路由 + 递归下钻 + 股市预期驱动 + 时间维度可预测性 + 4 条铁律
+  - 触发来源：东山精密 / NVDA / TSLA / CATL 系列压测反馈
+- **2026-04-23**：启动 0.2.0（本轮）
+  - 已对焦：4 个 framework（valuation-relative / stock-selection / valuation-dcf / us-ipo-arbitrage），单个 400-600 行
+  - us-ipo 由原 0.5.0 提前到 0.2.0（_index.md 设计，同步修正本 backlog 路线图）
+  - 下一步：出 spec + plan → 用户 review → 动手

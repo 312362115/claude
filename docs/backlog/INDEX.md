@@ -4,7 +4,7 @@
 <!-- 当前无 P0 -->
 
 ## P1 — 重要
-- [ ] [finance-analysis skill（金融分析技能）](2026-04-20-finance-analysis-skill.md) — 决策导向金融分析 skill 0.1.0：HK IPO 打新 + Alpha 生成 + AI 主题投资三个 framework
+- [~] [finance-analysis skill（金融分析技能）](2026-04-20-finance-analysis-skill.md) — 0.1.0 已落地；0.2.0 进行中（估值 + 选股 + 美股 IPO 共 4 个 framework，spec + plan 待出）
 - [ ] [Deep Research Multi-Agent 架构升级](2026-04-20-deep-research-multi-agent.md) — P0 已完成；P1 信源矩阵进行中（精简版 A 架构，spec + plan 已出）
 - [x] [Skill 体系扩建](2026-04-08-skill-system-expansion.md) — 新增 14 个 skill + task-start/task-finish 改造，覆盖安全/重构/写作/日常效率
 - [ ] [CI/CD 安全流水线](2026-04-08-cicd-security-pipeline.md) — 三层防线：pre-commit(gitleaks) + PR Check(全量扫描) + Release Gate(AI审查)
