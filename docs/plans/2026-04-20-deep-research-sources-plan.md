@@ -15,37 +15,37 @@
 
 ## 子任务
 
-- [ ] 1. 建目录 + 格式规范
+- [x] 1. 建目录 + 格式规范
   - 做什么：创建 `references/sources/` 目录，写 `_schema.yaml` 定义 YAML 字段格式
   - 涉及：`references/sources/_schema.yaml`（新建）
   - 验收：schema 覆盖 name / domain / url / scores / access_method / tier_suggestion / notes / rot_indicator 字段，给出示例
 
-- [ ] 2. `blacklist.yaml`（最高优先级）
+- [x] 2. `blacklist.yaml`（最高优先级）
   - 做什么：沉淀本次调研发现的黑名单 + 通用 SEO 模式
   - 涉及：`references/sources/blacklist.yaml`（新建）
   - 验收：至少包含 CSDN / 东财股吧 / 雪球 / 金色财经 / 掘金（搬运部分）/ "必涨/神预言"类，每条带 reason + category；含至少 2 条 patterns 通用规则
 
-- [ ] 3. `_source_heuristics.md`（一手源识别启发式）
+- [x] 3. `_source_heuristics.md`（一手源识别启发式）
   - 做什么：写给 sub-agent 的启发式规则——没有白名单领域（互联网/AI）如何识别一手源
   - 涉及：`references/sources/_source_heuristics.md`（新建）
   - 验收：包含一手源优先级排序、必避规则、AI/LLM 赛道推导示例（至少 3 个）、互联网技术推导示例（至少 3 个）
 
-- [ ] 4. `_router.md`（路由规则）
+- [x] 4. `_router.md`（路由规则）
   - 做什么：定义命题 → 路径判断逻辑
   - 涉及：`references/sources/_router.md`（新建）
   - 验收：含白名单启用闸门（具体查询 vs 命题调研）、关键词匹配规则、预算倾斜比例（70/20/10）
 
-- [ ] 5. `finance.yaml`（精简版，10-15 条）
+- [x] 5. `finance.yaml`（精简版，10-15 条）
   - 做什么：收录 LLM 不知道的冷门权威金融源
   - 涉及：`references/sources/finance.yaml`（新建）
   - 验收：条目数 10-15 个，每条通过"LLM top-of-mind 测试"；包含 BIS / 中债登 / CFETS / Fiscal Data / SAFE / 上清所 / HKEX SDI / CCASS / Tardis.dev / BaoStock / Finnhub 等
 
-- [ ] 6. `academic.yaml`（精简版，10-15 条）
+- [x] 6. `academic.yaml`（精简版，10-15 条）
   - 做什么：收录 LLM 不知道的冷门权威学术源
   - 涉及：`references/sources/academic.yaml`（新建）
   - 验收：条目数 10-15 个；包含 OpenAlex / bioRxiv / ChemRxiv / OpenReview / CrossRef / ACM DL 全 OA / SSRN / OSF Preprints 等
 
-- [ ] 7. 改造 deep-research skill 加载逻辑
+- [x] 7. 改造 deep-research skill 加载逻辑
   - 做什么：在 SKILL.md 1.2（判断调研类型）之后加一步"加载路由"，在 2.1（Lead Agent 职责）里加一步"向 sub-agent 派发时附带白名单"
   - 涉及：`skills/deep-research/SKILL.md`（改）
   - 验收：
@@ -54,12 +54,12 @@
     - 2.4 回传协议加字段 `whitelist_hits`（使用了几个白名单源）
     - CHANGELOG 升 1.6.0
 
-- [ ] 8. 改造 sub-agent prompt 模板
+- [x] 8. 改造 sub-agent prompt 模板
   - 做什么：Lead Agent 派发 sub-agent 时，prompt 自动注入 YAML + heuristics + blacklist 内容
   - 涉及：`skills/deep-research/SKILL.md` 的 2.1/2.4 章节
   - 验收：prompt 模板明确标注 "必爬清单（白名单）"、"必避清单（黑名单）"、"领域启发式规则"三段
 
-- [ ] 9. 写回归测试
+- [x] 9. 写回归测试
   - 做什么：至少 5 个命题的测试用例，覆盖不同路径
   - 涉及：`docs/tests/deep-research-sources.md`（新建）
   - 验收：
