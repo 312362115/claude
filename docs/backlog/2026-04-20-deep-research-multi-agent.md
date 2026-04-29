@@ -126,4 +126,10 @@ plan: docs/plans/2026-04-20-deep-research-sources-plan.md
     - 放弃 `internet-tech.yaml` 和 `ai-ml.yaml`（走 `_source_heuristics.md` 启发式）
     - 保留 `finance.yaml` + `academic.yaml`（各 10-15 条冷门权威）
     - 新增 `blacklist.yaml`（全域共享，最高价值）
-  - 下一步按 plan 落地（M1-M4，约 1 周）
+- **2026-04-20（P1 v1 落地）**：精简版 A 架构完整落地并 merge 到 main（PR #16）
+  - 产出 6 份配置：`_schema.yaml` / `blacklist.yaml`（5 具名+4 patterns）/ `_source_heuristics.md` / `_router.md` / `finance.yaml`（15 条）/ `academic.yaml`（10 条）
+  - SKILL.md 改造升到 1.6.0：1.2 加载闸门 + 2.1 Lead 注入 + 2.4 回传 3 新字段（whitelist_hits/heuristic_hits/blacklist_avoided）
+  - 回归测试 5 用例：`docs/tests/deep-research-sources.md`
+  - 复盘文档：`docs/decisions/2026-04-20-sources-matrix-architecture.md`（含 3 坑记录 + 4 条可复用经验）
+  - memory 沉淀：LLM top-of-mind 测试 + blacklist 最大价值（2 条 feedback）
+  - **剩余**：子任务 10 实战验证（下次真实调研任务触发）；CitationAgent 独立化（P1 原第 10 条，单独 plan）；P2 评测体系
