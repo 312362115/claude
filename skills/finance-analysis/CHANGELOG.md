@@ -1,5 +1,70 @@
 # Changelog — finance-analysis
 
+## 0.4.0-alpha.1（2026-05-07）
+
+**capital-flow framework 落地**。补齐致尚 301486 案例暴露的 L5 维度缺失（资金面 ~10% 权重）。这是 0.4.0 三大 framework 的第一个。
+
+### 新增 framework
+
+`frameworks/capital-flow.md`（~530 行）：
+
+**核心定位**：小盘控盘标的（C_smallcap 标签触发必跑）的资金面分析。胜负手 80% 在资金面，20% 在基本面。
+
+**5 维信号**：
+1. **龙虎榜**：买卖席位 / 机构席位 / 知名游资 / 沪深股通席位（A 股 + 港股 CCASS 替代）
+2. **北上 / 沪深股通持仓**：持股比 / 单日 5/20 日加减仓阈值
+3. **融资余额**：余额比 / 单日买入占比 / 5/20 日变动 / 融资融券比
+4. **大宗交易**：折溢价 / 受让方 / 连续大宗 → 沉淀沪电 + 致尚教训：禁止把大宗成交价当股价
+5. **流通股本 / 限售解禁**：解禁日 ± 30 日抛压窗口 + 减持意愿系数模型
+
+**控盘度评分模型**（百分制，5 维加权）：大股东 30 + 北上 20 + 机构 20 + 融资 15 + 高管 15。
+
+**主力方向 EV 修正系数**：
+- 强买入（≥ +50）→ 短期 EV ×1.5
+- 偏多（+20~+50）→ ×1.2
+- 中性 → ×1.0
+- 偏空 → ×0.7
+- 强卖出（≤ -50）→ ×0.5
+- 仅适用 ≤ 1 个月 EV，> 3 个月退基本面
+
+**3 条执行铁律**：
+1. 融资 / 流通市值 > 8% 高位禁追入
+2. 北上连 5 日净流出禁逆势抄底
+3. 龙虎榜机构连 3 次卖方出现立即减仓
+
+**Worked Example**：致尚 301486 4/28 资金面回放 — 假设性 5 维数据 → 控盘度 67 分（高）+ 主力方向 +40 分（偏多）+ 强异动 → 资金面附录与 asset-type-classifier B 强档禁令独立交叉验证，**双重阻断错判**。
+
+**5 类失效场景**：港股数据缺失 / 极端情绪期 / 控盘度过高反向陷阱 / 妖股化 / 短期事件冲击。
+
+**JSON schema**：资金面附录嵌入主决策卡 `capital_flow` 字段，含控盘度 / 主力方向四维分 / 异动等级 / EV 修正系数 / 操作建议。
+
+### 路由 / 主入口同步升级
+
+- `_index.md` 新增 0.4.0 资金面 / 事件 / 技术面段
+- `asset-type-classifier.md` 路由表 A+B+C / A+C / B+C 三行更新主框架（capital-flow ✅ 已落地）
+- `SKILL.md` VOLATILE TAIL framework 列表新增 0.4.0 段
+- 版本号升至 0.4.0-alpha.1
+
+### 0.4.0 路线图剩余
+
+- alpha.2: event-driven framework（A_event 标签）— 重组 / 并购 / 退市 / 商誉
+- alpha.3: technical-pattern framework（B_momentum 标签）— 洗盘 vs 出货 / MA / 量价
+
+### 致尚案例闭环进度
+
+| 根因层 | 权重 | 修复状态 |
+|---|---|---|
+| L1 数据时点 | 5% | ✅ 0.3.1 quote.sh + 铁律 0 |
+| L2 静态 EV 模型 | 30% | ✅ 0.3.2 path-aware EV（asset-type-classifier B 强档禁令）|
+| L3 framework 错配 | 40% | ✅ 0.3.2 asset-type-classifier 前置分类器 |
+| L4 认知偏误 | 20% | ✅ 0.3.2 决策卡 4 项强制 checklist + 0.3.3 JSON schema 量化 |
+| L5 维度缺失 | 10% | ✅ 0.4.0-alpha.1 capital-flow（A_event / B_momentum 子维度待 alpha.2/3）|
+| L6 时机层（洗盘 vs 出货）| 10% | ⏳ 0.4.0-alpha.3 technical-pattern 待建 |
+
+剩余 alpha.2 + alpha.3 完成后，致尚类错判应能实现"前置阻断 + 动态修正"双保险闭环。
+
+---
+
 ## 0.3.4（2026-05-07）
 
 **决策档案机器可读化（P1 三件落地）**。借鉴 Dexter `temporal-decay.ts` evergreen vs dated 区分 + 把 0.3.3 alpha-thesis-card 的 JSON schema 思想推广到所有核心模板。让 self-improvement-loop 从"问 LLM"升级到"扫文件统计"。

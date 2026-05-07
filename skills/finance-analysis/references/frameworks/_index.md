@@ -32,6 +32,14 @@
 | [fund-analysis.md](./fund-analysis.md) | **基金 / ETF 分析**：管理人 + α/β + 夏普 / 回撤 + 持仓归因 + 费率流动性 | 选基金 / ETF 对比 / 组合配置 | 0.3.0 |
 | [bond-analysis.md](./bond-analysis.md) | **债券分析**：久期 + 信用 + 利差三维 + 可转债（股性/债底/溢价）+ TLT 等债券 ETF | 债券配置 / 债基选择 / 固收决策 | 0.3.0 |
 
+### 0.4.0 资金面 / 事件 / 技术面（A/B/C 标签主框架）
+
+| Framework | 适用场景 | 被谁调用 | 版本 |
+|-----------|---------|---------|------|
+| [capital-flow.md](./capital-flow.md) | 小盘控盘标的资金面（龙虎榜 + 北上 + 融资 + 大宗 + 流通盘）| C_smallcap 标签触发必跑 | 0.4.0 |
+| event-driven.md | 事件驱动（重组 / 收购 / 退市风险 / 商誉减值）| A_event 标签触发必跑 | 0.4.0 待建 |
+| technical-pattern.md | 主升浪节奏（洗盘 vs 出货 / MA / 量价 / 缺口）| B_momentum 标签触发必跑 | 0.4.0 待建 |
+
 ## Integrations
 
 | Integration | 定位 |
