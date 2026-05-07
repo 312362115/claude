@@ -1,7 +1,7 @@
 ---
 name: diagram
-version: 1.4.0
-last_updated: 2026-04-01
+version: 1.7.0
+last_updated: 2026-05-07
 repository: https://github.com/312362115/claude
 changelog: skills/diagram/CHANGELOG.md
 description: >
@@ -22,14 +22,51 @@ description: >
 
 ---
 
-## 第一步：理解需求，选择图表类型
+## 第一步：分析内容拓扑，选择表达方式
 
-收到画图需求后，判断：
-1. **画什么** — 需要展示的信息类型（流程？架构？数据对比？关系？）
-2. **哪种图表** — 根据信息类型匹配最合适的图表
-3. **用什么布局** — 根据图表类型选择布局策略
+> **理念**：内容的**拓扑形态**决定**哪些图表能表达**，读者和场景决定**从中选哪个**。
+> 不要一上来就问"这是哪种图"——先看内容长什么样。
 
-### Mermaid / Graphviz 标记语言转换
+### 1.1 内容拓扑识别
+
+按内容的**结构形态**归类——同一拓扑可能映射到**多个图表类型**：
+
+| 拓扑形态 | 识别信号 | 可表达的图表类型 |
+|---------|---------|----------------|
+| **线性序列** | A → B → C，单路径，步骤、阶段、流程 | 流程图（线性）、时序图、时间线、甘特图 |
+| **多源汇聚 / DAG** | 多入口、多出口、依赖关系、资源流转 | 流程图（DAG）、数据流图、网络图、桑基图 |
+| **分层堆叠** | 层级、技术栈、容器化、抽象层次 | 架构图、C4 图 |
+| **角色协作** | 多角色 / 跨系统 / 跨服务交互 | 泳道图、时序图、C4 系统视图 |
+| **实体关系** | 数据库表、对象关系、字段映射 | ER 图、类图 |
+| **状态迁移** | 状态机、生命周期、并发、git 分支 | 状态图、Git Graph |
+| **树形结构** | 决策、组织、知识层级、菜单层级 | 决策树、组织图、思维导图 |
+| **矩阵 / 多维评估** | 多维度对比、四象限分类、覆盖关系 | 热力图、雷达图、SWOT、文氏图、矩形树图 |
+| **数值比较** | 离散对比、占比、累计增减 | 柱状图、饼图、漏斗图、瀑布图 |
+| **趋势变化** | 时间序列、版本演进、走势 | 折线图、柱线混合图 |
+| **分布关系** | 散点、聚类、相关性 | 散点图（含气泡） |
+| **阶段任务管理** | 看板、待办、阶段流转 | Kanban、甘特图 |
+| **根因分析** | 多因素归因、缺陷溯源 | 鱼骨图 |
+| **用户体验旅程** | 触点、情感曲线 | 旅程图 |
+
+### 1.2 同一拓扑选哪个图表？
+
+同一种拓扑可能有多个表达——按**读者** + **场景** + **强调点**做最终选择：
+
+| 判断维度 | 选择倾向 |
+|---------|---------|
+| 读者是开发者 | DAG 类内容优先**流程图/数据流图**（信息密度高），不用桑基图 |
+| 读者是评审/管理层 | 流量类内容选**桑基图**（视觉冲击），分层选 **C4 容器视图** |
+| 投屏路演 | 偏视觉冲击：**桑基图、雷达图、时间线、思维导图** |
+| 嵌入文档 | 偏信息密度：**流程图、ER 图、表格风结构图** |
+| 强调动作顺序 | **时序图** > 流程图 |
+| 强调容器化 / 边界 | **C4** > 架构图 |
+| 强调层叠关系 | **架构图** > C4 |
+| 数据对比为主 | 离散用**柱状图**，趋势用**折线图**，占比用**饼图**或**矩形树图** |
+| 数据维度 ≥ 3 | **雷达图**、**热力图**或**散点图** |
+| 多分支决策逻辑 | **决策树** > 流程图 |
+| 单分支线性流程 | **流程图（线性）** |
+
+### 1.3 Mermaid / Graphviz 标记语言转换
 
 当发现 Markdown 中有 ` ```mermaid ` 或 ` ```dot ` 代码块时：
 
@@ -55,41 +92,43 @@ description: >
 
 > **注意**：不是调用 Mermaid/Graphviz 工具渲染，而是 Claude 理解标记语言描述的图结构，转成我们的模板数据，用统一设计规范渲染。这样所有图表风格一致。
 
-### 图表类型速查
+### 1.4 图表类型 → 布局/规范索引
 
-| 要展示什么 | 图表类型 | 布局策略 | 专属规范 |
-|-----------|---------|---------|---------|
-| 工作流程、决策逻辑（单路径） | 流程图（线性） | 手动布局 | `references/diagrams/flowchart.md` |
-| 多源汇聚、资源流转、关系图 | 流程图（DAG） | **ELKjs** | `references/diagrams/flowchart.md` |
-| 多角色协作流程 | 泳道图 | 手动网格 | `references/diagrams/swimlane.md` |
-| API 调用、消息交互 | 时序图 | 自定义顺序堆叠 | `references/diagrams/sequence.md` |
-| 系统分层、技术栈 | 架构图 | 手动层堆叠 | `references/diagrams/architecture.md` |
-| 数据库表结构 | ER 图 | **ELKjs** | `references/diagrams/er.md` |
-| 面向对象设计 | 类图 | **ELKjs** | `references/diagrams/class.md` |
-| 状态迁移 | 状态图 | ELKjs | `references/diagrams/state.md` |
-| 网络拓扑 | 网络图 | 手动分层 | `references/diagrams/network.md` |
-| 选型决策 | 决策树 | 树形布局 | `references/diagrams/decision-tree.md` |
-| 数据管道 | 数据流图 | 手动分层 | `references/diagrams/dataflow.md` |
-| C4 系统视图 | C4 图 | 手动分层 | `references/diagrams/c4.md` |
-| 知识结构 | 思维导图 | 双侧树形 | `references/diagrams/mindmap.md` |
-| 项目排期 | 甘特图 | 日期轴网格 | `references/diagrams/gantt.md` |
-| 发展历程 | 时间线 | 纵向列表 | `references/diagrams/timeline.md` |
-| 组织架构 | 组织结构图 | 树形 | `references/diagrams/orgchart.md` |
-| 优劣势分析 | SWOT 图 | 卡片四象限 | `references/diagrams/swot.md` |
-| 根因分析 | 鱼骨图 | 鱼骨骨架 | `references/diagrams/fishbone.md` |
-| 集合关系 | 文氏图 | 圆形交叠 | `references/diagrams/venn.md` |
-| 用户体验 | 旅程图 | 卡片横向 | `references/diagrams/journey.md` |
-| 离散对比 | 柱状图 | 笛卡尔坐标 | `references/diagrams/bar-chart.md` |
-| 趋势变化 | 折线图 | 笛卡尔坐标 | `references/diagrams/line-chart.md` |
-| 占比构成 | 饼图 | 径向 | `references/diagrams/pie-chart.md` |
-| 多维评估 | 雷达图 | 径向 | `references/diagrams/radar-chart.md` |
-| 矩阵数据 | 热力图 | 网格 | `references/diagrams/heatmap.md` |
-| 流量路径 | 桑基图 | 流带分层 | `references/diagrams/sankey.md` |
-| 分布关系 | 散点图 | 笛卡尔坐标 | `references/diagrams/scatter.md` |
-| 数据占比/层级面积 | 矩形树图 | Squarified | `references/diagrams/treemap.md` |
-| 柱状+折线混合 | 柱线混合图 | 笛卡尔双 Y 轴 | `references/diagrams/combo.md` |
-| 项目管理/任务看板 | Kanban | 竖列卡片 | `references/diagrams/kanban.md` |
-| Git 分支工作流 | Git Graph | 横向分支线 | `references/diagrams/git-graph.md` |
+> 1.1-1.2 决定**用哪种图表**后，下面这张表是**布局策略和专属规范的检索入口**——不是"内容→选类型"的决策表（决策已在 1.1-1.2 完成）。
+
+| 图表类型 | 典型场景 | 布局策略 | 专属规范 |
+|---------|---------|---------|---------|
+| 流程图（线性） | 工作流程、决策逻辑（单路径） | 手动布局 | `references/diagrams/flowchart.md` |
+| 流程图（DAG） | 多源汇聚、资源流转、关系图 | **ELKjs** | `references/diagrams/flowchart.md` |
+| 泳道图 | 多角色协作流程 | 手动网格 | `references/diagrams/swimlane.md` |
+| 时序图 | API 调用、消息交互 | 自定义顺序堆叠 | `references/diagrams/sequence.md` |
+| 架构图 | 系统分层、技术栈 | 手动层堆叠 | `references/diagrams/architecture.md` |
+| ER 图 | 数据库表结构 | **ELKjs** | `references/diagrams/er.md` |
+| 类图 | 面向对象设计 | **ELKjs** | `references/diagrams/class.md` |
+| 状态图 | 状态迁移 | ELKjs | `references/diagrams/state.md` |
+| 网络图 | 网络拓扑 | 手动分层 | `references/diagrams/network.md` |
+| 决策树 | 选型决策 | 树形布局 | `references/diagrams/decision-tree.md` |
+| 数据流图 | 数据管道 | 手动分层 | `references/diagrams/dataflow.md` |
+| C4 图 | C4 系统视图 | 手动分层 | `references/diagrams/c4.md` |
+| 思维导图 | 知识结构 | 双侧树形 | `references/diagrams/mindmap.md` |
+| 甘特图 | 项目排期 | 日期轴网格 | `references/diagrams/gantt.md` |
+| 时间线 | 发展历程 | 纵向列表 | `references/diagrams/timeline.md` |
+| 组织结构图 | 组织架构 | 树形 | `references/diagrams/orgchart.md` |
+| SWOT 图 | 优劣势分析 | 卡片四象限 | `references/diagrams/swot.md` |
+| 鱼骨图 | 根因分析 | 鱼骨骨架 | `references/diagrams/fishbone.md` |
+| 文氏图 | 集合关系 | 圆形交叠 | `references/diagrams/venn.md` |
+| 旅程图 | 用户体验 | 卡片横向 | `references/diagrams/journey.md` |
+| 柱状图 | 离散对比 | 笛卡尔坐标 | `references/diagrams/bar-chart.md` |
+| 折线图 | 趋势变化 | 笛卡尔坐标 | `references/diagrams/line-chart.md` |
+| 饼图 | 占比构成 | 径向 | `references/diagrams/pie-chart.md` |
+| 雷达图 | 多维评估 | 径向 | `references/diagrams/radar-chart.md` |
+| 热力图 | 矩阵数据 | 网格 | `references/diagrams/heatmap.md` |
+| 桑基图 | 流量路径 | 流带分层 | `references/diagrams/sankey.md` |
+| 散点图 | 分布关系 | 笛卡尔坐标 | `references/diagrams/scatter.md` |
+| 矩形树图 | 数据占比/层级面积 | Squarified | `references/diagrams/treemap.md` |
+| 柱线混合图 | 柱状+折线混合 | 笛卡尔双 Y 轴 | `references/diagrams/combo.md` |
+| Kanban | 项目管理/任务看板 | 竖列卡片 | `references/diagrams/kanban.md` |
+| Git Graph | Git 分支工作流 | 横向分支线 | `references/diagrams/git-graph.md` |
 
 ---
 
@@ -167,19 +206,25 @@ description: >
 
 ### 2.5 标题规范
 
-**标题默认行为取决于调用场景**：
+**标题默认行为取决于调用场景**——但记住：标题、副标题、顶部标签条、底部图例、节点 icon 等都是**可叠加的独立组件**，不是"评审级必备"。完整组件清单和触发条件见 `references/diagrams/review-grade.md`。
 
-| 调用场景 | 默认标题 | 原因 |
-|---------|---------|------|
-| 用户直接请求画图 | **有标题** | 图表独立展示，需要自解释 |
-| deep-research 报告配图 | **无标题** | 文档上下文已有章节标题 |
-| writing skill 文档配图 | **无标题** | 文档上下文已有章节标题 |
-| 用户明确说"不要标题" | **无标题** | 遵循用户指示 |
+| 调用场景 | 默认行为 |
+|---------|---------|
+| 用户直接请求画图 | 标题 + 副标题（普通尺寸） |
+| deep-research 报告配图 | 不带标题，章节标题承担 |
+| writing skill 嵌入文档的配图 | 不带标题，章节标题承担 |
+| writing skill 路演 / 评审 HTML 配图 | 大字标题 + 副标题默认开，**其他叠加组件按内容评估**（见 review-grade.md） |
+| 用户明确说"画评审版 / 路演图" | 进入 review-grade 评估流程，**逐组件判断**是否叠加 |
+| 用户明确说"不要标题" | 跳过标题渲染 |
 
+**渲染参数**：
 - `title` 为空字符串或 `null` 时跳过标题渲染，标题区高度设为 0
-- 有标题时：位置左上角（x=0, y=18），16px bold，颜色 `#1a1a2e`
-- 副标题：12px，颜色 `#888888`，y=36
-- 标题区高度：有标题 52px，无标题 0px
+- 普通标题：左上角（x=0, y=18），16px bold，颜色 `#1a1a2e`，标题区 52px
+- 普通副标题：12px，颜色 `#888888`，y=36
+- 大字标题（review-grade.md 二.1）：22px Bold（投屏远距离可读），标题区 ≥ 70px
+- 大字副标题（review-grade.md 二.2）：14px Regular
+
+**重要原则**：被 writing 路演 HTML 调用 ≠ 必须开全部叠加组件。仍要按内容形态逐项评估，简单图就该简单画。
 
 ```javascript
 // 标题可选的标准写法
