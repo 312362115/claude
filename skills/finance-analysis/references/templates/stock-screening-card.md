@@ -114,6 +114,50 @@
 | 2 | ... | ... | ... | ... |
 | 3 | ... | ... | ... | ... |
 
+---
+
+## 9. 机器可读 JSON 输出（必填，0.3.3 引入）
+
+self-improvement-loop 扫描入口。所有筛选卡末尾必填以下代码块：
+
+```json
+{
+  "doc_type": "screening",
+  "screening_date": "2026-04-22",
+  "track": "AI 算力 A 股",
+  "pool_size": 50,
+  "candidates_evaluated": 12,
+  "framework_version": "finance-analysis 0.3.3",
+  "step_filters": {
+    "step1_track_passed": 12,
+    "step2_leader_passed": 8,
+    "step3_quality_passed": 6,
+    "step4_growth_passed": 5
+  },
+  "scoring": [
+    {
+      "ticker": "002463.SZ",
+      "name": "沪电股份",
+      "scores": {"track": 22, "leader": 24, "quality": 20, "growth": 18},
+      "total": 84,
+      "tier": "core",
+      "next_action": "valuation-relative + alpha-thesis-card"
+    }
+  ],
+  "redlines_passed": true,
+  "top_n_count": 3,
+  "post_routing_required": "asset-type-classifier per ticker",
+  "all_passed": true
+}
+```
+
+**字段约束**：
+- `tier` ∈ `{core, satellite, observation, eliminated}`
+- 单维度 `scores.*` 范围 0-25，`total` 为 4 项之和
+- `total < 55` 强制 `tier = eliminated`
+- `top_n_count` 必须等于 `tier ∈ {core, satellite}` 的标的数
+- `post_routing_required` 提醒：Top-N 出炉后**每只必须跑 asset-type-classifier 再单股研究**（0.3.2 强制流程）
+
 ### 每只"下一步研究方向"明细
 
 **<标的 1>**：

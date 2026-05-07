@@ -48,6 +48,65 @@ skill 要做到这点，需要系统性闭环。**4 层机制缺一不可**。
 
 **铁律**：**没有决策卡 = 没做过决策**。不允许 "当时我就觉得 ..."。
 
+#### 机器可读 JSON 契约（0.3.3 引入，统一规范）
+
+借鉴 Dexter `screen-stocks.ts:140-156` Zod structured output 模式 + 字段级 description。
+
+**所有决策卡 / 复盘报告 / 错判归因末尾必须输出 JSON 代码块**，作为机器扫描入口：
+
+```json
+{
+  "doc_type": "thesis | verify | postmortem | quarterly | monthly",
+  "ticker": "301486.SZ",
+  "decision_date": "2026-04-28",
+  "decision_action": "buy | add | trim | sell | hold | skip | watchlist-add",
+  "checklist": { /* 见 alpha-thesis-card 详细 schema */ },
+  "framework_version": "finance-analysis 0.3.3",
+  "asset_tags": ["A_event", "B_momentum", "C_smallcap"],
+  "main_framework": "capital-flow",
+  "all_passed": false,
+  "process_violation": false
+}
+```
+
+**为什么不双写 .jsonl 文件**：md 文件里嵌入的 JSON 代码块就是 jsonl 等价。`grep + jq` 直接扫即可，无需冗余双写。
+
+**扫描脚本占位**（self-improvement-loop 工具集 0.4.0 落地）：
+```bash
+# 提取所有决策卡的 JSON
+find docs/finance-journal/ -name "*.md" -newer <last_quarter> | \
+  xargs -I {} awk '/^```json$/,/^```$/' {} | \
+  grep -v '^```' | jq -s '.'
+
+# 命中率统计
+... | jq '[.[] | select(.doc_type == "verify")] | group_by(.outcome) | map({outcome: .[0].outcome, count: length})'
+
+# 铁律 0 真实通过率
+... | jq '[.[] | .checklist.all_passed] | (map(select(.)) | length) / length * 100'
+
+# D 类型错判分布（按 framework_version 分组）
+... | jq '[.[] | select(.doc_type == "postmortem")] | group_by(.error_type) | ...'
+```
+
+**模板覆盖范围**：
+
+| 模板 | JSON schema 状态 |
+|---|---|
+| alpha-thesis-card.md | ✅ 0.3.3 已加 |
+| valuation-card.md | ⏳ 0.3.3 待加（P1-6）|
+| stock-screening-card.md | ⏳ 0.3.3 待加（30/60/100 打分）|
+| ipo-decision-card.md | ⏳ 0.3.3 待加（HK/US 三路径 EV）|
+| decision-postmortem.md | ⏳ 0.3.3 待加（D1-D5 分类）|
+| quarterly-performance.md | ⏳ 0.3.3 待加（KPI 汇总）|
+
+**统一字段约定**（防各模板 schema 漂移）：
+- `doc_type` 必填，5 选 1
+- `ticker` 用交易所 suffix（`.SZ` / `.SS` / `.HK` / `.US`）
+- `decision_date` ISO 8601（YYYY-MM-DD）
+- `framework_version` 完整版本号
+- `asset_tags` 来自 asset-type-classifier 7 标签
+- 所有 bool 字段必须显式 `true / false`，禁用 null
+
 ---
 
 ### L2 事后验证（触发层）

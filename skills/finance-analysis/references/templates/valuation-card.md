@@ -197,6 +197,51 @@
 - 假设可能过时，请核对最新财报和卖方一致预期
 - 若依赖 DCF，注意敏感性红旗；若依赖相对估值，注意对标池可比性
 
+---
+
+## 13. 机器可读 JSON 输出（必填，0.3.3 引入）
+
+```json
+{
+  "doc_type": "valuation",
+  "ticker": "002384.SZ",
+  "name": "东山精密",
+  "valuation_date": "2026-04-22",
+  "framework_version": "finance-analysis 0.3.3",
+  "valuation_method": "relative | dcf | both",
+  "asset_tags": ["E_value"],
+  "current_price": 28.50,
+  "data_timestamp": "2026-04-22T15:00:00+08:00",
+  "scenarios": {
+    "bull":   {"probability": 0.30, "target_price": 42.00, "implied_pe": 28},
+    "base":   {"probability": 0.50, "target_price": 32.00, "implied_pe": 22},
+    "bear":   {"probability": 0.20, "target_price": 22.00, "implied_pe": 15}
+  },
+  "expected_price": 32.20,
+  "ev_pct": 12.98,
+  "implied_position_in_range": "fair | underpriced | overpriced",
+  "win_loss_ratio": 1.85,
+  "dcf_specific": {
+    "wacc": 0.085,
+    "terminal_growth": 0.025,
+    "sensitivity_red_flag": false
+  },
+  "comparables_count": 4,
+  "decision_action": "buy | hold | trim | sell | skip | watchlist-add",
+  "stop_loss": 22.00,
+  "max_loss_tolerance_pct": -22.8,
+  "all_passed": true,
+  "process_violation": false
+}
+```
+
+**字段约束**：
+- `valuation_method` 三选一；若 `both`，必填 `dcf_specific` 字段
+- `expected_price` = Σ(`probability` × `target_price`)，三情景概率必须和为 1.0
+- `ev_pct` = (expected_price - current_price) / current_price × 100
+- `implied_position_in_range`：基于 `expected_price` 与三情景区间的位置判断
+- `asset_tags` 必须来自 asset-type-classifier 7 标签；**E_value 是唯一适用本卡的强标签**，A/B/F 标签触发应转 event-driven / capital-flow 或 PB 路径
+
 ```
 
 ---

@@ -308,6 +308,67 @@ skill 会：
 4. **所有复盘必须写"Framework 修改项"** — 没有就是归因失败
 5. **填完后更新 INDEX.md** 的错判统计表 + 待验证队列
 
+---
+
+## 机器可读 JSON 输出（必填，0.3.3 引入）
+
+每份复盘报告（模板 A 或 B）末尾必填以下代码块：
+
+```json
+{
+  "doc_type": "postmortem",
+  "ticker": "301486.SZ",
+  "postmortem_date": "2026-05-07",
+  "outcome": "wrong | partial_wrong | success",
+  "framework_version_at_decision": "finance-analysis 0.3.1",
+  "framework_version_at_postmortem": "finance-analysis 0.3.3",
+  "original_decision_link": "2026-04-28-301486-skip.md",
+  "original_action": "skip",
+  "expected_outcome": {
+    "ev_pct": -5.9,
+    "horizon_months": 6,
+    "direction": "down"
+  },
+  "actual_outcome": {
+    "actual_pct_at_postmortem": 22.7,
+    "horizon_days_at_postmortem": 9,
+    "direction": "up",
+    "vs_benchmark_pct": 17.3
+  },
+  "deviation_magnitude": "extreme | large | moderate | small",
+  "error_type": "D1 | D2 | D3 | D4 | D5",
+  "error_subtype": "framework 错配（用价值股工具切博弈型标的）",
+  "root_cause_layers": [
+    {"layer": "L3 framework", "weight_pct": 40},
+    {"layer": "L2 model", "weight_pct": 30},
+    {"layer": "L4 cognitive", "weight_pct": 20},
+    {"layer": "L5 dimension", "weight_pct": 10}
+  ],
+  "framework_changes_made": [
+    {"file": "asset-type-classifier.md", "change": "新建前置分类器", "version": "0.3.2"},
+    {"file": "alpha-thesis-card.md", "change": "4 项强制 checklist + JSON schema", "version": "0.3.2-0.3.3"}
+  ],
+  "lesson_oneline": "framework 错配 ~40% = 最大单一根因；用价值股工具切博弈型标的几乎注定失败",
+  "memory_feedback_added": "feedback_framework_misclassification.md",
+  "cumulative_d_type_count": 1,
+  "framework_upgrade_triggered": false
+}
+```
+
+**对模板 B（成功经验）字段差异**：
+- `outcome`: `success`
+- `error_type`: 替换为 `"success_factors"`（数组：信息差 / 时机 / 仓位 / 持有 / 顶点判断）
+- `root_cause_layers`: 替换为 `success_attribution`（按维度分配权重）
+- `framework_changes_made`: 替换为 `framework_enhancements`（成功经验沉淀为新 framework 章节）
+
+**字段约束**：
+- `error_type` ∈ `{D1, D2, D3, D4, D5}`，决策卡未通过 checklist 的进 D5 + 标注 `process_violation: true`
+- `deviation_magnitude` 阈值：extreme ≥ 20% / large ≥ 10% / moderate ≥ 5% / small < 5%
+- `cumulative_d_type_count` 累计 ≥ 3 时 `framework_upgrade_triggered = true`，触发 framework 升级审查（INDEX 守护扫描 2）
+- `root_cause_layers` 权重和必须 = 100%
+
+---
+
 ## 相关资源
 
 - `frameworks/self-improvement-loop.md`（§L3 归因层 / §L4 升级层）

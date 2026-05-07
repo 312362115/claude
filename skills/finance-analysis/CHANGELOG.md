@@ -1,5 +1,53 @@
 # Changelog — finance-analysis
 
+## 0.3.4（2026-05-07）
+
+**决策档案机器可读化（P1 三件落地）**。借鉴 Dexter `temporal-decay.ts` evergreen vs dated 区分 + 把 0.3.3 alpha-thesis-card 的 JSON schema 思想推广到所有核心模板。让 self-improvement-loop 从"问 LLM"升级到"扫文件统计"。
+
+### P1-5：dated vs evergreen 时间衰减机制
+
+借鉴 Dexter `temporal-decay.ts:66-72` evergreen vs dated 区分（半衰期模型在 prompt-driven skill 上的零代码实现）。
+
+**改造**：
+- `docs/finance-journal/INDEX.md` 顶部新增「档案类型」段：dated 90 天后压缩为单行，evergreen 永不衰减
+- 「按时间归档」段标记为 dated 区，「错判归因/月度复盘/季度报告」段标记为 evergreen 区
+- 月度汇总执行时一并做 dated 区 90 天压缩
+
+**收益**：决策卡累积不会让 INDEX 臃肿；归因/铁律/经验作为 skill 进化资产保持完整可索引。
+
+### P1-4：self-improvement-loop JSON 契约统一规范
+
+**改造**：
+- `frameworks/self-improvement-loop.md` L1 决策留档段新增「机器可读 JSON 契约（0.3.3 引入，统一规范）」子段
+- 明确 6 类 doc_type（thesis / verify / postmortem / quarterly / monthly / valuation / screening / ipo）
+- 统一字段约定：ticker 用交易所 suffix、ISO 8601 日期、framework_version 完整版本号、bool 必显式、asset_tags 来自 7 标签
+- 占位扫描脚本（命中率 / 铁律 0 通过率 / D 类型分布）
+
+**收益**：决策档案成为机器可消费数据集，季度复盘 / framework 升级审查从手工统计升级为脚本扫描。**不双写 .jsonl 文件**——md 文件里的 JSON 代码块就是 jsonl 等价。
+
+### P1-6：4 个核心模板补 JSON schema
+
+**改造**：
+- `templates/stock-screening-card.md` — 30/60/100 打分卡末尾 JSON schema（4 项打分 + Top-N 清单 + post_routing 提醒）
+- `templates/valuation-card.md` — 估值决策卡 JSON schema（三情景概率加权 + DCF 字段 + asset_tags 强约束 E_value）
+- `templates/ipo-decision-card.md` — IPO 打新卡 JSON schema（HK/US 双轨 + 三路径 EV + lockup 字段）
+- `templates/decision-postmortem.md` — 复盘归因 JSON schema（D1-D5 分类 + 根因权重分布 + framework 升级触发）
+
+**字段约束**：所有 schema 字段都有显式约束（枚举、阈值、概率和、累计触发条件），便于自动校验。
+
+### 模板 JSON schema 全景表
+
+| 模板 | doc_type | 关键字段 | 状态 |
+|---|---|---|---|
+| alpha-thesis-card | thesis | 4 项 checklist + B_strength + C_confidence | ✅ 0.3.2 已加 |
+| valuation-card | valuation | 三情景概率 + DCF 字段 + asset_tags | ✅ 0.3.4 |
+| stock-screening-card | screening | 30/60/100 打分 + Top-N + post_routing | ✅ 0.3.4 |
+| ipo-decision-card | ipo | 信号矩阵 + EV + 三路径（US）/ 杠杆（HK）| ✅ 0.3.4 |
+| decision-postmortem | postmortem | D1-D5 + 根因权重 + 触发升级 | ✅ 0.3.4 |
+| quarterly-performance | quarterly | KPI 汇总 | 待 0.4.0 |
+
+---
+
 ## 0.3.3（2026-05-07）
 
 **吸收 Dexter 工程化优点**。从 ~/workspace/dexter（virattt 的金融研究 agent）深度扫描借鉴 6 维度工程模式，挑出 3 个 P0 落地，避免破坏 skill 跨平台 / 零依赖能力。

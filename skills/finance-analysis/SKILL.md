@@ -1,6 +1,6 @@
 ---
 name: finance-analysis
-version: 0.3.3
+version: 0.3.4
 last_updated: 2026-05-07
 repository: https://github.com/312362115/claude
 changelog: skills/finance-analysis/CHANGELOG.md
@@ -357,7 +357,8 @@ skill 从"工具"进化成"真正分析师"的关键：**4 层闭环** —— �
 | 0.3.0 | 自上而下 + 基金分析（夏普 / 回撤 / 归因）+ 债券分析（久期 / 信用 / 利差）+ self-improvement Phase 2 | ✅ |
 | 0.3.1 | 铁律 0（数据时点校准）+ scripts/quote.sh 实时行情脚本 | ✅ |
 | 0.3.2 | asset-type-classifier 前置分类器（修复 L3 framework 错配）+ 决策卡 4 项强制 checklist。从致尚 301486 错判（4/28→5/7 偏差 +22.7%）沉淀 | ✅ |
-| **0.3.3** | **吸收 Dexter 工程化优点**：framework 顶部 When to/NOT to Use 对照表 + 决策卡 checklist JSON 输出契约 + STABLE PREFIX/VOLATILE TAIL 分段（prompt cache 优化）| ✅ **本版** |
+| 0.3.3 | 吸收 Dexter 工程化优点（P0）：framework 顶部 When to/NOT to Use 对照表 + 决策卡 checklist JSON 输出契约 + STABLE PREFIX/VOLATILE TAIL 分段 | ✅ |
+| **0.3.4** | **决策档案机器可读化（P1）**：dated/evergreen 时间衰减 + self-improvement-loop JSON 契约统一规范 + 4 个核心模板（valuation / screening / ipo / postmortem）补 JSON schema | ✅ **本版** |
 | 0.4.0 | capital-flow（小盘资金面）+ event-driven（事件节奏）+ technical-pattern（洗盘 vs 出货）— 补齐 A/B/C 标签主框架 | 待做 |
 | 0.5.0 | 加密货币主题投资 | 待做 |
 | 1.0.0 | 所有核心 framework 稳定 + 回归测试集 + 实战命中率 ≥ 60% | 里程碑 |

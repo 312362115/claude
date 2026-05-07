@@ -122,6 +122,62 @@
 - 做对的：...
 - 做错的：...
 - 下次改进：...
+
+---
+
+## 机器可读 JSON 输出（必填，0.3.3 引入）
+
+```json
+{
+  "doc_type": "ipo",
+  "ticker": "0068.HK",
+  "name": "群核科技",
+  "market": "HK | US",
+  "ipo_date": "2026-04-17",
+  "framework_version": "finance-analysis 0.3.3",
+  "asset_tags": ["D_ipo"],
+  "signal_score": {
+    "total": 129,
+    "max": 140,
+    "tier": "S | A | B | C",
+    "breakdown": {
+      "fundamentals": 0,
+      "subscription": 0,
+      "dark_pool": 0,
+      "anchor_investor": 0,
+      "valuation": 0,
+      "market_sentiment": 0,
+      "track_record": 0
+    }
+  },
+  "ev_calculation": {
+    "expected_value_hkd_or_usd": 1230,
+    "leverage_multiple": 10,
+    "shares_applied": 10,
+    "interest_cost": 200,
+    "win_rate_estimate": 0.65,
+    "single_unit_profit": 5690
+  },
+  "us_specific": {
+    "path_chosen": "day1_flip | lockup_clear | core_hold",
+    "lockup_pressure_pct": 0,
+    "post_lockup_window_months": 6
+  },
+  "decision_action": "ipo | skip",
+  "leverage_chosen": 10,
+  "shares_subscribed": 10,
+  "verify_planned": "T+1",
+  "all_passed": true,
+  "process_violation": false
+}
+```
+
+**字段约束**：
+- `tier` ∈ `{S, A, B, C}`，对应 `total >= 110 / 90 / 70 / <70`
+- HK 标的填 `signal_score`，US 标的同时填 `us_specific.path_chosen`（三路径之一）
+- `leverage_multiple` 仅 HK 适用；US 默认 1
+- `lockup_pressure_pct` 仅 US 强制必填（=（lockup 解禁股数 / 流通盘）× 100）
+- `decision_action = skip` 时仍必须提交此 JSON（skip 也是决策，self-improvement-loop 需要追踪）
 ```
 
 ---
