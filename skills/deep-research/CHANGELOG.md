@@ -1,5 +1,14 @@
 # Changelog — deep-research
 
+## 1.7.0 (2026-05-07)
+- 新增：顶部"调研深度判断"章节，明确"6 步是能力库不是必走流程"
+- 新增：决策树——简单事实 / 对比类 / 复杂研究 / 超深度 四档命题分流，配各档对应的能力调用清单
+- 调整：5.2 报告结构从"所有报告采用三层输出"改为"按命题类型决定章节构成"，配按命题类型的章节选用矩阵
+- 调整：6.1 结构完整性检查从"对照所有必备章节"改为"按命题类型对照应有章节"，可省章节不强制
+- 调整：`references/templates/_common.md` 通用章节模板软化"必须包含"为"按命题类型选用"
+- 调整：6 个调研类型 templates（competitive-analysis / concept-research / feasibility / industry-analysis / performance-benchmark / tech-selection）标题从"模板"改"参考组合"，加"参考非必备"声明
+- 修复：消除"6 步必走"的流程派痕迹，对齐组件驱动的核心理念
+
 ## 1.6.0 (2026-04-20)
 - 新增：行业信源矩阵（精简版 A 架构）
   - 新建 `references/sources/` 目录体系：
