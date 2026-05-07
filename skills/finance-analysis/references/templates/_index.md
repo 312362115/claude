@@ -2,14 +2,15 @@
 
 > 可直接填的决策卡 / 监控表模板。
 
-## 核心决策 templates（0.1.0 / 0.2.0）
+## 核心决策 templates
 
 | Template | 关联 Framework | 用途 | 版本 |
 |----------|--------------|------|------|
 | [ipo-decision-card.md](./ipo-decision-card.md) | hk-ipo-arbitrage / us-ipo-arbitrage | **打新决策卡**（港美共用，T-1 晚填，T0 执行） | 0.1.0 |
-| [alpha-thesis-card.md](./alpha-thesis-card.md) | alpha-generation + command-driven-analysis | **个股投资论点卡**（7 问法 + bear case + 证伪条件） | 0.1.0 |
-| [valuation-card.md](./valuation-card.md) | valuation-relative + valuation-dcf | **估值决策卡**（三情景 + 概率加权 + 主题溢价 + 隐含预期位置，含东山精密 + NVDA 填充示例） | 0.2.0 |
-| [stock-screening-card.md](./stock-screening-card.md) | stock-selection | **选股筛选卡**（4 步筛 + 30/60/100 打分 + Top-N 清单 + Core/Satellite 标注） | 0.2.0 |
+| [alpha-thesis-card.md](./alpha-thesis-card.md) | alpha-generation + command-driven-analysis | **个股投资论点卡**（7 问法 + bear case + 证伪条件 + 4 项 checklist + JSON schema） | 0.3.3 |
+| [valuation-card.md](./valuation-card.md) | valuation-relative + valuation-dcf | **估值决策卡**（三情景 + 概率加权 + 主题溢价 + JSON schema） | 0.3.4 |
+| [stock-screening-card.md](./stock-screening-card.md) | stock-selection | **选股筛选卡**（4 步筛 + 30/60/100 打分 + JSON schema） | 0.3.4 |
+| **[combined-decision-card.md](./combined-decision-card.md)** | **asset-type-classifier + capital-flow + event-driven + technical-pattern** | **A+B+C 组合标的联动决策卡**（4 framework 输出整合 + 交叉验证矩阵 + 综合 JSON schema）| **0.4.2** |
 
 ## 辅助执行 templates（0.1.0，可选）
 

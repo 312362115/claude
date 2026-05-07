@@ -1,5 +1,109 @@
 # Changelog — finance-analysis
 
+## 0.4.3（2026-05-07）
+
+**致尚案例完整回归测试集 + CI 化路线图**。0.4.x 三件套完整收尾。
+
+### 新增
+
+`docs/tests/finance-analysis-regression.md`（~430 行）：
+
+**6 个核心回归用例**：
+
+| # | 案例 | 验证目标 | 状态 |
+|---|---|---|---|
+| 1 | 致尚 301486 @ 2026-04-28 | 0.4.0 完整闭环 6 层根因 | ✅ 基准 |
+| 2 | 群核 0068.HK 首日 +144% | hk-ipo-arbitrage 信号矩阵 | ✅ |
+| 3 | 沪电 002463 @ 2026-04-24 | 铁律 0 数据校准 | ✅ |
+| 4 | 东山 002384 @ 2026-04-22 | valuation-relative 三情景 | ✅ |
+| 5 | NVDA 2023-Q1 财报 | 3 层信息拆解 / 透过表象 | ✅ |
+| 6 | 致尚 4/29 单日分时形态 | technical-pattern 单日禁令铁律 | ✅ |
+
+**每个用例完整规格**：输入数据 + 期望 framework 输出 JSON + 实际历史决策对比 + 回归断言伪代码（pytest 风格）。
+
+**回归运行机制**：
+- 当前阶段（0.4.x）：手工跑 6 用例，每次 framework 升级前后对比期望输出
+- 工程化阶段（0.4.x 后期）：用例数据存 `docs/tests/cases/*.yaml` + framework 脚本化 + pytest CI
+- 1.0.0 里程碑：全量回归通过 + 实战 6 个月命中率 ≥ 60%
+
+**用例增加铁律**：实战错判 → 归因 → framework 升级 → 新增回归用例 → 升级前后跑全量回归确保不退化。
+
+### 0.4.x 三件套总结
+
+| 版本 | 内容 | 工作量 | 收益 |
+|---|---|---|---|
+| 0.4.0 | A/B/C 标签主框架三件套（1500+ 行）| 大 | 致尚案例 L1-L6 完整修复 |
+| 0.4.1 | capital-flow.sh 数据速查脚本 | 小 | framework 真正可执行 |
+| 0.4.2 | combined-decision-card.md 联动模板 | 中 | A+B+C 组合标的实战出口 |
+| 0.4.3 | 回归测试集 6 用例 | 中 | 防 framework 升级退化 |
+
+### 1.0.0 里程碑剩余项
+
+- **实战验证 6 个月**：60+ 决策，命中率 ≥ 60%
+- **错判分布**：D5 认知盲点占比 < 30%
+- **路径 EV 模型实战验证**：路径 EV 真实命中率显著高于终点 EV
+- **回归测试 CI 化**：pytest + framework 脚本化（capital-flow / event-driven / technical-pattern 各自的 .py 实现）
+- **可选**：crypto-thematic（0.5.0）/ macro-overlay（0.4.x 候选）
+
+---
+
+## 0.4.2（2026-05-07）
+
+**A+B+C 组合标的联动决策卡模板**。
+
+### 新增
+
+`templates/combined-decision-card.md`（~360 行）：
+
+**适用场景**：A+B+C 三标签全触发 / A+C 双标签 + B 弱 / B+C 双标签 + A 待披露。
+
+**结构 11 段**：
+1. 决策前置 4 项强制 checklist（与 alpha-thesis-card 对齐）
+2. 标的基本信息（仓位上限 ≤ 5%）
+3. asset-type-classifier 输出（7 标签 + 强度 + 置信度 + 路由 + 禁令）
+4. capital-flow 资金面附录（控盘度 5 维评分 + 主力方向 4 维 + EV 修正系数）
+5. event-driven 事件附录（7 类事件 + 时间轴 + 5 维强度 + 路径 EV vs 终点 EV + 黑天鹅清单）
+6. technical-pattern 形态附录（5 阶段 + 洗盘 vs 出货 + 量价 + MA + 5 维评分）
+7. **4 framework 交叉验证表**（核心，决策一致性矩阵）
+8. 综合决策（合议结论 + 4 framework 投票）
+9. 执行计划
+10. 验证日程
+11. 综合 JSON schema（嵌套 4 framework 输出）
+
+**核心铁律**：A+B+C 组合标的 sell / buy 决策必须 ≥ 3 framework 同向支持，否则只能 hold / watchlist / skip。
+
+**致尚案例填充**：综合 JSON 投票 → watch 2 / follow 1 / watchlist 1 → 最终决策 watchlist-add（不是实际历史的 skip）。
+
+---
+
+## 0.4.1（2026-05-07）
+
+**scripts/capital-flow.sh 资金面数据速查工具**。
+
+### 新增
+
+`scripts/capital-flow.sh`（~140 行 bash + Python heredoc）：
+
+**功能 4 段**：
+1. **实时行情**（数据源：sina hq.sinajs.cn 已知稳定）— 当前价 / 涨跌% / 数据时点
+2. **基础信息**（数据源：eastmoney push2 best-effort + 重试）— 总股本 / 流通股本 / 流通市值 / PE / PB / 换手率 + C_smallcap 标签快判
+3. **5 维官方数据源 URL 速查**（核心功能）— 龙虎榜 / 北上 / 融资 / 大宗 / 解禁
+4. **决策卡 JSON schema 占位提示**
+
+**设计原则（0.4.1）**：
+- 零依赖（bash + curl + python3 自带）
+- 优雅降级（接口故障时仍输出 URL 速查列表）
+- 不强求全自动（手工抓取是合理 fallback）
+
+**致尚 sz301486 实测**：
+- 流通市值 174 亿 → C_smallcap 弱触发（边界值 200 亿以下）
+- 流通比 56.3% → 高限售比例
+- PE 666 / PB 12 / 换手率 9.19% → 极端高估值 + 高换手
+
+**已知限制**：仅支持 A 股；港股 / 美股资金面需走 CCASS / SEC 13F 不同接口（未实现）。
+
+---
+
 ## 0.4.0（2026-05-07）
 
 **A/B/C 标签主框架三件套全部落地**。0.3.2 asset-type-classifier 暴露的 framework 缺位被一次性补齐。致尚 301486 案例 L1-L6 六层根因全部修复闭环。
