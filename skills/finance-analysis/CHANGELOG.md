@@ -1,5 +1,68 @@
 # Changelog — finance-analysis
 
+## 0.3.3（2026-05-07）
+
+**吸收 Dexter 工程化优点**。从 ~/workspace/dexter（virattt 的金融研究 agent）深度扫描借鉴 6 维度工程模式，挑出 3 个 P0 落地，避免破坏 skill 跨平台 / 零依赖能力。
+
+### P0-1：Framework 顶部 When to/NOT to Use 对照表
+
+借鉴 Dexter 的 tool description "When to Use / When NOT to Use / Usage Notes" 三段式（参见 `screen-stocks.ts:13-38`、`read-filings.ts:15-41`）。
+
+**改造文件**：
+- `frameworks/asset-type-classifier.md` — 顶部加 5 项使用边界（明确不覆盖基金 / 加密 / 期权 / 跨境套利 / 极端宏观危机）
+- `frameworks/valuation-dcf.md` — 顶部对照表 6 项 NOT Use 强禁令（含 A_event / B_momentum 强档禁令）
+- `frameworks/valuation-relative.md` — 顶部对照表 7 项 NOT Use（含 F_cyclical 必用 PB 不用 PE）
+- `frameworks/stock-selection.md` — 顶部对照表 5 项 + 输出后强制路由（Top-N 后必须走 asset-type-classifier）
+
+**核心机制**：framework 路由从"看完文档底部失效场景再判断"升级为"顶部对照表第一眼判断"，降低错配概率。
+
+### P0-2：决策卡 checklist JSON 输出契约
+
+借鉴 Dexter 的 Zod structured output 模式（`screen-stocks.ts:140-156`、`read-filings.ts:163-321`）+ schema 字段级 description。
+
+**改造文件**：
+- `templates/alpha-thesis-card.md` — checklist 段末尾新增「Checklist 机器可读输出」子段，每张决策卡末尾必填 JSON 代码块
+
+**核心字段**：
+- `checklist.data_calibration.{passed, quote_script_ran, price_recorded, data_timestamp, stale_data_used}`
+- `checklist.asset_type_classifier.{tags_triggered, B_strength_level, C_confidence, asset_profile, main_framework, fallback_action}`
+- `checklist.reverse_argumentation.{bull_case_words, bear_case_words, weakest_link}`
+- `checklist.cognitive_bias_check.{narrative_reverse_check, intraday_pattern_check, static_ev_under_AB_check, post_hoc_rationalization_check}`
+- `all_passed`、`process_violation`
+
+**机制收益**：self-improvement-loop 从"问 LLM 它是否做了"升级到"扫文件统计真实通过率"。命中率统计、铁律 0 真实通过率、D 类型错判触发分布等指标全部脚本可算。
+
+### P0-3：SKILL.md STABLE PREFIX / VOLATILE TAIL 分段
+
+借鉴 Dexter 的 Anthropic prompt caching 设计（`llm.ts:200-213, 265-286`）—— 让前缀稳定 = 缓存命中。
+
+**改造文件**：
+- `SKILL.md` — 重排为两段式结构
+
+**变更**：
+1. **STABLE PREFIX**（前 70%）：灵魂 / 核心定位 / 决策前置 / 5 类命题路由 / 三原则 / 决策卡格式 / 加载方式 / 自我迭代 / 协作边界 / 信源 —— 永不变方法论
+2. **VOLATILE TAIL**（后 30%）：辅助 framework 列表 / 能力两档 / 关于自动触发 / 版本路线图 —— 随版本升级而变
+3. 中段新增「Framework 升级铁律」段，明确 4 条铁律：先升 STABLE 后升 VOLATILE / 禁止 query-specific 引入 STABLE / breaking 改动需 CHANGELOG 标注 / 决策卡只写 finance-journal 不进 SKILL.md
+
+**机制收益**：Anthropic prompt cache 命中前缀，前缀稳定 = ~90% input token 节省。Claude Code 自动处理 cache，无需手工 cache_control 标记。
+
+### 不抄清单（保护既有路线）
+
+明确不吸收的 7 类 Dexter 设计（破坏跨平台 / 不适用 prompt-driven skill）：
+1. SQLite + FTS5 + embedding hybrid search（破坏跨平台 + 引入运行时基础设施）
+2. Multi-LLM provider factory（skill 不调 SDK，由 harness 决定）
+3. Two-step planner / sub-LLM 调用（需要运行时 LLM 调度，prompt skill 没有）
+4. Agent loop / microcompact / turn budget 工程概念（harness 责任，不应往 skill 文档塞）
+5. Financial Datasets API 业务实现（美股 only，破坏 A股/港股能力）
+6. Anthropic `cache_control` 手工标记（Claude Code 自动处理）
+7. Buffett/Munger 长期价值哲学路线（与多 framework / 博弈型路线冲突）
+
+### 0.4.0 路线图保持不变
+
+capital-flow / event-driven / technical-pattern 三个 framework 仍是下一版核心。本版仅做工程化吸收。
+
+---
+
 ## 0.3.2（2026-05-07）
 
 **asset-type-classifier 前置分类器 + 决策卡强制 checklist**。沉淀于致尚科技 301486 血泪案例：用价值股 framework 切博弈型标的，4/28 决策 skip 后到 5/7 早盘 6 个交易日累计 +22.7%（同期创业板指 +5.4%，相对超额 +17.3pt），短期方向 100% 反向。

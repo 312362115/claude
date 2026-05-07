@@ -10,6 +10,20 @@
 
 ---
 
+## ⚡ When to Use / When NOT to Use（路由前必读）
+
+| ✅ When to Use | ❌ When NOT to Use（强禁令）|
+|---|---|
+| 赛道→Top-N 待研究清单（"AI 算力 3 只"）| **单股深度分析（已锁定标的）→ valuation-relative / valuation-dcf / alpha-generation** |
+| 主题投资标的选取（AI / 机器人 / 新能源 / 创新药）| **全市场扫描（量化层）→ Tier 2 本地栈 + Python（integrations/local-data-stack.md）** |
+| 量化筛选前的"定性 + 半定量"漏斗 | **事件驱动机会（并购 / 拆分 / IPO）→ event-driven（0.4.0）/ us-ipo-arbitrage** |
+| 组合重平衡：候选池 → 新增仓位候选 | **纯技术面筛选（趋势 / 突破）→ technical-pattern（0.4.0）** |
+| 自下而上（赛道池已确定）| **没有赛道锚（"市场上选最好的"）→ 先走 top-down-selection 确定赛道再来** |
+
+**输出后强制路由**：Top-N 清单生成后，**每只候选必须跑 asset-type-classifier 打标签**，再决定走 valuation-dcf / valuation-relative / alpha-generation 中哪一条做单股分析。**不允许 Top-N 直接当决策清单用**——这是 0.3.2 后的强制流程。
+
+---
+
 ## 1. 核心定位
 
 ### 适用场景

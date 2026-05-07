@@ -1,6 +1,6 @@
 ---
 name: finance-analysis
-version: 0.3.2
+version: 0.3.3
 last_updated: 2026-05-07
 repository: https://github.com/312362115/claude
 changelog: skills/finance-analysis/CHANGELOG.md
@@ -31,6 +31,11 @@ description: >
 > 不研究"这家公司是什么"，研究"要不要买、什么价买、什么时候卖"。
 > **命题驱动 + 决策导向 + 手动触发**。
 
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- ════ STABLE PREFIX：永不变方法论（prompt cache 命中区）════════════ -->
+<!-- ════ 任何 framework 升级禁止往本段引入 query-specific 内容 ═════ -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+
 ---
 
 ## 🎯 Skill 的灵魂：3 大核心价值
@@ -40,8 +45,8 @@ description: >
 ### 价值 1：**数据深度**（原始数据优先，不抄）
 - **T1 一手**：SEC / HKEXnews / 巨潮 / IR / 交易所 原始披露 PDF / XBRL
 - **T2 结构化**：API 机读数据（FRED / SEC EDGAR / BIS SDMX）
-- **铁律**：能读原文不看摘要，能 API 不看 PDF，能直接抓交易所不信二手聚合
-- **多源交叉**：每份分析至少 4 个独立源
+- **铁律**：能读原文不看摘要，能 API 不看 PDF,能直接抓交易所不信二手聚合
+- **多源交叉**:每份分析至少 4 个独立源
 
 ### 价值 2：**分析深度**（独立推演，不抄观点）
 - **自己算估值**（不抄卖方目标价）
@@ -102,7 +107,7 @@ description: >
 | **D. 主题/赛道命题** | "AI 电力 / 机器人 / CPO / 某赛道 / 建仓晚不晚" | 套路 D | 主题定位 + Layer 地图 + 标的排序 |
 | **E. 自我迭代闭环** | "复盘 / 回看 / verify / 错判归因 / 命中率 / framework 升级" | 套路 E（不走命题分析）| 复盘 / 归因 / 季度报告 |
 
-**套路 E 路由（复盘类命题，0.3.0 新增）**：
+**套路 E 路由（复盘类命题）**：
 
 | 触发词 | skill 动作 | 产出 / 更新位置 |
 |-------|----------|---------------|
@@ -120,93 +125,8 @@ description: >
 
 详见 `frameworks/self-improvement-loop.md` 4 层机制。
 
-### 辅助 framework（按命题类型调用）
-
-**前置分类器（决策前必跑，0.3.2 新增）**：
-
-| Framework | 使用时机 | 版本 |
-|-----------|---------|------|
-| **`frameworks/asset-type-classifier.md`** | **个股 / 事件 / 主题命题决策前置必跑**。7 项标签扫描 → framework 路由 + 必看维度 + 强制反向论证 | 0.3.2 |
-
-**核心分析 / 决策**：
-
-| Framework | 使用时机 | 版本 |
-|-----------|---------|------|
-| `frameworks/hk-ipo-arbitrage.md` | 港股打新套利决策 | 0.1.0 |
-| `frameworks/us-ipo-arbitrage.md` | 美股 IPO（三路径 EV + Lockup 抛压） | 0.2.0 |
-| `frameworks/alpha-generation.md` | 10x 股 + 顶级 IPO 长期持有 | 0.1.0 |
-| `frameworks/ai-thematic-investing.md` | AI 主题投资（8 层产业链） | 0.1.0 |
-
-**估值 / 选股**（0.2.0 新增）：
-
-| Framework | 使用时机 | 版本 |
-|-----------|---------|------|
-| `frameworks/valuation-relative.md` | 相对估值（PE/PS/PB 对标 + 三情景 + 概率加权） | 0.2.0 |
-| `frameworks/valuation-dcf.md` | DCF 估值（成长股 / 独家商业模型 / 主题失真期） | 0.2.0 |
-| `frameworks/stock-selection.md` | **自下而上**：赛道池 → Top-N 待研究清单（4 步筛 + 30/60/100） | 0.2.0 |
-| `frameworks/top-down-selection.md` | **自上而下**：宏观 → 行业 → 板块 → 赛道池（Fed 加息降息预期 + 五年规划等中长期政策） | 0.3.0 |
-
-### 0.3.0 新增
-
-| Framework | 使用时机 | 版本 |
-|-----------|---------|------|
-| `frameworks/top-down-selection.md` | 自上而下选股（宏观→行业→板块→赛道池） | 0.3.0 |
-| `frameworks/fund-analysis.md` | 基金 / ETF 分析（夏普 / 回撤 / α / 归因 / 风格） | 0.3.0 |
-| `frameworks/bond-analysis.md` | 债券 / 债券 ETF / 可转债（久期 / 信用 / 利差三维） | 0.3.0 |
-
-### 计划扩展（按需）
-
-| Framework | 场景 | 版本 |
-|-----------|------|------|
-| technical / event-driven | 技术面 / 事件 | 0.4.0 |
-| macro-overlay / crypto-thematic | 宏观择时 / 加密 | 0.4.0-0.5.0 |
-
-详见 `references/frameworks/_index.md`。
-
-### 关于自动触发
-
-**本 skill 不做自动触发/定时扫描**（日度/月度巡检 templates 保留作为可选辅助，用户想用自己配定时器）。skill 只做命题驱动的"抓+分析"。
-
----
-
-## 能力两档（数据获取）
-
-### Tier 1 基础能力（默认开箱即用）
-
-**数据工具**：WebSearch + WebFetch（Claude Code 原生）
-
-**能做**：读财报原文 / 电话会 / 行业报告 / 当前股价 / 近 1-3 月 K线 / 手工估值对标 / 产业链推演 / 决策卡输出（**80% 命题分析**）
-
-### Tier 2 增强能力（可选，对接本地量化栈）
-
-**数据工具**：本地 PG + Python 量化 + 行情同步服务（用户自建）
-
-**解锁**：批量历史 K线 / 精确技术指标 / 回测 / 大批量筛选（**高阶 20%**）
-
-详见 `references/integrations/local-data-stack.md`。
-
-**核心判断**：skill 的战斗力在**方法论 + 读财报 + 独立推演**，不在是否有量化 API。没 Tier 2 也能打。
-
----
-
-## 自我迭代闭环（长期核心）
-
-skill 从"工具"进化成"真正分析师"的关键：**4 层闭环** —— 决策留档 → 事后验证 → 错判归因 → Framework 升级。
-
-详见 `references/frameworks/self-improvement-loop.md`。
-
-**核心**：不执行这套闭环，skill 永远不会变强；执行 6 个月，命中率显著提升。
-
----
-
-## 信源加载（复用 deep-research）
-
-**不重复造轮子**。金融分析的信源与 deep-research 共享：
-
-- **白名单**：`skills/deep-research/references/sources/finance.yaml`（冷门权威：BIS / 中债登 / CFETS / HKEX SDI / CCASS / Tardis.dev / BaoStock / Finnhub 等）
-- **黑名单**：`skills/deep-research/references/sources/blacklist.yaml`（hard 过滤：CSDN / 东财股吧 / 雪球 / 金色财经等）
-
-金融分析独有的"实时行情 API"（Binance / Finnhub / Alpha Vantage / AKShare 等）在 framework 中按场景引用，不在本 skill 重复沉淀。
+> **辅助 framework 详细列表已迁移到文件末尾「VOLATILE TAIL」段**（随版本升级而变）。
+> 调用 framework 时通过 `references/frameworks/_index.md` 路由表查询。
 
 ---
 
@@ -300,6 +220,16 @@ skill 触发后：
 
 ---
 
+## 自我迭代闭环（长期核心）
+
+skill 从"工具"进化成"真正分析师"的关键：**4 层闭环** —— 决策留档 → 事后验证 → 错判归因 → Framework 升级。
+
+详见 `references/frameworks/self-improvement-loop.md`。
+
+**核心**：不执行这套闭环，skill 永远不会变强；执行 6 个月，命中率显著提升。
+
+---
+
 ## 与其他 skill 的协作边界
 
 | Skill | 分工 |
@@ -316,6 +246,108 @@ skill 触发后：
 
 ---
 
+## 信源加载（复用 deep-research）
+
+**不重复造轮子**。金融分析的信源与 deep-research 共享：
+
+- **白名单**：`skills/deep-research/references/sources/finance.yaml`（冷门权威：BIS / 中债登 / CFETS / HKEX SDI / CCASS / Tardis.dev / BaoStock / Finnhub 等）
+- **黑名单**：`skills/deep-research/references/sources/blacklist.yaml`（hard 过滤：CSDN / 东财股吧 / 雪球 / 金色财经等）
+
+金融分析独有的"实时行情 API"（Binance / Finnhub / Alpha Vantage / AKShare 等）在 framework 中按场景引用，不在本 skill 重复沉淀。
+
+---
+
+## Framework 升级铁律（吸收 Dexter prompt cache 设计 / 0.3.3 新增）
+
+> 设计依据：Anthropic prompt caching 命中前缀，前缀稳定 = 缓存命中率高 = 速度+成本双重收益。
+
+本 SKILL.md 自上而下分两段：
+
+| 段 | 内容 | 特性 |
+|---|---|---|
+| **STABLE PREFIX**（本注释行以上）| 灵魂 + 核心定位 + 决策前置 + 5 类命题路由 + 三原则 + 决策卡格式 + 加载方式 + 自我迭代 + 协作边界 + 信源 | 永不变方法论，prompt cache 命中区 |
+| **VOLATILE TAIL**（本注释行以下）| 辅助 framework 列表 + 能力两档 + 关于自动触发 + 版本路线图 | 随版本升级而变，prompt cache 失效区 |
+
+**升级铁律**：
+1. 任何 framework 升级**先升级 STABLE PREFIX 方法论**，后升级 VOLATILE TAIL framework 列表
+2. **禁止**把 query-specific 内容（具体 ticker / 时点 / 数据 / 单次决策结论）引入 STABLE PREFIX
+3. STABLE PREFIX 改动需在 CHANGELOG 显式标注 "BREAKING: stable prefix changed"，触发 prompt cache 失效
+4. 决策卡 / 复盘报告 / 错判归因等 query-specific 内容**只能写到 `docs/finance-journal/`**，不进 SKILL.md
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- ════ VOLATILE TAIL：随版本升级而变（prompt cache 失效区）═════════ -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+
+---
+
+## 辅助 framework 列表（按命题类型调用）
+
+**前置分类器（决策前必跑，0.3.2 新增）**：
+
+| Framework | 使用时机 | 版本 |
+|-----------|---------|------|
+| **`frameworks/asset-type-classifier.md`** | **个股 / 事件 / 主题命题决策前置必跑**。7 项标签扫描 → framework 路由 + 必看维度 + 强制反向论证 | 0.3.2 |
+
+**核心分析 / 决策**：
+
+| Framework | 使用时机 | 版本 |
+|-----------|---------|------|
+| `frameworks/hk-ipo-arbitrage.md` | 港股打新套利决策 | 0.1.0 |
+| `frameworks/us-ipo-arbitrage.md` | 美股 IPO（三路径 EV + Lockup 抛压） | 0.2.0 |
+| `frameworks/alpha-generation.md` | 10x 股 + 顶级 IPO 长期持有 | 0.1.0 |
+| `frameworks/ai-thematic-investing.md` | AI 主题投资（8 层产业链） | 0.1.0 |
+
+**估值 / 选股**（0.2.0 新增）：
+
+| Framework | 使用时机 | 版本 |
+|-----------|---------|------|
+| `frameworks/valuation-relative.md` | 相对估值（PE/PS/PB 对标 + 三情景 + 概率加权） | 0.2.0 |
+| `frameworks/valuation-dcf.md` | DCF 估值（成长股 / 独家商业模型 / 主题失真期） | 0.2.0 |
+| `frameworks/stock-selection.md` | **自下而上**：赛道池 → Top-N 待研究清单（4 步筛 + 30/60/100） | 0.2.0 |
+| `frameworks/top-down-selection.md` | **自上而下**：宏观 → 行业 → 板块 → 赛道池（Fed 加息降息预期 + 五年规划等中长期政策） | 0.3.0 |
+
+**0.3.0 新增**：
+
+| Framework | 使用时机 | 版本 |
+|-----------|---------|------|
+| `frameworks/fund-analysis.md` | 基金 / ETF 分析（夏普 / 回撤 / α / 归因 / 风格） | 0.3.0 |
+| `frameworks/bond-analysis.md` | 债券 / 债券 ETF / 可转债（久期 / 信用 / 利差三维） | 0.3.0 |
+
+**计划扩展（按需）**：
+
+| Framework | 场景 | 版本 |
+|-----------|------|------|
+| capital-flow / event-driven / technical-pattern | 资金面 / 事件节奏 / 洗盘 vs 出货 | 0.4.0 |
+| macro-overlay / crypto-thematic | 宏观择时 / 加密 | 0.4.0-0.5.0 |
+
+详见 `references/frameworks/_index.md`。
+
+### 关于自动触发
+
+**本 skill 不做自动触发/定时扫描**（日度/月度巡检 templates 保留作为可选辅助，用户想用自己配定时器）。skill 只做命题驱动的"抓+分析"。
+
+---
+
+## 能力两档（数据获取）
+
+### Tier 1 基础能力（默认开箱即用）
+
+**数据工具**：WebSearch + WebFetch（Claude Code 原生）
+
+**能做**：读财报原文 / 电话会 / 行业报告 / 当前股价 / 近 1-3 月 K线 / 手工估值对标 / 产业链推演 / 决策卡输出（**80% 命题分析**）
+
+### Tier 2 增强能力（可选，对接本地量化栈）
+
+**数据工具**：本地 PG + Python 量化 + 行情同步服务（用户自建）
+
+**解锁**：批量历史 K线 / 精确技术指标 / 回测 / 大批量筛选（**高阶 20%**）
+
+详见 `references/integrations/local-data-stack.md`。
+
+**核心判断**：skill 的战斗力在**方法论 + 读财报 + 独立推演**，不在是否有量化 API。没 Tier 2 也能打。
+
+---
+
 ## 版本路线图
 
 | 版本 | 内容 | 状态 |
@@ -324,7 +356,8 @@ skill 触发后：
 | 0.2.0 | 相对估值 / DCF / 选股（4 步筛 + 30/60/100） / 美股 IPO（三路径 EV）+ valuation-card / stock-screening-card | ✅ |
 | 0.3.0 | 自上而下 + 基金分析（夏普 / 回撤 / 归因）+ 债券分析（久期 / 信用 / 利差）+ self-improvement Phase 2 | ✅ |
 | 0.3.1 | 铁律 0（数据时点校准）+ scripts/quote.sh 实时行情脚本 | ✅ |
-| **0.3.2** | **asset-type-classifier 前置分类器**（修复 L3 framework 错配）+ 决策卡 4 项强制 checklist。从致尚 301486 错判（4/28→5/7 偏差 +22.7%）沉淀 | ✅ **本版** |
+| 0.3.2 | asset-type-classifier 前置分类器（修复 L3 framework 错配）+ 决策卡 4 项强制 checklist。从致尚 301486 错判（4/28→5/7 偏差 +22.7%）沉淀 | ✅ |
+| **0.3.3** | **吸收 Dexter 工程化优点**：framework 顶部 When to/NOT to Use 对照表 + 决策卡 checklist JSON 输出契约 + STABLE PREFIX/VOLATILE TAIL 分段（prompt cache 优化）| ✅ **本版** |
 | 0.4.0 | capital-flow（小盘资金面）+ event-driven（事件节奏）+ technical-pattern（洗盘 vs 出货）— 补齐 A/B/C 标签主框架 | 待做 |
 | 0.5.0 | 加密货币主题投资 | 待做 |
 | 1.0.0 | 所有核心 framework 稳定 + 回归测试集 + 实战命中率 ≥ 60% | 里程碑 |

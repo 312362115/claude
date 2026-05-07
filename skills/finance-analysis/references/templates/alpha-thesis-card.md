@@ -57,6 +57,71 @@
 
 **未过 4 项 checklist 而出具的决策卡，归入"流程违规决策"，错判时归因 D5（认知盲点）+ 流程外伤。**
 
+### Checklist 机器可读输出（必填，决策卡末尾代码块同步）
+
+为让 self-improvement-loop 量化扫描历史决策，**每张决策卡末尾必须输出以下 JSON 代码块**（与上方 markdown checklist 一一对应）：
+
+```json
+{
+  "ticker": "301486.SZ",
+  "decision_date": "2026-04-28",
+  "decision_action": "buy | hold | trim | sell | skip | watchlist",
+  "checklist": {
+    "data_calibration": {
+      "passed": true,
+      "quote_script_ran": true,
+      "price_recorded": 202.86,
+      "data_timestamp": "2026-04-28T15:00:00+08:00",
+      "stale_data_used": false
+    },
+    "asset_type_classifier": {
+      "passed": true,
+      "tags_triggered": ["A_event", "B_momentum", "C_smallcap"],
+      "B_strength_level": "strong",
+      "B_signals_hit": 5,
+      "B_signals_total": 6,
+      "C_confidence": "weak",
+      "asset_profile": "重组期+主升浪+小盘",
+      "main_framework": "capital-flow (0.4.0 待建)",
+      "fallback_action": "framework 缺位 → 观望"
+    },
+    "reverse_argumentation": {
+      "passed": true,
+      "bull_case_words": 120,
+      "bear_case_words": 150,
+      "weakest_link": "主升浪节奏判断"
+    },
+    "cognitive_bias_check": {
+      "passed": false,
+      "narrative_reverse_check": true,
+      "intraday_pattern_check": true,
+      "static_ev_under_AB_check": true,
+      "post_hoc_rationalization_check": false,
+      "any_high_risk_triggered": true
+    },
+    "all_passed": false,
+    "process_violation": false
+  },
+  "framework_version": "finance-analysis 0.3.2"
+}
+```
+
+**字段定义**：
+- `passed`（bool）：该项 checklist 是否全部通过
+- 子字段为各项原始数据，方便季度/年度复盘脚本扫描
+- `all_passed = false` 时，决策卡仍可发布，但**必须在元信息区域顶部用 ⚠️ 标注流程违规点**
+- `process_violation = true` 触发条件：跳过 quote.sh / 跳过分类器 / 反向论证字数 < 100 / 认知偏误任一打 ✅ 但未停下重审
+
+**自动扫描脚本**（self-improvement-loop 用）：
+```bash
+# 季度复盘扫描脚本占位（0.4.0 落地）
+find docs/finance-journal/ -name "*-thesis.md" -newer <last_quarter> | \
+  xargs -I {} grep -A 100 '^```json$' {} | \
+  jq '.checklist.all_passed'
+```
+
+→ 命中率统计、铁律 0 真实通过率、D 类型错判触发分布等指标全部自动可算。
+
 ---
 
 ## 元信息
