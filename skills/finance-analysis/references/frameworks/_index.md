@@ -37,8 +37,8 @@
 | Framework | 适用场景 | 被谁调用 | 版本 |
 |-----------|---------|---------|------|
 | [capital-flow.md](./capital-flow.md) | 小盘控盘标的资金面（龙虎榜 + 北上 + 融资 + 大宗 + 流通盘）| C_smallcap 标签触发必跑 | 0.4.0 |
-| event-driven.md | 事件驱动（重组 / 收购 / 退市风险 / 商誉减值）| A_event 标签触发必跑 | 0.4.0 待建 |
-| technical-pattern.md | 主升浪节奏（洗盘 vs 出货 / MA / 量价 / 缺口）| B_momentum 标签触发必跑 | 0.4.0 待建 |
+| [event-driven.md](./event-driven.md) | 事件驱动（重组 / 收购 / 退市 / 商誉 / 对赌 / 实控人 / 监管 7 类）| A_event 标签触发必跑 | 0.4.0 |
+| [technical-pattern.md](./technical-pattern.md) | 主升浪节奏（5 阶段 + 洗盘 vs 出货 + 量价 + MA + 缺口）| B_momentum 中/强档触发必跑 | 0.4.0 |
 
 ## Integrations
 

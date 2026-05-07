@@ -220,9 +220,9 @@ Step 5: 输出"分类标签卡" 嵌入决策卡顶部
 
 | 标签组合 | 标的类型描述 | 主框架（必跑）| 辅框架（建议）| 必看维度 | 可降权 |
 |---|---|---|---|---|---|
-| **A + B + C** | 重组+主升浪+小盘（致尚画像）| **capital-flow ✅ 0.4.0 + event-driven（待建）+ technical-pattern（待建）** | ai-thematic-investing | **资金面 / 技术面 / 事件节奏** | 静态估值 |
-| A + C | 重组+小盘 | **capital-flow ✅ 0.4.0** + event-driven（待建）+ valuation-relative（PB）| alpha-generation | 事件节奏 / 龙虎榜 | 静态 PE |
-| B + C | 主升浪+小盘 | **capital-flow ✅ 0.4.0** + technical-pattern（待建）| ai-thematic | 量价 / 龙虎榜 / 板块强度 | 静态估值 |
+| **A + B + C** | 重组+主升浪+小盘（致尚画像）| **capital-flow ✅ + event-driven ✅ + technical-pattern ✅（全 0.4.0）** | ai-thematic-investing | **资金面 / 技术面 / 事件节奏** | 静态估值 |
+| A + C | 重组+小盘 | **capital-flow ✅ + event-driven ✅** + valuation-relative（PB）| alpha-generation | 事件节奏 / 龙虎榜 | 静态 PE |
+| B + C | 主升浪+小盘 | **capital-flow ✅ + technical-pattern ✅** | ai-thematic | 量价 / 龙虎榜 / 板块强度 | 静态估值 |
 | B + 主题龙头 | 主升浪+赛道龙头 | ai-thematic-investing + valuation-dcf | top-down-selection | 主题节奏 / 业绩兑现 | — |
 | D | IPO / 次新 | hk-ipo-arbitrage 或 us-ipo-arbitrage | alpha-generation | 锁仓 / 流动性 | 稳态 PE |
 | **E** | 稳态价值股 | **valuation-relative + valuation-dcf** | alpha-generation | 财报 / 估值历史分位 / 分红 | 短期资金面 |

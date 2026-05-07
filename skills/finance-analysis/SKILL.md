@@ -1,6 +1,6 @@
 ---
 name: finance-analysis
-version: 0.4.0-alpha.1
+version: 0.4.0
 last_updated: 2026-05-07
 repository: https://github.com/312362115/claude
 changelog: skills/finance-analysis/CHANGELOG.md
@@ -318,8 +318,8 @@ skill 从"工具"进化成"真正分析师"的关键：**4 层闭环** —— �
 | Framework | 使用时机 | 版本 |
 |-----------|---------|------|
 | `frameworks/capital-flow.md` | 小盘控盘标的资金面（龙虎榜 + 北上 + 融资 + 大宗 + 流通盘）| 0.4.0 |
-| `frameworks/event-driven.md` | 事件驱动（重组 / 收购 / 退市 / 商誉）| 待建 |
-| `frameworks/technical-pattern.md` | 主升浪节奏（洗盘 vs 出货 / MA / 量价）| 待建 |
+| `frameworks/event-driven.md` | 事件驱动（重组 / 收购 / 退市 / 商誉 / 对赌 / 实控人 / 监管 7 类）| 0.4.0 |
+| `frameworks/technical-pattern.md` | 主升浪节奏（5 阶段 + 洗盘 vs 出货 + 量价 + MA + 缺口）| 0.4.0 |
 
 **计划扩展（按需）**：
 
@@ -366,8 +366,6 @@ skill 从"工具"进化成"真正分析师"的关键：**4 层闭环** —— �
 | 0.3.2 | asset-type-classifier 前置分类器（修复 L3 framework 错配）+ 决策卡 4 项强制 checklist。从致尚 301486 错判（4/28→5/7 偏差 +22.7%）沉淀 | ✅ |
 | 0.3.3 | 吸收 Dexter 工程化优点（P0）：framework 顶部 When to/NOT to Use 对照表 + 决策卡 checklist JSON 输出契约 + STABLE PREFIX/VOLATILE TAIL 分段 | ✅ |
 | 0.3.4 | 决策档案机器可读化（P1）：dated/evergreen 时间衰减 + self-improvement-loop JSON 契约统一规范 + 4 个核心模板补 JSON schema | ✅ |
-| **0.4.0-alpha.1** | **capital-flow framework**（C_smallcap 标签主框架）：5 维信号（龙虎榜 + 北上 + 融资 + 大宗 + 流通盘）+ 控盘度评分 + 主力方向 EV 修正系数 + 资金面附录 JSON schema | ✅ **本版** |
-| 0.4.0-alpha.2 | event-driven framework（A_event 标签主框架）— 重组 / 并购 / 退市 / 商誉减值 / 业绩对赌 | 待做 |
-| 0.4.0-alpha.3 | technical-pattern framework（B_momentum 标签主框架）— 洗盘 vs 出货 / MA / 量价 / 缺口 | 待做 |
+| **0.4.0** | **A/B/C 标签主框架三件套全部落地**：capital-flow（C_smallcap，5 维信号 + 控盘度 + EV 修正）+ event-driven（A_event，7 类事件 + 节点路径 EV 模型）+ technical-pattern（B_momentum，5 阶段 + 洗盘 vs 出货 + 量价 + MA）。致尚案例 L1-L6 六层根因全部修复 | ✅ **本版** |
 | 0.5.0 | 加密货币主题投资 | 待做 |
 | 1.0.0 | 所有核心 framework 稳定 + 回归测试集 + 实战命中率 ≥ 60% | 里程碑 |
