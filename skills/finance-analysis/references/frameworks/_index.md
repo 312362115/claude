@@ -7,6 +7,7 @@
 | Framework | 定位 |
 |-----------|------|
 | **[command-driven-analysis.md](./command-driven-analysis.md)** | **主入口**。定义 3 大核心价值（数据深度/分析深度/透过表象预判未来）+ 4 类命题（个股/政策/事件/主题）+ 执行检查单 |
+| **[asset-type-classifier.md](./asset-type-classifier.md)** | **决策前置必跑**。7 项标签扫描 → 标签组合 → framework 路由。修复 L3 framework 错配（致尚 301486 偏差 +22.7% 后沉淀） |
 
 ## 辅助 framework（0.1.0-0.2.0）
 
@@ -55,6 +56,7 @@
 
 Lead agent 接到命题时：
 
+0. **【强制前置】跑 asset-type-classifier**：套路 A / 套路 C / 套路 D 启动前必跑。输出标签组合 → 决定后续 framework 调用清单。**未跑分类器直接调用静态估值 framework = L3 错配，禁止**
 1. **匹配关键词** → 加载对应 framework
 2. **跨 framework 组合**（一个命题可能触发多个）：
    - "港股打新 + 中长期持有" → `hk-ipo-arbitrage` + `alpha-generation`
@@ -94,6 +96,7 @@ Lead agent 接到命题时：
 - **0.1.0**：command-driven-analysis（主入口，承接所有认知基础）+ hk-ipo-arbitrage / alpha-generation / ai-thematic-investing / self-improvement-loop
 - **0.2.0**：valuation-relative / valuation-dcf / stock-selection / us-ipo-arbitrage（估值 + 选股 + 美股 IPO 补全）
 - **0.3.0**：top-down-selection + fund-analysis + bond-analysis（自上而下 / 基金 / 债券三块补齐）+ self-improvement-loop Phase 2（decision-postmortem + quarterly-performance 模板 + 套路 E 路由 + INDEX 守护检查）
+- **0.3.2**：**asset-type-classifier**（前置分类器，修复 L3 framework 错配）+ alpha-thesis-card 决策卡 4 项强制 checklist。从致尚 301486 错判（4/28 → 5/7 偏差 +22.7%）沉淀
 
 **不做**：
 - 日内技术分析（和决策导向定位不符）

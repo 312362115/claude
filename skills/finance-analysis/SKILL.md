@@ -1,7 +1,7 @@
 ---
 name: finance-analysis
-version: 0.2.0
-last_updated: 2026-04-23
+version: 0.3.2
+last_updated: 2026-05-07
 repository: https://github.com/312362115/claude
 changelog: skills/finance-analysis/CHANGELOG.md
 description: >
@@ -83,6 +83,15 @@ description: >
 
 主流程：**`references/frameworks/command-driven-analysis.md`**（必读）
 
+### 🚦 决策前置必跑（套路 A / C / D 启动前）
+
+| 步骤 | Framework | 作用 |
+|---|---|---|
+| 0.1 | `scripts/quote.sh` | 实时股价 + 数据时点校准（铁律 0）|
+| 0.2 | **`frameworks/asset-type-classifier.md`** | **7 项标签扫描 → 标签组合 → framework 路由清单**。修复 L3 framework 错配 |
+
+**禁止**：未跑分类器直接调用 valuation-relative / valuation-dcf 作为主决策依据。这是 finance-analysis 历史最大单一根因（致尚 301486 偏差 +22.7%）。
+
 ### 5 类命题 + 路由
 
 | 命题类型 | 触发词 | 主流程 | 输出 |
@@ -112,6 +121,12 @@ description: >
 详见 `frameworks/self-improvement-loop.md` 4 层机制。
 
 ### 辅助 framework（按命题类型调用）
+
+**前置分类器（决策前必跑，0.3.2 新增）**：
+
+| Framework | 使用时机 | 版本 |
+|-----------|---------|------|
+| **`frameworks/asset-type-classifier.md`** | **个股 / 事件 / 主题命题决策前置必跑**。7 项标签扫描 → framework 路由 + 必看维度 + 强制反向论证 | 0.3.2 |
 
 **核心分析 / 决策**：
 
@@ -306,8 +321,10 @@ skill 触发后：
 | 版本 | 内容 | 状态 |
 |------|------|------|
 | 0.1.0 | HK IPO 打新 + Alpha Generation + AI 主题 + self-improvement + 命题驱动主入口 | ✅ |
-| 0.2.0 | 相对估值 / DCF / 选股（4 步筛 + 30/60/100） / 美股 IPO（三路径 EV）+ valuation-card / stock-screening-card | ✅ **本版** |
-| 0.3.0 | 基金分析（夏普 / 最大回撤 / 持仓归因）+ 债券分析（久期 / 信用 / 利差） | 待做 |
-| 0.4.0 | 技术面 + 事件驱动 + 宏观择时 | 待做 |
+| 0.2.0 | 相对估值 / DCF / 选股（4 步筛 + 30/60/100） / 美股 IPO（三路径 EV）+ valuation-card / stock-screening-card | ✅ |
+| 0.3.0 | 自上而下 + 基金分析（夏普 / 回撤 / 归因）+ 债券分析（久期 / 信用 / 利差）+ self-improvement Phase 2 | ✅ |
+| 0.3.1 | 铁律 0（数据时点校准）+ scripts/quote.sh 实时行情脚本 | ✅ |
+| **0.3.2** | **asset-type-classifier 前置分类器**（修复 L3 framework 错配）+ 决策卡 4 项强制 checklist。从致尚 301486 错判（4/28→5/7 偏差 +22.7%）沉淀 | ✅ **本版** |
+| 0.4.0 | capital-flow（小盘资金面）+ event-driven（事件节奏）+ technical-pattern（洗盘 vs 出货）— 补齐 A/B/C 标签主框架 | 待做 |
 | 0.5.0 | 加密货币主题投资 | 待做 |
 | 1.0.0 | 所有核心 framework 稳定 + 回归测试集 + 实战命中率 ≥ 60% | 里程碑 |
