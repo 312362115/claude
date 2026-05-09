@@ -245,8 +245,25 @@ pre code.hljs { background: #1e293b; padding: 16px 20px; }
 </main>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.1/marked.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script>
+window.__katexReady = new Promise(function(resolve) {
+  function check() {
+    if (window.katex) resolve(); else setTimeout(check, 30);
+  }
+  check();
+});
+</script>
+<style>
+/* 块级公式居中、有上下间距，与正文保持节奏 */
+.math-block { display: block; overflow-x: auto; margin: 16px 0; text-align: center; }
+.math-block .katex-display { margin: 0; }
+/* 渲染失败回退样式 */
+.math-error { color: var(--c-danger, #b91c1c); background: #fef2f2; padding: 2px 6px; border-radius: 4px; font-family: var(--font-mono, monospace); font-size: 0.9em; }
+</style>
 <script>
 window.__mermaidReady = new Promise(function(resolve) { window.__mermaidResolve = resolve; });
 </script>
@@ -738,7 +755,7 @@ window.__mermaidResolve();
   }
 
   function escapeHTML(str) {
-    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
   // 渲染 Mermaid DSL 代码块
@@ -878,8 +895,69 @@ window.__mermaidResolve();
     });
   }
 
+  // marked 扩展：把 $$...$$ 和 $...$ 提取为独立 token，避免被当成斜体/普通文本
+  const mathExtension = {
+    extensions: [
+      {
+        name: 'mathBlock',
+        level: 'block',
+        start(src) { const i = src.indexOf('$$'); return i < 0 ? undefined : i; },
+        tokenizer(src) {
+          const m = /^\\$\\$\\n?([\\s\\S]+?)\\n?\\$\\$(?:\\n|$)/.exec(src);
+          if (m) return { type: 'mathBlock', raw: m[0], text: m[1] };
+        },
+        renderer(token) {
+          return '<div class="math-block" data-math="' + escapeHTML(token.text) + '"></div>';
+        },
+      },
+      {
+        name: 'mathInline',
+        level: 'inline',
+        start(src) {
+          const m = /(^|[^\\\\$])\\$[^\\s$][^$\\n]*?[^\\s\\\\$]\\$(?!\\d)/.exec(src) || /(^|[^\\\\$])\\$[^\\s$\\n]\\$(?!\\d)/.exec(src);
+          if (!m) return undefined;
+          // start 应返回 $ 在 src 中的位置
+          const dollarIdx = src.indexOf('$', m.index);
+          return dollarIdx;
+        },
+        tokenizer(src) {
+          // 单字符或多字符；要求紧贴非空白，避免误吞 "$10 ... $20"
+          const m = /^\\$([^\\s$][^$\\n]*?[^\\s\\\\$]|[^\\s$\\n])\\$(?!\\d)/.exec(src);
+          if (m) return { type: 'mathInline', raw: m[0], text: m[1] };
+        },
+        renderer(token) {
+          return '<span class="math-inline" data-math="' + escapeHTML(token.text) + '"></span>';
+        },
+      },
+    ],
+  };
+
+  // 用 KaTeX 渲染所有 .math-block / .math-inline 占位符
+  async function renderMath() {
+    if (!document.querySelector('.math-block, .math-inline')) return;
+    if (window.__katexReady) await window.__katexReady;
+    if (!window.katex) return;
+    document.querySelectorAll('.math-block').forEach(el => {
+      const tex = el.dataset.math || '';
+      try {
+        window.katex.render(tex, el, { displayMode: true, throwOnError: false, output: 'html' });
+      } catch (e) {
+        el.innerHTML = '<span class="math-error">公式渲染失败: ' + escapeHTML(tex) + '</span>';
+      }
+    });
+    document.querySelectorAll('.math-inline').forEach(el => {
+      const tex = el.dataset.math || '';
+      try {
+        window.katex.render(tex, el, { displayMode: false, throwOnError: false, output: 'html' });
+      } catch (e) {
+        el.innerHTML = '<span class="math-error">' + escapeHTML(tex) + '</span>';
+      }
+    });
+  }
+
   async function renderMarkdown(md) {
     marked.setOptions({ gfm: true, breaks: false });
+    marked.use(mathExtension);
 
     const renderer = new marked.Renderer();
     const slugCounts = {};
@@ -916,6 +994,7 @@ window.__mermaidResolve();
     await renderDSLBlocks();
     colorizeMermaidCharts();
     addCodeBlockLabels();
+    await renderMath();
 
     // 生成目录
     const tocList = document.getElementById('toc');
