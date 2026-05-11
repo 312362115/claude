@@ -69,3 +69,14 @@ playwright-mcp
 node_modules/
 .playwright-mcp/
 memory
+
+# 本地 skill 安装产物（软链 / 独立 skill 目录）
+skills/lark-*
+skills/agent-reach/
+
+# MCP 鉴权状态缓存
+mcp-needs-auth-cache.json
+
+# 清理时间戳
+.last-cleanup
+
