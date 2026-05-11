@@ -1,5 +1,15 @@
 # Changelog — deep-research
 
+## 1.8.0 (2026-05-11)
+- 重构：报告写作彻底切换为"组件驱动"——不再按调研类型套模板，按内容形态调用组件
+- 新增：`references/report-blocks.md` 调研报告组件库（A 顶部信息 / B 现状基线 / C 论证 / D 对比评估 / E 过程可观测 / F 引用来源 / G 通用组件 / H 内容形态→组件速查 / I 反模式）
+- 调整：SKILL.md 5.2 从"章节选用矩阵 + 完整报告模板示例"改为"内容形态 → 组件 速查"+组合原则
+- 调整：SKILL.md 6.1 检查 1 从"按命题类型对照必备章节"改为"内容形态是否被组件承载"
+- 调整：调研深度判断段从"对比类可省章节"改为"按内容选组件"
+- 调整：`references/templates/_common.md` 改为"历史范式仅作灵感"，只保留 6 种主题的章节顺序提示
+- 删除：`references/templates/` 下 6 个调研类型硬模板（tech-selection / industry-analysis / concept-research / feasibility / performance-benchmark / competitive-analysis）
+- 修复：消除"先选类型→套模板→填空"的模板派痕迹，让 AI 按内容自由组合
+
 ## 1.7.0 (2026-05-07)
 - 新增：顶部"调研深度判断"章节，明确"6 步是能力库不是必走流程"
 - 新增：决策树——简单事实 / 对比类 / 复杂研究 / 超深度 四档命题分流，配各档对应的能力调用清单
